@@ -1,0 +1,88 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+homeassistant:
+  allowlist_external_dirs:
+    - "/config/www/snapshots"
+
+
+
+
+    
+template:
+  - sensor:
+      - name: "Kiwi Display Name"
+        state: >
+          {{states('sensor.kiwi_gcode_filename').split('-')[0]}}
+      - name: "Kiwi Object"
+        state: >
+          {{states('sensor.kiwi_gcode_filename').replace(states('sensor.kiwi_display_name') + '-', '')}}
+      - name: "Kiwi Last Display Name"
+        state: >
+          {{states('sensor.kiwi_task_name').split('-')[0]}}
+      - name: "Kiwi Last Object"
+        state: >
+          {{states('sensor.kiwi_task_name').replace(states('sensor.kiwi_task_name') + '-', '')}}
+      - name: "Mango Display Name"
+        state: >
+          {{states('sensor.mango_gcode_filename').split('-')[0]}}
+      - name: "Mango Object"
+        state: >
+          {{states('sensor.mango_gcode_filename').replace(states('sensor.mango_display_name') + '-', '')}}
+      - name: "Mango Last Display Name"
+        state: >
+          {{states('sensor.mango_task_name').split('-')[0]}}
+      - name: "Mango Last Object"
+        state: >
+          {{states('sensor.mango_task_name').replace(states('sensor.mango_task_name') + '-', '')}}
+      - name: "Papaya Display Name"
+        state: >
+          {{states('sensor.papaya_gcode_filename').split('-')[0]}}
+      - name: "Papaya Object"
+        state: >
+          {{states('sensor.papaya_gcode_filename').replace(states('sensor.papaya_display_name') + '-', '')}}
+      - name: "Papaya Last Display Name"
+        state: >
+          {{states('sensor.papaya_task_name').split('-')[0]}}
+      - name: "Papaya Last Object"
+        state: >
+          {{states('sensor.papaya_task_name').replace(states('sensor.papaya_task_name') + '-', '')}}
+      - name: "Strawberry Display Name"
+        state: >
+          {{states('sensor.strawberry_gcode_filename').split('-')[0]}}
+      - name: "Strawberry Object"
+        state: >
+          {{states('sensor.strawberry_gcode_filename').replace(states('sensor.strawberry_display_name') + '-', '')}}
+      - name: "Strawberry Last Display Name"
+        state: >
+          {{states('sensor.strawberry_task_name').split('-')[0]}}
+      - name: "Strawberry Last Object"
+        state: >
+          {{states('sensor.strawberry_task_name').replace(states('sensor.strawberry_task_name') + '-', '')}}
+      - name: "Huckleberry Display Name"
+        state: >
+          {{states('sensor.huckleberry_gcode_filename').split('-')[0]}}
+      - name: "Huckleberry Object"
+        state: >
+          {{states('sensor.huckleberry_gcode_filename').replace(states('sensor.huckleberry_display_name') + '-', '')}}
+      - name: "Huckleberry Last Display Name"
+        state: >
+          {{states('sensor.huckleberry_task_name').split('-')[0]}}
+      - name: "Huckleberry Last Object"
+        state: >
+          {{states('sensor.huckleberry_task_name').replace(states('sensor.huckleberry_task_name') + '-', '')}}
+
+      - name: "Dragonfruit Display Name"
+        state: >
+          {{states('sensor.dragonfruit_filename').split('-')[0]}}
+      - name: "Dragonfruit Object"
+        state: >
+          {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}

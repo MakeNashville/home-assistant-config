@@ -1,0 +1,78 @@
+# === SECRETS & CREDENTIALS ===
+secrets.yaml
+*.key
+*.pem
+*.crt
+*.csr
+.google.token
+.uuid
+.HA_VERSION
+
+# === DATABASES ===
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+home-assistant_v2.db*
+zigbee.db*
+
+# === LOGS ===
+*.log
+*.log.*
+OZW_Log.txt
+
+# === STORAGE (UI Configuration) ===
+# This is debatable - some people include it for backup
+.storage/
+.cloud/
+
+# === RUNTIME/TEMPORARY ===
+*.pid
+*.xml
+*.swp
+*.swo
+*.bak
+*.tmp
+*~
+
+# === TTS & MEDIA CACHE ===
+tts/
+www/
+
+# === DEPENDENCIES ===
+deps/
+lib/
+pycache/
+*.pyc
+__pycache__/
+
+# === DEVICE-SPECIFIC ===
+known_devices.yaml  # Can contain MAC addresses
+ip_bans.yaml
+*.conf  # Often contains device-specific paths
+
+# === ADD-ON & SYSTEM ===
+.ssh/
+.vscode/
+.idea/
+*.code-workspace
+
+# === CUSTOM COMPONENTS (optional) ===
+# custom_components/  # Uncomment if you want to exclude custom integrations
+
+# === BACKUP FILES ===
+backups/
+*.backup
+*.zip
+*.tar.gz
+
+# === OS SPECIFIC ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === ESPHOME (if you use it) ===
+esphome/.esphome/
+esphome/secrets.yaml
+
+custom_components/

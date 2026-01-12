@@ -1,0 +1,61 @@
+esphome:
+  name: kaeser-monitor
+
+esp32:
+  board: adafruit_feather_esp32c6
+  framework:
+    type: esp-idf
+
+
+sensor:
+  - platform: adc
+    pin: GPIO1
+    name: "System Pressure"
+    unit_of_measurement: "psi"
+    accuracy_decimals: 0
+    update_interval: 1s
+    attenuation: 12db
+    filters: 
+      - calibrate_linear:
+        - 0.606 -> 0.0
+        - 1.808 -> 111.0
+      - throttle_average: 5s
+          
+          
+
+binary_sensor:
+  - platform: gpio
+    pin: 
+      number: GPIO4
+      inverted: True
+    # White wire 
+    name: "Pressure Switch"
+  - platform: gpio
+    pin: 
+      number: GPIO6
+      inverted: True
+    # Green wire
+    name: "Control Valve Solenoid"
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Kaeser-Monitor Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+    

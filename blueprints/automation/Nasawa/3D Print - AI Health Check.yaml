@@ -1,0 +1,664 @@
+blueprint:
+  name: AI 3D Printer Status Check 2.0
+  description: 'Monitors a camera or image entity on a repeating cadence **while**
+    a state sensor equals a target value (case-insensitive).
+
+
+    Each cycle runs a Home Assistant **AI Task** on a frame and exposes the AI result
+    + snapshot path to an optional user script for platform-specific notifications.
+
+
+    • **Local AI** = attach **camera** directly to the AI Task (fast, high quality).
+
+    • **Remote AI** = attach **snapshot** file via Local Media (requires allowlisted
+    media path).
+
+    • **Image entities** = analyzed via entity_picture URL.
+
+    • Optional confidence threshold (fixed number or entity) gates the built-in text
+    alert.
+
+    • Built-in **debug** and **failure** messages are text-only; image sending is
+    delegated to your script.
+
+    • Snapshot naming: overwrite a single file or write timestamped files (no automatic
+    cleanup).
+
+    • **Test mode** = run a single check immediately for testing configuration.
+
+
+    **Notes:**
+
+    - Image sending is delegated to **script_on_result**, keeping this blueprint notify-platform
+    agnostic.
+
+    - The script receives **nested objects** for clarity and long-term stability (see
+    Scripts section).
+
+    Community: [Community link for this blueprint](community.home-assistant.io/t/3d-printer-ai-status-check/919182)
+    Version: 2.0.0
+
+    '
+  domain: automation
+  source_url: https://gist.github.com/Nasawa/3de5049337cacb75e31296eea2e13d4b
+  input:
+    core:
+      name: Core inputs
+      icon: mdi:camera
+      collapsed: false
+      description: Required entities and cadence.
+      input:
+        image_entity:
+          name: Image or Camera Entity
+          description: 'Camera or image entity to monitor. Camera entities save snapshots
+            to the configured path. Image entities are analyzed directly from their
+            current state.
+
+            '
+          selector:
+            entity:
+              domain:
+              - camera
+              - image
+              multiple: false
+              reorder: false
+        stage_sensor:
+          name: State sensor
+          description: Entity whose state controls when monitoring is active
+          selector:
+            entity:
+              domain:
+              - sensor
+              multiple: false
+              reorder: false
+        active_state:
+          name: Active state value
+          description: Case-insensitive match that enables monitoring (e.g., "Printing")
+          default: Printing
+          selector:
+            text:
+              multiline: false
+              multiple: false
+        interval_minutes:
+          name: Interval (minutes)
+          default: 15
+          selector:
+            number:
+              min: 1.0
+              max: 120.0
+              step: 1.0
+              mode: slider
+        test_mode:
+          name: Test mode (run once immediately)
+          description: 'When enabled, runs a single check immediately regardless of
+            state sensor value. Useful for testing configuration. Automation will
+            complete after one cycle.
+
+            '
+          default: false
+          selector:
+            boolean: {}
+    ai_settings:
+      name: AI settings
+      icon: mdi:robot
+      collapsed: false
+      description: Configure AI analysis behavior, task entity, and image attachment
+        method.
+      input:
+        ai_task_entity:
+          name: AI Task entity (optional)
+          description: If set, this AI Task will be used instead of the system default.
+          default: ''
+          selector:
+            entity:
+              domain:
+              - ai_task
+              multiple: false
+              reorder: false
+        ai_task_name:
+          name: AI Task Name
+          description: Name for the AI task (useful for organizing multiple automations)
+          default: Image Health Check
+          selector:
+            text:
+              multiline: false
+              multiple: false
+        ai_instructions:
+          name: AI Instructions
+          description: Custom prompt for the AI to analyze the image
+          default: 'You are inspecting a 3D printer''s camera frame. Determine if
+            the print is going wrong. Common failures include spaghetti (stringy filament),
+            poor first-layer adhesion, severe warping/corner lift, nozzle clog with
+            under-extrusion, layer shift, knocked-over part, filament blob near the
+            hotend, or the part detaching from the bed. If there is meaningful risk
+            of failure without intervention, set has_problem to true and provide brief,
+            actionable advice.
+
+            '
+          selector:
+            text:
+              multiline: true
+              multiple: false
+        ai_schema:
+          name: AI Response Schema (JSON)
+          description: Define the structure of the AI response. Must be valid JSON.
+          default: "{\n  \"has_problem\": {\"selector\": {\"boolean\": {}}, \"required\":
+            true},\n  \"problem_type\": {\"selector\": {\"text\": {}}},\n  \"confidence\":
+            {\"selector\": {\"number\": {}}, \"description\": \"0-100 (fraction like
+            0.85 will be interpreted as 85%).\"},\n  \"advice\": {\"selector\": {\"text\":
+            {}}}\n}\n"
+          selector:
+            text:
+              multiline: true
+              multiple: false
+        use_local_model:
+          name: Use local AI (attach camera directly)
+          description: 'ON: attach the camera live frame via media-source (good for
+            local backends like Ollama). OFF: attach a snapshot file via Local Media
+            (recommended for remote providers). Note: Image entities always use snapshot
+            mode.
+
+            '
+          default: true
+          selector:
+            boolean: {}
+        snapshot_path_base:
+          name: Local Media filesystem path
+          description: 'Filesystem path for your Local Media folder (NOT a URL). Commonly
+            **/media**, sometimes **/config/media**. Must be listed under **homeassistant.allowlist_external_dirs**.
+
+            '
+          default: /media
+          selector:
+            text:
+              multiline: false
+              multiple: false
+        snapshot_subfolder:
+          name: Subfolder (under Local Media)
+          description: 'Optional subfolder name. If blank, defaults to `ai_health/<entity_object_id>`
+            to avoid collisions. Ensure this folder exists before running the automation.
+
+            '
+          default: ''
+          selector:
+            text:
+              multiline: false
+              multiple: false
+        image_format:
+          name: Image Format
+          description: Image format for saved snapshots
+          default: jpg
+          selector:
+            select:
+              options:
+              - label: JPEG
+                value: jpg
+              - label: PNG
+                value: png
+              - label: WebP
+                value: webp
+              sort: false
+              multiple: false
+              custom_value: false
+    thresholds:
+      name: Thresholds (optional)
+      icon: mdi:tune-variant
+      collapsed: true
+      description: 'Gate the built-in text alert by minimum AI confidence. Your result
+        script still receives all results.
+
+        '
+      input:
+        confidence_threshold:
+          name: Confidence threshold (fixed)
+          description: Notify only when normalized confidence ≥ this value (0-100).
+            Leave blank to disable.
+          selector:
+            number:
+              min: 0.0
+              max: 100.0
+              step: 1.0
+              mode: slider
+        confidence_threshold_entity:
+          name: Confidence threshold entity (number or sensor)
+          description: If set, this entity's numeric value (0-100) takes precedence
+            over the fixed value.
+          default: ''
+          selector:
+            entity:
+              domain:
+              - number
+              - sensor
+              multiple: false
+              reorder: false
+    scripts:
+      name: Script (optional)
+      icon: mdi:script-text-outline
+      collapsed: true
+      description: "Provide a script to handle platform-specific notifications or
+        archival.\nThe same script is called for success **and** failure; on failure,
+        an `error` object is included.\n\n<details>\n<summary><strong>script_on_result
+        payload (nested objects)</strong></summary>\n\n```yaml\n# On success:\nai_result:\n
+        \ has_problem: bool\n  problem_type: string|null\n  advice: string|null\n
+        \ confidence:\n    raw: number|null          # as returned by the model (0.85
+        or 85)\n    normalized: number|null   # 0-100; null if model omitted confidence\nsnapshot:\n
+        \ abs_path: string            # absolute file path\n  rel_path: string            #
+        relative under Local Media (e.g., subfolder/filename.jpg)\n  provider_mode:
+        string       # \"local\" or \"remote\"\nscript_context:\n  image_entity: string\n
+        \ ai_task_entity: string|null\n  ts: string                  # ISO8601 timestamp\n
+        \ cycle_number: number        # iteration count for this automation run\n
+        \ threshold:\n    active: boolean\n    value: number|null\n  notified: boolean
+        \          # whether built-in alert fired this cycle\nerror:\n  message: string
+        \            # not provided if there is no error\n```\n</details>\n"
+      input:
+        script_on_result:
+          name: Script on result (success or failure)
+          description: Optional script called each cycle; receives nested objects
+            as above.
+          default: ''
+          selector:
+            entity:
+              domain:
+              - script
+              multiple: false
+              reorder: false
+    housekeeping:
+      name: Housekeeping (optional)
+      icon: mdi:broom
+      collapsed: true
+      description: 'Control snapshot file naming. This blueprint does not delete files.
+        If you choose timestamped files, you''ll need to handle cleanup yourself.
+
+        '
+      input:
+        overwrite_snapshot:
+          name: Overwrite single file (latest)
+          description: 'If ON, writes `<subfolder>/latest.<ext>` each run. OFF writes
+            timestamped files (no auto-cleanup).
+
+            '
+          default: true
+          selector:
+            boolean: {}
+    notifications:
+      name: Built-in notifications (optional)
+      icon: mdi:message-outline
+      collapsed: true
+      description: 'Text-only status messages from the blueprint itself. Custom notify
+        actions have access to all variables including ai, normalized_confidence,
+        snapshot paths, has_problem, etc.
+
+        '
+      input:
+        notify_action:
+          name: Custom notify action (optional)
+          description: 'An action (or sequence) to run when the blueprint emits a
+            text notification. If provided, it will be used instead of the simple
+            notify service below. Available variables: notification_title, notification_message,
+            notification_type, ai (full response), normalized_confidence, raw_confidence,
+            has_problem, problem_type, advice, snapshot_abs_path, snapshot_rel_path,
+            cycle_number, and more.
+
+            '
+          default: []
+          selector:
+            action: {}
+        notify_service:
+          name: Notify service for text pings (fallback)
+          description: 'e.g., `notify.mobile_app_<device>` or `notify.persistent_notification`.
+            Leave blank to disable if not using a custom action.
+
+            '
+          default: ''
+          selector:
+            text:
+              multiline: false
+              multiple: false
+    debugging:
+      name: Debug (optional)
+      icon: mdi:bug
+      collapsed: true
+      description: Extra telemetry each cycle.
+      input:
+        debug_mode:
+          name: Debug mode
+          default: false
+          selector:
+            boolean: {}
+triggers:
+- trigger: state
+  entity_id: !input stage_sensor
+- trigger: homeassistant
+  event: start
+mode: restart
+variables:
+  image_entity: !input image_entity
+  stage_sensor: !input stage_sensor
+  interval_min: !input interval_minutes
+  active_state: !input active_state
+  test_mode_enabled: !input test_mode
+  ai_entity: !input ai_task_entity
+  ai_task_name: !input ai_task_name
+  ai_instructions: !input ai_instructions
+  ai_schema_raw: !input ai_schema
+  use_local: !input use_local_model
+  snapshot_base: !input snapshot_path_base
+  snapshot_subfolder: !input snapshot_subfolder
+  image_format: !input image_format
+  threshold_fixed: !input confidence_threshold
+  threshold_entity: !input confidence_threshold_entity
+  script_result: !input script_on_result
+  overwrite_snapshot: !input overwrite_snapshot
+  notify_action: !input notify_action
+  notify_service: !input notify_service
+  debug_enabled: !input debug_mode
+  has_notify_action: '{{ (notify_action | default([])) | length > 0 }}'
+  has_notify_service: '{{ (notify_service | string | trim) | length > 0 }}'
+  has_ai_entity: '{{ (ai_entity | string | trim) | length > 0 }}'
+  has_script: '{{ (script_result | string | trim) | length > 0 }}'
+  ai_schema_valid: '{% set test_parse = ai_schema_raw | from_json(none) %} {{ test_parse
+    is not none }}
+
+    '
+  ai_schema: "{% if ai_schema_valid %}\n  {{ ai_schema_raw | from_json }}\n{% else
+    %}\n  {{ none }}\n{% endif %}\n"
+  threshold_entity_provided: '{{ (threshold_entity | string | trim) | length > 0 }}'
+  threshold_from_entity: '{{ states(threshold_entity) | float(''nan'') if threshold_entity_provided
+    else float(''nan'') }}'
+  threshold_from_fixed: '{{ threshold_fixed | float(''nan'') if (threshold_fixed is
+    not none) else float(''nan'') }}'
+  confidence_threshold: "{% if threshold_entity_provided %}\n  {{ threshold_from_entity
+    }}\n{% else %}\n  {{ threshold_from_fixed }}\n{% endif %}\n"
+  threshold_active: '{{ confidence_threshold == confidence_threshold }}'
+  both_thresholds_set: '{{ threshold_entity_provided and (threshold_fixed is not none)
+    }}'
+  entity_obj_id: '{{ (image_entity | string).split(''.'')[-1] }}'
+  entity_domain: '{{ (image_entity | string).split(''.'')[0] }}'
+  is_camera: '{{ entity_domain == ''camera'' }}'
+  is_image: '{{ entity_domain == ''image'' }}'
+  format_extension: '{% if image_format == ''jpg'' %}jpg {% elif image_format == ''png''
+    %}png {% elif image_format == ''webp'' %}webp {% else %}jpg{% endif %}
+
+    '
+  format_mime_type: '{% if image_format == ''jpg'' %}image/jpeg {% elif image_format
+    == ''png'' %}image/png {% elif image_format == ''webp'' %}image/webp {% else %}image/jpeg{%
+    endif %}
+
+    '
+  default_subfolder: ai_health/{{ entity_obj_id }}
+  folder: "{% set sf = (snapshot_subfolder | string | trim) %} {% if sf | length >
+    0 %}\n  {{ sf.strip('/') }}\n{% else %}\n  {{ default_subfolder }}\n{% endif %}\n"
+  folder_abs_path: '{{ snapshot_base.rstrip(''/'') }}/{{ folder }}'
+actions:
+- choose:
+  - conditions:
+    - condition: template
+      value_template: '{{ not ai_schema_valid }}'
+    sequence:
+    - variables:
+        notification_title: AI Health Check - Configuration Error
+        notification_message: 'The AI Response Schema is not valid JSON. Please fix
+          the schema in the blueprint configuration. Automation cannot continue.
+
+          '
+        notification_type: error
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ has_notify_action }}'
+        sequence: !input notify_action
+      - conditions:
+        - condition: template
+          value_template: '{{ has_notify_service }}'
+        sequence:
+        - action: !input notify_service
+          data:
+            title: '{{ notification_title }}'
+            message: '{{ notification_message }}'
+    - stop: Invalid AI schema - cannot continue
+- choose:
+  - conditions:
+    - condition: template
+      value_template: '{{ both_thresholds_set }}'
+    sequence:
+    - action: persistent_notification.create
+      data:
+        title: AI Health Check - Threshold Conflict
+        message: 'Both a fixed confidence threshold and a threshold entity were provided.
+          The entity value will be used. Clear one of them to remove this message.
+
+          '
+- condition: template
+  value_template: '{{ test_mode_enabled or ((states(stage_sensor) | lower) == (active_state
+    | lower)) }}'
+- choose:
+  - conditions:
+    - condition: template
+      value_template: '{{ not test_mode_enabled }}'
+    sequence:
+    - delay:
+        seconds: '{{ range(0, 5) | random }}'
+- variables:
+    cycle_count: 0
+- repeat:
+    until:
+    - condition: template
+      value_template: '{{ test_mode_enabled or ((states(stage_sensor) | lower) !=
+        (active_state | lower)) }}'
+    sequence:
+    - variables:
+        cycle_count: '{{ cycle_count + 1 }}'
+        cycle_ts: '{{ now().strftime(''%Y%m%d-%H%M%S'') }}'
+        filename: '{% if overwrite_snapshot %}latest.{{ format_extension }}{% else
+          %}{{ cycle_ts }}.{{ format_extension }}{% endif %}'
+        snapshot_rel_path: '{{ folder }}/{{ filename }}'
+        snapshot_abs_path: '{{ folder_abs_path }}/{{ filename }}'
+        media_source_id: media-source://media_source/local/{{ snapshot_rel_path }}
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ is_camera }}'
+        sequence:
+        - action: camera.snapshot
+          continue_on_error: true
+          target:
+            entity_id: !input image_entity
+          data:
+            filename: '{{ snapshot_abs_path }}'
+        - delay: 00:00:02
+    - variables:
+        use_direct_camera: '{{ use_local and is_camera }}'
+        ai_attachment: "{% if use_direct_camera %}\n  media-source://camera/{{ image_entity
+          }}\n{% elif is_image %}\n  {{ state_attr(image_entity, 'entity_picture')
+          }}\n{% else %}\n  {{ media_source_id }}\n{% endif %}\n"
+        ai_task_name_full: '{{ ai_task_name }} ({{ ''live'' if use_direct_camera else
+          ''snapshot'' }})'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ has_ai_entity }}'
+        sequence:
+        - action: ai_task.generate_data
+          continue_on_error: true
+          data:
+            entity_id: !input ai_task_entity
+            task_name: '{{ ai_task_name_full }}'
+            instructions: '{{ ai_instructions }}'
+            structure: '{{ ai_schema }}'
+            attachments:
+              media_content_id: '{{ ai_attachment }}'
+              media_content_type: '{{ format_mime_type }}'
+          response_variable: ai
+      default:
+      - action: ai_task.generate_data
+        continue_on_error: true
+        data:
+          task_name: '{{ ai_task_name_full }}'
+          instructions: '{{ ai_instructions }}'
+          structure: '{{ ai_schema }}'
+          attachments:
+            media_content_id: '{{ ai_attachment }}'
+            media_content_type: '{{ format_mime_type }}'
+        response_variable: ai
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ ai is not defined }}'
+        sequence:
+        - choose:
+          - conditions:
+            - condition: template
+              value_template: '{{ has_script }}'
+            sequence:
+            - action: !input script_on_result
+              data:
+                error:
+                  message: no assistant content returned
+                snapshot:
+                  abs_path: '{{ snapshot_abs_path }}'
+                  rel_path: '{{ snapshot_rel_path }}'
+                  provider_mode: '{{ ''local'' if use_direct_camera else ''remote''
+                    }}'
+                script_context:
+                  image_entity: '{{ image_entity }}'
+                  ai_task_entity: '{{ ai_entity if has_ai_entity else none }}'
+                  ts: '{{ now().isoformat() }}'
+                  cycle_number: '{{ cycle_count }}'
+        - variables:
+            notification_title: AI Health Check - Processing Failed
+            notification_message: 'The AI task did not return a valid assistant message
+              this cycle. Try a different instruct/JSON-friendly model. (Monitoring
+              continues.) Cycle: {{ cycle_count }}
+
+              '
+            notification_type: error
+            snapshot_abs_path: '{{ snapshot_abs_path }}'
+            snapshot_rel_path: '{{ snapshot_rel_path }}'
+            cycle_number: '{{ cycle_count }}'
+        - choose:
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_action }}'
+            sequence: !input notify_action
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_service }}'
+            sequence:
+            - action: !input notify_service
+              data:
+                title: '{{ notification_title }}'
+                message: '{{ notification_message }}'
+    - variables:
+        raw_confidence: "{% if ai is defined and (ai.data.confidence is defined or
+          ai.data.get('confidence') is not none) %}\n  {{ ai.data.confidence if (ai.data.confidence
+          is defined) else ai.data.get('confidence') }}\n{% else %}\n  {{ none }}\n{%
+          endif %}\n"
+        normalized_confidence: "{% if raw_confidence is not none %}\n  {% set c =
+          raw_confidence | float(0) %}\n  {{ (c * 100) if c <= 1 else c }}\n{% else
+          %}\n  {{ none }}\n{% endif %}\n"
+        has_problem: '{{ ai is defined and (ai.data.has_problem | default(false))
+          }}'
+        problem_type: '{{ ai.data.problem_type | default(none) if ai is defined else
+          none }}'
+        advice: '{{ ai.data.advice | default(none) if ai is defined else none }}'
+        meets_threshold: "{% if not threshold_active %}\n  true\n{% else %}\n  {%
+          if normalized_confidence is none %}\n    false\n  {% else %}\n    {{ (normalized_confidence
+          | float(0)) >= (confidence_threshold | float(0)) }}\n  {% endif %}\n{% endif
+          %}\n"
+        should_notify: '{{ has_problem and meets_threshold }}'
+        snapshot_abs_path: '{{ snapshot_abs_path }}'
+        snapshot_rel_path: '{{ snapshot_rel_path }}'
+        cycle_number: '{{ cycle_count }}'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ should_notify }}'
+        sequence:
+        - variables:
+            notification_title: ⚠️ Image Issue Detected
+            notification_message: 'Type: {{ problem_type | default(''unknown'') }}
+              Confidence: {{ (normalized_confidence | float(0)) | round(1) if (normalized_confidence
+              is not none) else ''—'' }}% Advice: {{ advice | default(''Check the
+              print ASAP.'') }} Cycle: {{ cycle_count }} (via AI Task)
+
+              '
+            notification_type: problem
+        - choose:
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_action }}'
+            sequence: !input notify_action
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_service }}'
+            sequence:
+            - action: !input notify_service
+              data:
+                title: '{{ notification_title }}'
+                message: '{{ notification_message }}'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ has_script and ai is defined }}'
+        sequence:
+        - action: !input script_on_result
+          data:
+            ai_result:
+              has_problem: '{{ has_problem }}'
+              problem_type: '{{ problem_type }}'
+              advice: '{{ advice }}'
+              confidence:
+                raw: '{{ raw_confidence if (raw_confidence is not none) else none
+                  }}'
+                normalized: '{{ normalized_confidence if (normalized_confidence is
+                  not none) else none }}'
+            snapshot:
+              abs_path: '{{ snapshot_abs_path }}'
+              rel_path: '{{ snapshot_rel_path }}'
+              provider_mode: '{{ ''local'' if use_direct_camera else ''remote'' }}'
+            script_context:
+              image_entity: '{{ image_entity }}'
+              ai_task_entity: '{{ ai_entity if has_ai_entity else none }}'
+              ts: '{{ now().isoformat() }}'
+              cycle_number: '{{ cycle_count }}'
+              threshold:
+                active: '{{ threshold_active }}'
+                value: '{{ confidence_threshold if threshold_active else none }}'
+              notified: '{{ should_notify }}'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ debug_enabled }}'
+        sequence:
+        - variables:
+            notification_title: AI Health Check - Debug
+            notification_message: "{% if ai is not defined %}\n  Cycle {{ cycle_count
+              }}: AI failed this cycle (no assistant content).\n{% else %}\n  Cycle
+              {{ cycle_count }}:\n  Has Problem={{ has_problem }},\n  Type={{ problem_type
+              | default('—') }},\n  Confidence (raw)={{ raw_confidence | default('—')
+              }},\n  Confidence (normalized)={{ (normalized_confidence | float(0))
+              | round(2) if (normalized_confidence is not none) else '—' }},\n  Threshold
+              Active={{ threshold_active }},\n  Threshold={{ (confidence_threshold
+              | float(0)) | round(1) if threshold_active else '—' }},\n  Notified={{
+              should_notify }},\n  Snapshot={{ snapshot_abs_path }}\n{% endif %}\n"
+            notification_type: debug
+        - choose:
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_action }}'
+            sequence: !input notify_action
+          - conditions:
+            - condition: template
+              value_template: '{{ has_notify_service }}'
+            sequence:
+            - action: !input notify_service
+              data:
+                title: '{{ notification_title }}'
+                message: '{{ notification_message }}'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ not test_mode_enabled }}'
+        sequence:
+        - delay:
+            minutes: '{{ interval_min | int }}'
