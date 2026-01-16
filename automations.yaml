@@ -1,292 +1,286 @@
-- id: "1721495372161"
+- id: '1721495372161'
   alias: Lifecycle Print Progress
-  description: ""
+  description: ''
   triggers:
-    - entity_id:
-        - sensor.kiwi_current_layer
-        - sensor.papaya_current_layer
-        - sensor.mango_current_layer
-        - sensor.strawberry_current_layer
-        - sensor.huckleberry_current_layer
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 1
-      to:
-        - "2"
-      trigger: state
-    - entity_id:
-        - sensor.kiwi_current_layer
-        - sensor.papaya_current_layer
-        - sensor.mango_current_layer
-        - sensor.strawberry_current_layer
-        - sensor.huckleberry_current_layer
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 1
-      to:
-        - "10"
-      trigger: state
-    - entity_id:
-        - sensor.kiwi_print_progress
-        - sensor.papaya_print_progress
-        - sensor.mango_print_progress
-        - sensor.strawberry_print_progress
-        - sensor.huckleberry_print_progress
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 1
-      to:
-        - "50"
-      trigger: state
-    - entity_id:
-        - sensor.kiwi_print_progress
-        - sensor.papaya_print_progress
-        - sensor.mango_print_progress
-        - sensor.strawberry_print_progress
-        - sensor.huckleberry_print_progress
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 1
-      to:
-        - "90"
-      trigger: state
+  - entity_id:
+    - sensor.kiwi_current_layer
+    - sensor.papaya_current_layer
+    - sensor.mango_current_layer
+    - sensor.strawberry_current_layer
+    - sensor.huckleberry_current_layer
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+    to:
+    - '2'
+    trigger: state
+  - entity_id:
+    - sensor.kiwi_current_layer
+    - sensor.papaya_current_layer
+    - sensor.mango_current_layer
+    - sensor.strawberry_current_layer
+    - sensor.huckleberry_current_layer
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+    to:
+    - '10'
+    trigger: state
+  - entity_id:
+    - sensor.kiwi_print_progress
+    - sensor.papaya_print_progress
+    - sensor.mango_print_progress
+    - sensor.strawberry_print_progress
+    - sensor.huckleberry_print_progress
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+    to:
+    - '50'
+    trigger: state
+  - entity_id:
+    - sensor.kiwi_print_progress
+    - sensor.papaya_print_progress
+    - sensor.mango_print_progress
+    - sensor.strawberry_print_progress
+    - sensor.huckleberry_print_progress
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+    to:
+    - '90'
+    trigger: state
   conditions: []
   actions:
-    - variables:
-        printer: "{{trigger.entity_id.split('_')[0].split('.')[1]}}"
-        display_name: '{{states("sensor."+printer+"_display_name") }}'
-        object_name: '{{states("sensor."+printer+"_object") }}'
-    - data:
-        target: "#3dprint-info"
-        message:
-          "\U0001F4AC {% if display_name != object_name %}@{{display_name}},
-          {% endif %}{{object_name}} is {{ states('sensor.'+printer+'_print_progress',
-          with_unit=True)}} complete and on layer {{ states('sensor.'+printer+'_current_layer')
-          }} of {{ states('sensor.'+printer+'_total_layer_count') }}. {{states('input_text.'+printer+'_stream')}}"
-        data:
-          username: "{{ printer | capitalize }}"
-          icon: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
-      action: notify.make_nashville
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+  - data:
+      target: '#3dprint-info'
+      message: "\U0001F4AC {% if display_name != object_name %}@{{display_name}},
+        {% endif %}{{object_name}} is {{ states('sensor.'+printer+'_print_progress',
+        with_unit=True)}} complete and on layer {{ states('sensor.'+printer+'_current_layer')
+        }} of {{ states('sensor.'+printer+'_total_layer_count') }}. {{states('input_text.'+printer+'_stream')}}"
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
   mode: single
-- id: "1722144402850"
+- id: '1722144402850'
   alias: Lifecycle Print Starting
-  description: ""
+  description: ''
   triggers:
-    - entity_id:
-        - sensor.mango_print_status
-        - sensor.kiwi_print_status
-        - sensor.strawberry_print_status
-        - sensor.papaya_print_status
-        - sensor.huckleberry_print_status
-      to:
-        - running
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 10
-      trigger: state
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - running
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
   conditions: []
   actions:
-    - variables:
-        printer: "{{trigger.entity_id.split('_')[0].split('.')[1]}}"
-        display_name: '{{states("sensor."+printer+"_display_name")}}'
-        object_name: '{{states("sensor."+printer+"_object") }}'
-    - data:
-        target: "#3dprint-info"
-        message:
-          "\U0001F389 {% if display_name != object_name %}@{{display_name}},
-          {% endif %}{{object_name}} is starting! Printing {{states(\"sensor.\"+printer+\"_print_weight\",
-          with_unit=True)}} over {{states(\"sensor.\"+printer+\"_total_layer_count\")
-          }} layers on a {{states(\"sensor.\"+printer+\"_print_bed_type\") }}. Estimated
-          duration {{time_until(as_datetime(states(\"sensor.\"+printer+\"_end_time\",
-          2))) }} (ends at {{ as_datetime(states(\"sensor.\"+printer+\"_end_time\",
-          2)) }}) {{states('input_text.'+printer+'_stream')}}"
-        data:
-          username: "{{ printer | capitalize }}"
-          icon: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
-      action: notify.make_nashville
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name")}}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+  - data:
+      target: '#3dprint-info'
+      message: "\U0001F389 {% if display_name != object_name %}@{{display_name}},
+        {% endif %}{{object_name}} is starting! Printing {{states(\"sensor.\"+printer+\"_print_weight\",
+        with_unit=True)}} over {{states(\"sensor.\"+printer+\"_total_layer_count\")
+        }} layers on a {{states(\"sensor.\"+printer+\"_print_bed_type\") }}. Estimated
+        duration {{time_until(as_datetime(states(\"sensor.\"+printer+\"_end_time\",
+        2))) }} (ends at {{ as_datetime(states(\"sensor.\"+printer+\"_end_time\",
+        2)) }}) {{states('input_text.'+printer+'_stream')}}"
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
   mode: parallel
   max: 4
-- id: "1722191155564"
+- id: '1722191155564'
   alias: Lifecycle Print Finished
-  description: ""
+  description: ''
   triggers:
-    - entity_id:
-        - sensor.mango_print_status
-        - sensor.kiwi_print_status
-        - sensor.strawberry_print_status
-        - sensor.papaya_print_status
-        - sensor.huckleberry_print_status
-      to:
-        - finish
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 5
-      trigger: state
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - finish
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
   conditions: []
   actions:
-    - variables:
-        printer: "{{trigger.entity_id.split('_')[0].split('.')[1]}}"
-        display_name: '{{states("sensor."+printer+"_last_display_name") }}'
-        object_name: '{{states("sensor."+printer+"_last_object") }}'
-    - data:
-        target: "#3dprint-info"
-        message:
-          ✅ {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-          finished! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
-        data:
-          username: "{{ printer | capitalize }}"
-          icon: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
-      action: notify.make_nashville
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_last_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_last_object") }}'
+  - data:
+      target: '#3dprint-info'
+      message: ✅ {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+        finished! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
   mode: parallel
   max: 4
-- id: "1722194364076"
+- id: '1722194364076'
   alias: Lifecycle Print Failed
-  description: ""
+  description: ''
   triggers:
-    - entity_id:
-        - sensor.mango_print_status
-        - sensor.kiwi_print_status
-        - sensor.strawberry_print_status
-        - sensor.papaya_print_status
-        - sensor.huckleberry_print_status
-      to:
-        - failed
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 10
-      trigger: state
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - failed
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
   conditions: []
   actions:
-    - variables:
-        printer: "{{trigger.entity_id.split('_')[0].split('.')[1]}}"
-        display_name: '{{states("sensor."+printer+"_display_name") }}'
-        object_name: '{{states("sensor."+printer+"_object") }}'
-    - data:
-        target: "#3dprint-info"
-        message:
-          "  ❌ {% if display_name != object_name %}@{{display_name}}, {% endif
-          %}{{object_name}} failed. Check the print room for more details on what happened.
-          {{states('input_text.'+printer+'_stream')}}"
-        data:
-          username: "{{ printer | capitalize }}"
-          icon: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
-      action: notify.make_nashville
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+  - data:
+      target: '#3dprint-info'
+      message: '  ❌ {% if display_name != object_name %}@{{display_name}}, {% endif
+        %}{{object_name}} failed. Check the print room for more details on what happened.
+        {{states(''input_text.''+printer+''_stream'')}}'
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
   mode: parallel
   max: 4
-- id: "1722445886802"
+- id: '1722445886802'
   alias: Roundup
-  description: ""
+  description: ''
   triggers:
-    - hours: /2
-      trigger: time_pattern
+  - hours: /2
+    trigger: time_pattern
   conditions: []
   actions:
-    - data:
-        target: "#3dprint-info"
-        data:
-          username: Fruitbasket
-          icon: basket
-        message:
-          "{# --- config: list your printers here --- #}\n{% set printers = [\n
-          \ {\"id\":\"kiwi\", \"emoji\":\":kiwifruit:\"},\n  {\"id\":\"mango\", \"emoji\":\":mango:\"},\n
-          \ {\"id\":\"papaya\", \"emoji\":\":papaya:\"},\n  {\"id\":\"strawberry\",
-          \"emoji\":\":strawberry:\"},\n  {\"id\":\"huckleberry\", \"emoji\":\":huckleberry:\"},\n]
-          %}\n\n{# --- config: statuses that are NOT actively printing --- #}\n{% set
-          not_printing = ['unavailable','idle','offline','finish','failed'] %}\n\n{%-
-          macro line(p) -%}\n  {%- set st = states('sensor.' ~ p.id ~ '_print_status')
-          -%}\n  {%- if st not in not_printing -%}\n    {{ p.emoji }} @{{ states('sensor.'
-          ~ p.id ~ '_display_name') }} printing {{ states('sensor.' ~ p.id ~ '_object')
-          }}. Finishes at {{ states('sensor.' ~ p.id ~ '_end_time') }}.\n  {%- else
-          -%}\n    {{ p.emoji }} {{ st }}\n  {%- endif -%}\n{%- endmacro -%}\n\nBi-hourly
-          roundup!\n{%- for p in printers %}\n{{ line(p) }}\n{%- endfor %}"
-      action: notify.make_nashville
-      enabled: true
+  - data:
+      target: '#3dprint-info'
+      data:
+        username: Fruitbasket
+        icon: basket
+      message: "{# --- config: list your printers here --- #}\n{% set printers = [\n
+        \ {\"id\":\"kiwi\", \"emoji\":\":kiwifruit:\"},\n  {\"id\":\"mango\", \"emoji\":\":mango:\"},\n
+        \ {\"id\":\"papaya\", \"emoji\":\":papaya:\"},\n  {\"id\":\"strawberry\",
+        \"emoji\":\":strawberry:\"},\n  {\"id\":\"huckleberry\", \"emoji\":\":huckleberry:\"},\n]
+        %}\n\n{# --- config: statuses that are NOT actively printing --- #}\n{% set
+        not_printing = ['unavailable','idle','offline','finish','failed'] %}\n\n{%-
+        macro line(p) -%}\n  {%- set st = states('sensor.' ~ p.id ~ '_print_status')
+        -%}\n  {%- if st not in not_printing -%}\n    {{ p.emoji }} @{{ states('sensor.'
+        ~ p.id ~ '_display_name') }} printing {{ states('sensor.' ~ p.id ~ '_object')
+        }}. Finishes at {{ states('sensor.' ~ p.id ~ '_end_time') }}.\n  {%- else
+        -%}\n    {{ p.emoji }} {{ st }}\n  {%- endif -%}\n{%- endmacro -%}\n\nBi-hourly
+        roundup!\n{%- for p in printers %}\n{{ line(p) }}\n{%- endfor %}"
+    action: notify.make_nashville
+    enabled: true
   mode: single
-- id: "1763702620736"
+- id: '1763702620736'
   alias: Kaeser Event notifier
-  description: ""
+  description: ''
   triggers:
-    - type: voltage
-      device_id: 475db66f7f774cdfa45430706b46ee05
-      entity_id: a04620ed092035484c42bbc3ec1a8e07
-      domain: sensor
-      trigger: device
-      above: 130
-      for:
-        hours: 0
-        minutes: 2
-        seconds: 0
+  - type: voltage
+    device_id: 475db66f7f774cdfa45430706b46ee05
+    entity_id: a04620ed092035484c42bbc3ec1a8e07
+    domain: sensor
+    trigger: device
+    above: 130
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
   conditions: []
   actions:
-    - action: notify.mobile_app_tim_krentz_iphone
-      metadata: {}
-      data:
-        message: Kaeser Overpressurization Event!
+  - action: notify.mobile_app_tim_krentz_iphone
+    metadata: {}
+    data:
+      message: Kaeser Overpressurization Event!
   mode: single
-- id: "1767137243013"
+- id: '1767137243013'
   alias: Stripe – 3D Print Filament Purchase
-  description: ""
+  description: ''
   triggers:
-    - webhook_id: stripe_payment_complete
-      trigger: webhook
-      allowed_methods:
-        - POST
-        - PUT
-      local_only: false
+  - webhook_id: stripe_payment_complete
+    trigger: webhook
+    allowed_methods:
+    - POST
+    - PUT
+    local_only: false
   conditions:
-    - condition: template
-      value_template: "{% set desc = trigger.json.data.object.description %}
+  - condition: template
+    value_template: '{% set desc = trigger.json.data.object.description %}
 
-        {{ desc.startswith('3D Print Filament Purchase') }}
+      {{ desc.startswith(''3D Print Filament Purchase'') }}
 
-        "
-      enabled: true
+      '
+    enabled: true
   actions:
-    - action: light.turn_on
-      metadata: {}
-      target:
-        entity_id: light.filament_store_light
-      data:
-        rgb_color:
-          - 11
-          - 199
-          - 0
-        brightness_pct: 100
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 30
-        milliseconds: 0
-    - action: light.turn_on
-      metadata: {}
-      target:
-        entity_id: light.filament_store_light
-      data:
-        rgb_color:
-          - 255
-          - 158
-          - 0
-        brightness_pct: 10
-        transition: 32
+  - action: light.turn_on
+    metadata: {}
+    target:
+      entity_id: light.filament_store_light
+    data:
+      rgb_color:
+      - 11
+      - 199
+      - 0
+      brightness_pct: 100
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - action: light.turn_on
+    metadata: {}
+    target:
+      entity_id: light.filament_store_light
+    data:
+      rgb_color:
+      - 255
+      - 158
+      - 0
+      brightness_pct: 10
+      transition: 32
   mode: single
-
 - id: backup_config_github
-  alias: "Backup Config to GitHub"
-  description: "Automatically backup HA config to GitHub"
-  trigger:
-    - platform: time
-      at: "03:00:00"
-  action:
-    - service: shell_command.git_commit_push
-    - service: persistent_notification.create
+  alias: Backup Config to GitHub
+  description: Automatically backup HA config to GitHub
+  triggers:
+  - at: 03:00:00
+    trigger: time
+  actions:
+  - sequence:
+    - action: hassio.addon_stdin
       data:
-        title: "GitHub Backup"
-        message: "Configuration backed up at {{ now().strftime('%H:%M:%S') }}"
+        addon: core_ssh
+        input: /config/git_backup.sh
   mode: single

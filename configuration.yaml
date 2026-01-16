@@ -82,10 +82,3 @@ template:
       - name: "Dragonfruit Object"
         state: >
           {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}
-
-shell_command:
-  git_commit_push: >
-    ssh -i /config/.ssh/id_rsa -o StrictHostKeyChecking=no 
-    -p 22222 root@localhost 
-    "cd /config && git add . && git diff-index --quiet HEAD || 
-    (git commit -m 'Auto backup: $(date +\"%Y-%m-%d %H:%M:%S\")' && git push origin main)"

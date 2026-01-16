@@ -1,8 +1,1 @@
-testing_change:
-  sequence:
-  - action: notify.notify
-    metadata: {}
-    data:
-      message: Testing a change
-  alias: Testing change
-  description: ''
+{}
