@@ -199,7 +199,7 @@
         -%}\n  {%- if st not in not_printing -%}\n    {{ p.emoji }} @{{ states('sensor.'
         ~ p.id ~ '_display_name') }} printing {{ states('sensor.' ~ p.id ~ '_object')
         }}. Finishes at {{ states('sensor.' ~ p.id ~ '_end_time') }}.\n  {%- else
-        -%}\n    {{ p.emoji }} {{ st }}\n  {%- endif -%}\n{%- endmacro -%}\n\nBi-hourly
+        -%}\n    {{ p.emoji }} {{ st }}\n  {%- endif -%}\n{%- endmacro -%}\n\n\nBi-hourly
         roundup!\n{%- for p in printers %}\n{{ line(p) }}\n{%- endfor %}"
     action: notify.make_nashville
     enabled: true
