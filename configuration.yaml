@@ -118,6 +118,19 @@ template:
         state: >
           {{states('sensor.huckleberry_task_name').replace(states('sensor.huckleberry_task_name') + '-', '')}}
 
+      - name: "Pineapple Display Name"
+        state: >
+          {{states('sensor.pineapple_current_object')}}
+      - name: "Pineapple Object"
+        state: >
+          {{states('sensor.pineapple_current_object')}}
+      - name: "Pineapple Last Display Name"
+        state: >
+          {{states('sensor.pineapple_current_object')}}
+      - name: "Pineapple Last Object"
+        state: >
+          {{states('sensor.pineapple_current_object')}}
+
       - name: "Dragonfruit Display Name"
         state: >
           {{states('sensor.dragonfruit_filename').split('-')[0]}}
