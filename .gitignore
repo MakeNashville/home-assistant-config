@@ -28,6 +28,7 @@ OZW_Log.txt
 
 # === RUNTIME/TEMPORARY ===
 *.pid
+*.lock
 *.xml
 *.swp
 *.swo
