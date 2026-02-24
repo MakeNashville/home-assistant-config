@@ -127,7 +127,7 @@
         {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
         %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
         %} on a {{bed_type}}{% endif %}. Estimated duration {{time_until(end_dt)}}{%
-        if end_dt %} (ends at {{ end_dt | as_local | strftime('%I:%M %p') }}){% endif
+        if end_dt %} (ends at {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}){% endif
         %} {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
@@ -331,7 +331,7 @@
           {%- if st not in not_printing %}
             {%- set progress = states('sensor.' ~ p.id ~ '_print_progress') %}
             {%- set end_dt = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
-            {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ end_dt | as_local | strftime('%I:%M %p') }}{%- endif %}
+            {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}{%- endif %}
           {%- else %}
             {{- p.emoji }} {{ status_labels.get(st, st | capitalize) }}
           {%- endif %}
