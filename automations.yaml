@@ -531,7 +531,6 @@
       printer_id: '{{ trigger.json.PrinterName | lower }}'
       file_name: '{{ trigger.json.FileName | default("") }}'
       progress: '{{ trigger.json.Progress | default(0) }}'
-      quick_view_url: '{{ trigger.json.QuickViewUrl | default("") }}'
       stream_url: '{{ states("input_text." + printer_id + "_stream") }}'
   - action: notify.make_nashville
     data:
@@ -539,8 +538,7 @@
       message: '{% if event_type == 8 %}🚨 Gadget paused {{ printer_name }} after
         detecting a failure{% else %}⚠️ Gadget detected a possible failure on {{
         printer_name }}{% endif %}{% if file_name %} printing {{ file_name }}{% endif
-        %} ({{ progress }}% complete).{% if quick_view_url %} {{ quick_view_url }}{%
-        endif %} {{ stream_url }}'
+        %} ({{ progress }}% complete). {{ stream_url }}'
       data:
         username: Gadget
         icon: robot_face
