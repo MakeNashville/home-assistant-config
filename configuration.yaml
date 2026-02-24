@@ -17,21 +17,43 @@ shell_command:
   git_pull: "git -C /config pull origin main"
 
 recorder:
+  purge_keep_days: 14
   exclude:
     domains:
       - camera
       - device_tracker
+      - image
       - person
       - weather
     entities:
-      - sun.sun # Don't record sun data
+      - sun.sun
+      - binary_sensor.filament_store_light_motion
+      - sensor.filament_store_light_illuminance
     entity_globs:
+      # Fan speeds / signals (already present)
       - sensor.*_wi_fi_signal
       - sensor.*_fan_speed
       - sensor.*_target_temperature
       - sensor.*_speed_profile
       - sensor.*_current_layer_height
       - sensor.*_ams_tray_*
+      # 3D printer real-time sensors
+      - sensor.*_bed_temperature
+      - sensor.*_position_*
+      - sensor.*_ams_*
+      - sensor.*_current_layer
+      - sensor.*_remaining_time
+      - sensor.*_model_download
+      - sensor.*_print_progress
+      - sensor.*_print_time_left
+      - sensor.*_real_time_flow
+      - sensor.*_current_object
+      # Fans
+      - fan.*_aux_fan
+      - fan.*_chamber_fan
+      - fan.*_cooling_fan
+      # Distance / proximity sensors
+      - sensor.*_estimated_distance*
 
 template:
   - sensor:
