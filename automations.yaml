@@ -147,7 +147,7 @@
   mode: parallel
   max: 4
 - id: '1722194364076'
-  alias: Lifecycle Print Failed
+  alias: Lifecycle Print Stopped
   description: ''
   triggers:
   - entity_id:
@@ -173,8 +173,42 @@
       object_name: '{{states("sensor."+printer+"_object") }}'
   - data:
       target: '#3dprint-info'
-      message: '  ❌ {% if display_name != object_name %}@{{display_name}}, {% endif
-        %}{{object_name}} failed. Check the print room for more details on what happened.
+      message: '⏹️ {% if display_name != object_name %}@{{display_name}}, {% endif
+        %}{{object_name}} stopped. Check the print room for more details on what happened.
+        {{states(''input_text.''+printer+''_stream'')}}'
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
+  mode: parallel
+  max: 4
+- id: '1740355200000'
+  alias: Lifecycle Print Error
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - error
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+  conditions: []
+  actions:
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+  - data:
+      target: '#3dprint-info'
+      message: '🚨 {% if display_name != object_name %}@{{display_name}}, {% endif
+        %}{{object_name}} encountered an error. Check the printer immediately.
         {{states(''input_text.''+printer+''_stream'')}}'
       data:
         username: '{{ printer | capitalize }}'
