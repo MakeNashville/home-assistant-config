@@ -1,0 +1,45 @@
+name: Deploy to Home Assistant
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - automations.yaml
+      - scripts.yaml
+      - configuration.yaml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest config on HA
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/shell_command/git_pull"
+
+      # Give git pull a moment to finish before reloading
+      - name: Wait for pull
+        run: sleep 5
+
+      - name: Reload automations
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/automation/reload"
+
+      - name: Reload scripts
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/script/reload"
+
+      - name: Reload core config (templates)
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/homeassistant/reload_core_config"
