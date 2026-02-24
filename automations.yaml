@@ -88,6 +88,8 @@
       minutes: 0
       seconds: 10
     trigger: state
+    from:
+    - prepare
   conditions: []
   actions:
   - variables:
@@ -126,6 +128,8 @@
       minutes: 0
       seconds: 5
     trigger: state
+    from:
+    - running
   conditions: []
   actions:
   - variables:
@@ -159,6 +163,8 @@
       minutes: 0
       seconds: 10
     trigger: state
+    from:
+    - running
   conditions: []
   actions:
   - variables:
@@ -239,7 +245,7 @@
   - condition: template
     value_template: '{% set desc = trigger.json.data.object.description %}
 
-      {{ desc.startswith(''3D Print Filament Purchase'') }}
+      {{ desc.startswith(''3D Print Filament – Self Service'') }}
 
       '
     enabled: true
@@ -283,4 +289,93 @@
       data:
         addon: core_ssh
         input: /config/git_backup.sh
+  mode: single
+- id: '1769271913348'
+  alias: Facilities Temperature Alert
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+    below: 60
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  conditions: []
+  actions:
+  - action: notify.make_nashville
+    metadata: {}
+    data:
+      target: '#facilities-feed'
+      data:
+        icon: warning
+        username: Alert
+      message: '"{{ trigger.to_state.name }} is currently {{ trigger.to_state.state
+        }}, it may continue to drop."'
+  mode: single
+- id: '1769288567041'
+  alias: Facilities Pulse
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    hours: /6
+  conditions: []
+  actions:
+  - action: notify.make_nashville
+    metadata: {}
+    data:
+      message: '```
+
+        Area               Temp   Humidity
+
+        ----------------------------------
+
+        {% for device_id in label_devices(''facilities_pulse'') -%}
+
+        {% set entities = device_entities(device_id) -%}
+
+        {% set temp_entity = entities | reject(''search'', ''display_temperature'')
+        | select(''search'', ''temperature'') | first | default(none) -%}
+
+        {% set humidity_entity = entities | select(''search'', ''humidity'') | first
+        | default(none) -%}
+
+        {% if temp_entity and states(temp_entity) not in [''unknown'', ''unavailable'',
+        none] -%}
+
+        {% set area = area_name(temp_entity) | default(''Unknown'') -%}
+
+        {{ "%-17s" | format(area) }} {{ "%5.1f°F" | format(states(temp_entity) | float(0))
+        }}  {{ states(humidity_entity) | float(0) | round(0) | int }}%
+
+        {% endif -%}
+
+        {% endfor -%}
+
+        {{ "%-17s" | format(''Outside'') }} {{ "%5.1f°F" | format(state_attr(''weather.forecast_home'',
+        ''temperature'') | float(0)) }}  {{ state_attr(''weather.forecast_home'',
+        ''humidity'') | int }}%
+
+
+        Power:               {{ states(''sensor.total_power_alarm_power_failure_alarm'')
+        | capitalize }}
+
+        Executive Bathroom:  {{ state_translated(''binary_sensor.water_leak_sensor'')
+        }}
+
+        3D Print VOC Index:  {{ states(''sensor.air_quality_voc_index'') }}
+
+        Kaeser Air Pressure: {{ states(''sensor.kaeser_monitor_system_pressure'')
+        | float(0) | round(1) }} psi
+
+        ```'
+      data:
+        icon: information_source
+        username: Facilities Pulse
+      target: '#facilities-feed'
   mode: single

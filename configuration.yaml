@@ -13,8 +13,22 @@ homeassistant:
   allowlist_external_dirs:
     - "/config/www/snapshots"
 
-shell_command:
-  git_pull: "git -C /config pull origin main"
+recorder:
+  exclude:
+    domains:
+      - camera
+      - device_tracker
+      - person
+      - weather
+    entities:
+      - sun.sun # Don't record sun data
+    entity_globs:
+      - sensor.*_wi_fi_signal
+      - sensor.*_fan_speed
+      - sensor.*_target_temperature
+      - sensor.*_speed_profile
+      - sensor.*_current_layer_height
+      - sensor.*_ams_tray_*
 
 template:
   - sensor:
