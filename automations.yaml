@@ -273,6 +273,53 @@
     action: notify.make_nashville
   mode: parallel
   max: 4
+- id: '1740400001000'
+  alias: Lifecycle Print Paused
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - pause
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+    from:
+    - running
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - paused
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+    from:
+    - printing
+  conditions: []
+  actions:
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+      progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
+  - data:
+      target: '#3dprint-info'
+      message: '⏸️ {% if display_name != object_name %}@{{display_name}}, {% endif
+        %}{{object_name}} paused at {{progress}}%. {{states(''input_text.''+printer+''_stream'')}}'
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
+  mode: parallel
+  max: 4
 - id: '1722445886802'
   alias: Roundup
   description: ''
@@ -363,6 +410,13 @@
     metadata: {}
     data:
       message: Kaeser Overpressurization Event!
+  - action: notify.make_nashville
+    data:
+      target: '#facilities-feed'
+      message: "\U0001F6A8 Kaeser Overpressurization Event detected!"
+      data:
+        icon: warning
+        username: Kaeser
   mode: single
 - id: '1767137243013'
   alias: Stripe – 3D Print Filament Purchase
@@ -412,16 +466,21 @@
   mode: single
 - id: backup_config_github
   alias: Backup Config to GitHub
-  description: Automatically backup HA config to GitHub
+  description: Automatically backup HA config to GitHub then reload
   triggers:
   - at: 03:00:00
     trigger: time
+  - trigger: homeassistant
+    event: start
   actions:
   - sequence:
     - action: hassio.addon_stdin
       data:
         addon: core_ssh
         input: /config/git_backup.sh
+    - action: automation.reload
+    - action: script.reload
+    - action: homeassistant.reload_core_config
   mode: single
 - id: '1769271913348'
   alias: Facilities Temperature Alert

@@ -120,16 +120,16 @@ template:
 
       - name: "Pineapple Display Name"
         state: >
-          {{states('sensor.pineapple_current_object')}}
+          {{states('sensor.pineapple_current_object').split('-')[0]}}
       - name: "Pineapple Object"
         state: >
-          {{states('sensor.pineapple_current_object')}}
+          {{states('sensor.pineapple_current_object').replace(states('sensor.pineapple_display_name') + '-', '')}}
       - name: "Pineapple Last Display Name"
         state: >
-          {{states('sensor.pineapple_current_object')}}
+          {{states('sensor.pineapple_current_object').split('-')[0]}}
       - name: "Pineapple Last Object"
         state: >
-          {{states('sensor.pineapple_current_object')}}
+          {{states('sensor.pineapple_current_object').replace(states('sensor.pineapple_last_display_name') + '-', '')}}
 
       - name: "Dragonfruit Display Name"
         state: >
