@@ -112,14 +112,23 @@
       end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
         %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
         %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
+      print_weight: '{{states("sensor."+printer+"_print_weight", with_unit=True) if
+        states("sensor."+printer+"_print_weight") not in ["unknown","unavailable",""]
+        else ""}}'
+      total_layers: '{{states("sensor."+printer+"_total_layer_count") if states("sensor."+printer+"_total_layer_count")
+        not in ["unknown","unavailable",""] else states("sensor."+printer+"_total_layers")
+        if states("sensor."+printer+"_total_layers") not in ["unknown","unavailable",""]
+        else ""}}'
+      bed_type: '{{states("sensor."+printer+"_print_bed_type") if states("sensor."+printer+"_print_bed_type")
+        not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: '#3dprint-info'
       message: "🎉 {% if display_name != object_name %}@{{display_name}},
-        {% endif %}{{object_name}} is starting! Printing {{states(\"sensor.\"+printer+\"_print_weight\",
-        with_unit=True)}} over {{states(\"sensor.\"+printer+\"_total_layer_count\")
-        }} layers on a {{states(\"sensor.\"+printer+\"_print_bed_type\") }}. Estimated
-        duration {{time_until(end_dt)}}{% if end_dt %} (ends at {{ end_dt | as_local
-        | strftime('%I:%M %p') }}){% endif %} {{states('input_text.'+printer+'_stream')}}"
+        {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
+        %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
+        %} on a {{bed_type}}{% endif %}. Estimated duration {{time_until(end_dt)}}{%
+        if end_dt %} (ends at {{ end_dt | as_local | strftime('%I:%M %p') }}){% endif
+        %} {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
