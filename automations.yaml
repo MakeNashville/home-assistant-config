@@ -8,6 +8,7 @@
     - sensor.mango_current_layer
     - sensor.strawberry_current_layer
     - sensor.huckleberry_current_layer
+    - sensor.pineapple_current_layer
     for:
       hours: 0
       minutes: 0
@@ -21,6 +22,7 @@
     - sensor.mango_current_layer
     - sensor.strawberry_current_layer
     - sensor.huckleberry_current_layer
+    - sensor.pineapple_current_layer
     for:
       hours: 0
       minutes: 0
@@ -34,6 +36,7 @@
     - sensor.mango_print_progress
     - sensor.strawberry_print_progress
     - sensor.huckleberry_print_progress
+    - sensor.pineapple_print_progress
     for:
       hours: 0
       minutes: 0
@@ -47,6 +50,7 @@
     - sensor.mango_print_progress
     - sensor.strawberry_print_progress
     - sensor.huckleberry_print_progress
+    - sensor.pineapple_print_progress
     for:
       hours: 0
       minutes: 0
@@ -90,21 +94,32 @@
     trigger: state
     from:
     - prepare
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - printing
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
   conditions: []
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name")}}'
       object_name: '{{states("sensor."+printer+"_object") }}'
+      end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
+        %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
+        %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
   - data:
       target: '#3dprint-info'
-      message: "\U0001F389 {% if display_name != object_name %}@{{display_name}},
+      message: "🎉 {% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is starting! Printing {{states(\"sensor.\"+printer+\"_print_weight\",
         with_unit=True)}} over {{states(\"sensor.\"+printer+\"_total_layer_count\")
         }} layers on a {{states(\"sensor.\"+printer+\"_print_bed_type\") }}. Estimated
-        duration {{time_until(as_datetime(states(\"sensor.\"+printer+\"_end_time\",
-        2))) }} (ends at {{ as_datetime(states(\"sensor.\"+printer+\"_end_time\",
-        2)) }}) {{states('input_text.'+printer+'_stream')}}"
+        duration {{time_until(end_dt)}}{% if end_dt %} (ends at {{ end_dt | as_local
+        | strftime('%I:%M %p') }}){% endif %} {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -130,16 +145,34 @@
     trigger: state
     from:
     - running
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - completed
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+    from:
+    - printing
   conditions: []
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_last_display_name") }}'
       object_name: '{{states("sensor."+printer+"_last_object") }}'
+      job_secs: '{{states("sensor."+printer+"_print_job_time") | int(0)}}'
+      job_time_str: '{%- set h = (job_secs // 3600) | int %}{%- set m = ((job_secs
+        % 3600) // 60) | int %}{{ h }}h {{ "%02d" | format(m) }}m'
+      used_weight: '{{states("sensor."+printer+"_used_material_weight", with_unit=True)
+        if states("sensor."+printer+"_used_material_weight") not in ["unknown","unavailable"]
+        else ""}}'
   - data:
       target: '#3dprint-info'
       message: ✅ {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-        finished! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
+        finished in {{job_time_str}}{% if used_weight %}, used {{used_weight}}{% endif
+        %}! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -165,17 +198,29 @@
     trigger: state
     from:
     - running
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - stopped
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+    from:
+    - printing
   conditions: []
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
+      progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
       target: '#3dprint-info'
       message: '⏹️ {% if display_name != object_name %}@{{display_name}}, {% endif
-        %}{{object_name}} stopped. Check the print room for more details on what happened.
-        {{states(''input_text.''+printer+''_stream'')}}'
+        %}{{object_name}} stopped at {{progress}}%. Check the print room for more
+        details on what happened. {{states(''input_text.''+printer+''_stream'')}}'
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -192,6 +237,7 @@
     - sensor.strawberry_print_status
     - sensor.papaya_print_status
     - sensor.huckleberry_print_status
+    - sensor.pineapple_print_status
     to:
     - error
     for:
@@ -205,11 +251,13 @@
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
+      error_info: '{{states("sensor."+printer+"_print_error") if states("sensor."+printer+"_print_error")
+        not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: '#3dprint-info'
       message: '🚨 {% if display_name != object_name %}@{{display_name}}, {% endif
-        %}{{object_name}} encountered an error. Check the printer immediately.
-        {{states(''input_text.''+printer+''_stream'')}}'
+        %}{{object_name}} encountered an error{% if error_info %}: {{error_info}}{%
+        endif %}. Check the printer immediately. {{states(''input_text.''+printer+''_stream'')}}'
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -226,7 +274,7 @@
   - condition: template
     value_template: |-
       {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
-      {% set not_printing = ['unavailable','idle','offline','finish','failed','error','unknown'] %}
+      {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown'] %}
       {% set ns = namespace(active=false) %}
       {% for p in printers %}{% if states('sensor.' ~ p ~ '_print_status') not in not_printing %}{% set ns.active = true %}{% endif %}{% endfor %}
       {{ ns.active }}
@@ -245,7 +293,7 @@
           {"id":"huckleberry","emoji":":huckleberry:"},
           {"id":"pineapple","emoji":":pineapple:"},
         ] %}
-        {%- set not_printing = ['unavailable','idle','offline','finish','failed','error','unknown'] %}
+        {%- set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown'] %}
         {%- set ns = namespace(active=0) %}
         {%- for p in printers %}
           {%- if states('sensor.' ~ p.id ~ '_print_status') not in not_printing %}
@@ -261,9 +309,12 @@
           {%- set status_labels = {
             'idle': 'Ready',
             'finish': 'Finished',
+            'completed': 'Finished',
             'failed': 'Stopped',
+            'stopped': 'Stopped',
             'error': 'Error',
             'pause': 'Paused',
+            'paused': 'Paused',
             'offline': 'Offline',
             'unavailable': 'Offline',
             'unknown': 'Offline',
