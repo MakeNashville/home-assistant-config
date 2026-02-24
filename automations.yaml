@@ -379,3 +379,17 @@
         username: Facilities Pulse
       target: '#facilities-feed'
   mode: single
+- id: '1769999000001'
+  alias: Purge Kaeser Pressure History
+  description: Keep only 3 days of Kaeser pressure data to limit DB growth
+  triggers:
+  - trigger: time
+    at: '03:30:00'
+  conditions: []
+  actions:
+  - action: recorder.purge_entities
+    data:
+      entity_id:
+      - sensor.kaeser_monitor_system_pressure
+      keep_days: 3
+  mode: single
