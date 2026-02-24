@@ -222,25 +222,54 @@
   triggers:
   - hours: /2
     trigger: time_pattern
-  conditions: []
+  conditions:
+  - condition: template
+    value_template: |-
+      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
+      {% set not_printing = ['unavailable','idle','offline','finish','failed','error','unknown'] %}
+      {% set ns = namespace(active=false) %}
+      {% for p in printers %}{% if states('sensor.' ~ p ~ '_print_status') not in not_printing %}{% set ns.active = true %}{% endif %}{% endfor %}
+      {{ ns.active }}
   actions:
   - data:
       target: '#3dprint-info'
       data:
         username: Fruitbasket
         icon: basket
-      message: "{# --- config: list your printers here --- #}\n{% set printers = [\n
-        \ {\"id\":\"kiwi\", \"emoji\":\":kiwifruit:\"},\n  {\"id\":\"mango\", \"emoji\":\":mango:\"},\n
-        \ {\"id\":\"papaya\", \"emoji\":\":papaya:\"},\n  {\"id\":\"strawberry\",
-        \"emoji\":\":strawberry:\"},\n  {\"id\":\"huckleberry\", \"emoji\":\":huckleberry:\"},\n]
-        %}\n\n{# --- config: statuses that are NOT actively printing --- #}\n{% set
-        not_printing = ['unavailable','idle','offline','finish','failed'] %}\n\n{%-
-        macro line(p) -%}\n  {%- set st = states('sensor.' ~ p.id ~ '_print_status')
-        -%}\n  {%- if st not in not_printing -%}\n    {{ p.emoji }} @{{ states('sensor.'
-        ~ p.id ~ '_display_name') }} printing {{ states('sensor.' ~ p.id ~ '_object')
-        }}. Finishes at {{ states('sensor.' ~ p.id ~ '_end_time') }}.\n  {%- else
-        -%}\n    {{ p.emoji }} {{ st }}\n  {%- endif -%}\n{%- endmacro -%}\n\n\nBi-hourly
-        roundup!\n{%- for p in printers %}\n{{ line(p) }}\n{%- endfor %}"
+      message: |-
+        {%- set printers = [
+          {"id":"kiwi","emoji":":kiwifruit:"},
+          {"id":"mango","emoji":":mango:"},
+          {"id":"papaya","emoji":":papaya:"},
+          {"id":"strawberry","emoji":":strawberry:"},
+          {"id":"huckleberry","emoji":":huckleberry:"},
+          {"id":"pineapple","emoji":":pineapple:"},
+        ] %}
+        {%- set not_printing = ['unavailable','idle','offline','finish','failed','error','unknown'] %}
+        {%- set ns = namespace(active=0) %}
+        {%- for p in printers %}
+          {%- if states('sensor.' ~ p.id ~ '_print_status') not in not_printing %}
+            {%- set ns.active = ns.active + 1 %}
+          {%- endif %}
+        {%- endfor %}
+        {%- macro line(p) %}
+          {%- set st = states('sensor.' ~ p.id ~ '_print_status') %}
+          {%- set display = states('sensor.' ~ p.id ~ '_display_name') %}
+          {%- set obj = states('sensor.' ~ p.id ~ '_object') %}
+          {%- set display = p.id | capitalize if display in ['unknown','unavailable',''] else display %}
+          {%- set obj = display if obj in ['unknown','unavailable',''] else obj %}
+          {%- if st not in not_printing %}
+            {%- set progress = states('sensor.' ~ p.id ~ '_print_progress') %}
+            {%- set end_dt = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
+            {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ end_dt | as_local | strftime('%I:%M %p') }}{%- endif %}
+          {%- else %}
+            {{- p.emoji }} {{ st }}
+          {%- endif %}
+        {%- endmacro %}
+        Bi-hourly roundup — {{ ns.active }} printer{{ 's' if ns.active != 1 else '' }} active
+        {%- for p in printers %}
+        {{ line(p) }}
+        {%- endfor %}
     action: notify.make_nashville
     enabled: true
   mode: single
