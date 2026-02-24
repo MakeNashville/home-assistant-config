@@ -54,8 +54,6 @@ recorder:
       - fan.*_cooling_fan
       # Distance / proximity sensors
       - sensor.*_estimated_distance*
-      # Air quality (high-frequency, current value sufficient)
-      - sensor.air_quality_*
 
 template:
   - sensor:
