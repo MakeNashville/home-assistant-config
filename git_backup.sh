@@ -6,7 +6,7 @@ notify() {
   curl -sf -X POST \
     -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "{\"message\":\"$msg\",\"target\":\"#facilities-feed\",\"data\":{\"username\":\"Git Backup\",\"icon\":\"floppy_disk\"}}" \
+    -d "{\"message\":\"$msg\",\"target\":\"#deployment-feed\",\"data\":{\"username\":\"Git Backup\",\"icon\":\"floppy_disk\"}}" \
     http://supervisor/core/api/services/notify/make_nashville || true
 }
 
