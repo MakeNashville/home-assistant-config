@@ -14,7 +14,7 @@ homeassistant:
     - "/config/www/snapshots"
 
 shell_command:
-  git_pull: "git -C /config pull origin main"
+  git_pull: "git -C /config pull --rebase origin main"
 
 recorder:
   purge_keep_days: 14
