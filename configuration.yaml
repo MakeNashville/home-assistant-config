@@ -13,6 +13,9 @@ homeassistant:
   allowlist_external_dirs:
     - "/config/www/snapshots"
 
+shell_command:
+  git_pull: "git -C /config pull origin main"
+
 recorder:
   exclude:
     domains:
