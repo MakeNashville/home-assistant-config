@@ -412,7 +412,7 @@
   mode: single
 - id: backup_config_github
   alias: Backup Config to GitHub
-  description: Automatically backup HA config to GitHub
+  description: Automatically backup HA config to GitHub then reload
   triggers:
   - at: 03:00:00
     trigger: time
@@ -422,6 +422,9 @@
       data:
         addon: core_ssh
         input: /config/git_backup.sh
+    - action: automation.reload
+    - action: script.reload
+    - action: homeassistant.reload_core_config
   mode: single
 - id: '1769271913348'
   alias: Facilities Temperature Alert
