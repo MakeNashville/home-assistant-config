@@ -258,12 +258,22 @@
           {%- set obj = states('sensor.' ~ p.id ~ '_object') %}
           {%- set display = p.id | capitalize if display in ['unknown','unavailable',''] else display %}
           {%- set obj = display if obj in ['unknown','unavailable',''] else obj %}
+          {%- set status_labels = {
+            'idle': 'Ready',
+            'finish': 'Finished',
+            'failed': 'Stopped',
+            'error': 'Error',
+            'pause': 'Paused',
+            'offline': 'Offline',
+            'unavailable': 'Offline',
+            'unknown': 'Offline',
+          } %}
           {%- if st not in not_printing %}
             {%- set progress = states('sensor.' ~ p.id ~ '_print_progress') %}
             {%- set end_dt = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
             {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ end_dt | as_local | strftime('%I:%M %p') }}{%- endif %}
           {%- else %}
-            {{- p.emoji }} {{ st }}
+            {{- p.emoji }} {{ status_labels.get(st, st | capitalize) }}
           {%- endif %}
         {%- endmacro %}
         Bi-hourly roundup — {{ ns.active }} printer{{ 's' if ns.active != 1 else '' }} active
