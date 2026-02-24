@@ -18,7 +18,9 @@ Home Assistant configuration for the [MakeNashville](https://makenashville.org) 
 
 ## Deploy
 
-Pushing to `main` automatically deploys to the HA instance via GitHub Actions (`.github/workflows/deploy.yml`). Changes to `automations.yaml`, `scripts.yaml`, or `configuration.yaml` trigger a `git pull` on the HA host followed by a config reload.
+Merging a PR to `main` automatically deploys to the HA instance via GitHub Actions (`.github/workflows/deploy.yml`). Changes to `automations.yaml`, `scripts.yaml`, or `configuration.yaml` trigger a `git pull` on the HA host followed by a config reload.
+
+**`main` is a protected branch — all changes must go through a pull request.** Direct pushes are not allowed.
 
 ### Initial HA host setup
 
