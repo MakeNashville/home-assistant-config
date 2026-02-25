@@ -72,6 +72,18 @@ recorder:
 
 template:
   - sensor:
+      - name: "Air Quality Overall Status"
+        unique_id: air_quality_overall_status
+        state: >
+          {% set co2  = states('sensor.air_quality_carbon_dioxide') | int(0) %}
+          {% set voc  = states('sensor.air_quality_voc_index')      | int(0) %}
+          {% set nox  = states('sensor.air_quality_nox_index')      | int(0) %}
+          {% set pm25 = states('sensor.air_quality_pm2_5')          | float(0) %}
+          {% if co2 > 1500 or voc > 300 or nox > 250 or pm25 > 55.4 %}Dangerous
+          {% elif co2 > 1200 or voc > 200 or nox > 150 or pm25 > 35.4 %}Poor
+          {% elif co2 > 800  or voc > 150 or nox > 50  or pm25 > 12 %}Moderate
+          {% else %}Good{% endif %}
+
       - name: "Kiwi Display Name"
         state: >
           {{states('sensor.kiwi_gcode_filename').split('-')[0]}}

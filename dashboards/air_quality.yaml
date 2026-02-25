@@ -1,11 +1,48 @@
 title: 3D Print Air Quality
 views:
-  - title: Overview
+  - title: Air Quality
     path: overview
     icon: mdi:air-filter
     cards:
 
-      # ── Current readings ────────────────────────────────────────────
+      # ── Danger / warning banner (hidden when Good or Moderate) ───────
+      - type: conditional
+        conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity: sensor.air_quality_overall_status
+                state: Poor
+              - condition: state
+                entity: sensor.air_quality_overall_status
+                state: Dangerous
+        card:
+          type: markdown
+          content: >
+            {% set st = states('sensor.air_quality_overall_status') %}
+            {% set co2  = states('sensor.air_quality_carbon_dioxide') | int(0) %}
+            {% set voc  = states('sensor.air_quality_voc_index') | int(0) %}
+            {% set nox  = states('sensor.air_quality_nox_index') | int(0) %}
+            {% set pm25 = states('sensor.air_quality_pm2_5') | float(0) %}
+
+            {% if st == 'Dangerous' %}## ⛔ DANGEROUS AIR QUALITY — VENTILATE IMMEDIATELY
+            {% else %}## ⚠️ POOR AIR QUALITY — Ventilation Recommended
+            {% endif %}
+            {% if co2  > 1200 %}• CO₂ at **{{ co2 }} ppm** — unhealthy above 1,200 ppm (impairs cognition)
+            {% endif %}{% if voc  > 200 %}• VOC Index at **{{ voc }}** — unhealthy above 200 (active emissions present)
+            {% endif %}{% if nox  > 150 %}• NOx Index at **{{ nox }}** — investigate combustion or outdoor source
+            {% endif %}{% if pm25 > 35.4 %}• PM2.5 at **{{ pm25 | round(1) }} µg/m³** — EPA unhealthy above 35.4 µg/m³
+            {% endif %}
+
+      # ── Status header ────────────────────────────────────────────────
+      - type: markdown
+        content: >
+          {% set st = states('sensor.air_quality_overall_status') %}
+          {% set icon = '🟢' if st == 'Good' else '🟡' if st == 'Moderate' else '🟠' if st == 'Poor' else '🔴' %}
+          ## {{ icon }} 3D Print Room — Air Quality {{ st }}
+          *Updated {{ now().strftime('%-I:%M %p') }}*
+
+      # ── Primary pollutant gauges ─────────────────────────────────────
       - type: grid
         columns: 4
         square: false
@@ -37,29 +74,66 @@ views:
             entity: sensor.air_quality_nox_index
             name: NOx Index
             min: 0
-            max: 400
+            max: 300
             needle: true
             severity:
               green: 0
-              yellow: 20
-              red: 50
+              yellow: 50
+              red: 150
 
           - type: gauge
             entity: sensor.air_quality_pm2_5
             name: PM2.5
             unit: µg/m³
             min: 0
-            max: 100
+            max: 150
             needle: true
             severity:
               green: 0
               yellow: 12
               red: 35
 
+      # ── Secondary readings ───────────────────────────────────────────
       - type: grid
-        columns: 2
+        columns: 5
         square: false
         cards:
+          - type: gauge
+            entity: sensor.air_quality_pm1
+            name: PM1
+            unit: µg/m³
+            min: 0
+            max: 50
+            needle: true
+            severity:
+              green: 0
+              yellow: 5
+              red: 15
+
+          - type: gauge
+            entity: sensor.air_quality_pm10
+            name: PM10
+            unit: µg/m³
+            min: 0
+            max: 200
+            needle: true
+            severity:
+              green: 0
+              yellow: 54
+              red: 154
+
+          - type: gauge
+            entity: sensor.air_quality_pm0_3
+            name: PM0.3
+            unit: "#/dL"
+            min: 0
+            max: 8000
+            needle: true
+            severity:
+              green: 0
+              yellow: 500
+              red: 1500
+
           - type: gauge
             entity: sensor.air_quality_temperature
             name: Temperature
@@ -68,8 +142,8 @@ views:
             needle: true
             severity:
               green: 65
-              yellow: 85
-              red: 90
+              yellow: 80
+              red: 88
 
           - type: gauge
             entity: sensor.air_quality_humidity
@@ -81,45 +155,119 @@ views:
             severity:
               green: 30
               yellow: 60
-              red: 75
+              red: 70
 
-      # ── 24-hour trends ───────────────────────────────────────────────
-      - type: history-graph
-        title: CO₂ (ppm)
-        hours_to_show: 24
-        entities:
-          - entity: sensor.air_quality_carbon_dioxide
-            name: CO₂
+      # ── Education cards ──────────────────────────────────────────────
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+
+          - type: markdown
+            content: |
+              {% set v = states('sensor.air_quality_carbon_dioxide') | int(0) %}
+              {% if v < 800 %}### 🟢 CO₂ — {{ v }} ppm — Good
+              {% elif v < 1200 %}### 🟡 CO₂ — {{ v }} ppm — Moderate
+              {% elif v < 1500 %}### 🟠 CO₂ — {{ v }} ppm — Poor
+              {% else %}### 🔴 CO₂ — {{ v }} ppm — Dangerous{% endif %}
+
+              {% if v < 800 %}Fresh, well-ventilated air. No action needed.
+              {% elif v < 1000 %}Mild stuffiness. Open a door or window.
+              {% elif v < 1200 %}Ventilate now — cognitive effects start around 1,000 ppm.
+              {% elif v < 1500 %}Headaches and fatigue likely. Ventilate immediately.
+              {% else %}Severe impairment risk. Leave area and ventilate.{% endif %}
+
+              **3D printing context:** CO₂ doesn't come from printers — it signals poor ventilation. The same stale air that traps CO₂ concentrates the VOCs and particles your printers emit. Source: ASHRAE 62.1, NIOSH.
+
+          - type: markdown
+            content: |
+              {% set v = states('sensor.air_quality_voc_index') | int(0) %}
+              {% if v < 150 %}### 🟢 VOC Index — {{ v }} — Good
+              {% elif v < 200 %}### 🟡 VOC Index — {{ v }} — Moderate
+              {% elif v < 300 %}### 🟠 VOC Index — {{ v }} — Poor
+              {% else %}### 🔴 VOC Index — {{ v }} — Dangerous{% endif %}
+
+              {% if v < 100 %}Cleaner than typical indoor baseline (100 = average room).
+              {% elif v < 150 %}Normal indoor background. No action needed.
+              {% elif v < 200 %}Elevated VOCs. Increase ventilation.
+              {% elif v < 300 %}Active source present. Ventilate and identify source.
+              {% else %}Leave area and ventilate immediately.{% endif %}
+
+              **Emissions by material:** PLA (low), PETG (medium), ABS/ASA (high, 150–300+), Nylon (highest). Enclosures with activated carbon filtration cut VOCs by 90%+. Source: Sensirion VOC Index application note.
+
+          - type: markdown
+            content: |
+              {% set v = states('sensor.air_quality_nox_index') | int(0) %}
+              {% if v < 50 %}### 🟢 NOx Index — {{ v }} — Good
+              {% elif v < 150 %}### 🟡 NOx Index — {{ v }} — Moderate
+              {% elif v < 250 %}### 🟠 NOx Index — {{ v }} — Poor
+              {% else %}### 🔴 NOx Index — {{ v }} — Dangerous{% endif %}
+
+              {% if v < 50 %}Normal indoor air quality.
+              {% elif v < 150 %}Mildly elevated. Possible outdoor pollution or combustion nearby.
+              {% elif v < 250 %}Respiratory irritation risk. Investigate and ventilate.
+              {% else %}Leave the area — significant combustion or pollution source nearby.{% endif %}
+
+              **3D printing context:** FDM printers produce minimal NOx at normal temps. Spikes indicate an external source: combustion, diesel, laser cutters, or resin printers. Source: Sensirion NOx Index application note, WHO.
+
+          - type: markdown
+            content: |
+              {% set v = states('sensor.air_quality_pm2_5') | float(0) %}
+              {% if v < 12 %}### 🟢 PM2.5 — {{ v | round(1) }} µg/m³ — Good
+              {% elif v < 35.4 %}### 🟡 PM2.5 — {{ v | round(1) }} µg/m³ — Moderate
+              {% elif v < 55.4 %}### 🟠 PM2.5 — {{ v | round(1) }} µg/m³ — Unhealthy (sensitive groups)
+              {% elif v < 150.4 %}### 🔴 PM2.5 — {{ v | round(1) }} µg/m³ — Unhealthy
+              {% else %}### ⛔ PM2.5 — {{ v | round(1) }} µg/m³ — Hazardous{% endif %}
+
+              {% if v < 12 %}EPA AQI: Good. Safe for all individuals.
+              {% elif v < 35.4 %}Sensitive individuals should reduce time in area.
+              {% elif v < 55.4 %}Reduce exposure. Improve filtration or ventilation.
+              {% elif v < 150.4 %}All individuals at risk. Ventilate immediately.
+              {% else %}Evacuate. Hazardous to all.{% endif %}
+
+              **Emissions by material:** PLA (20–100 µg/m³), PETG (30–100), ABS (50–200+), Nylon (200+). Particles penetrate deep into lungs — HEPA-filtered enclosures reduce emissions 90%+. Source: EPA AQI, peer-reviewed FDM emission studies.
+
+      # ── 24-hour history ──────────────────────────────────────────────
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: history-graph
+            title: CO₂ — 24h (ppm)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.air_quality_carbon_dioxide
+                name: CO₂
+
+          - type: history-graph
+            title: VOC & NOx Index — 24h
+            hours_to_show: 24
+            entities:
+              - entity: sensor.air_quality_voc_index
+                name: VOC Index
+              - entity: sensor.air_quality_nox_index
+                name: NOx Index
+
+          - type: history-graph
+            title: Particulates — 24h (µg/m³)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.air_quality_pm2_5
+                name: PM2.5
+              - entity: sensor.air_quality_pm1
+                name: PM1
+              - entity: sensor.air_quality_pm10
+                name: PM10
+
+          - type: history-graph
+            title: PM0.3 Ultrafine Count — 24h (#/dL)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.air_quality_pm0_3
+                name: PM0.3
 
       - type: history-graph
-        title: VOC & NOx Index
-        hours_to_show: 24
-        entities:
-          - entity: sensor.air_quality_voc_index
-            name: VOC Index
-          - entity: sensor.air_quality_nox_index
-            name: NOx Index
-
-      - type: history-graph
-        title: Particulates (µg/m³)
-        hours_to_show: 24
-        entities:
-          - entity: sensor.air_quality_pm2_5
-            name: PM2.5
-          - entity: sensor.air_quality_pm1
-            name: PM1
-          - entity: sensor.air_quality_pm10
-            name: PM10
-
-      - type: history-graph
-        title: Ultrafine Particles PM0.3 (#/dL)
-        hours_to_show: 24
-        entities:
-          - entity: sensor.air_quality_pm0_3
-            name: PM0.3
-
-      - type: history-graph
-        title: Temperature & Humidity
+        title: Temperature & Humidity — 24h
         hours_to_show: 24
         entities:
           - entity: sensor.air_quality_temperature

@@ -680,3 +680,61 @@
         ──────────────────────
         Total: {{ ns.total_ok }} ✅  {{ ns.total_fail }} ❌
   mode: single
+- id: '1740600000002'
+  alias: Air Quality Alert
+  description: Notify #facilities-feed when 3D print room air quality degrades or recovers
+  triggers:
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 3
+    id: degraded
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Good
+    - Moderate
+    from:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 5
+    id: recovered
+  conditions: []
+  actions:
+  - variables:
+      co2: '{{ states("sensor.air_quality_carbon_dioxide") }}'
+      voc: '{{ states("sensor.air_quality_voc_index") }}'
+      nox: '{{ states("sensor.air_quality_nox_index") }}'
+      pm25: '{{ states("sensor.air_quality_pm2_5") }}'
+      status: '{{ states("sensor.air_quality_overall_status") }}'
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: degraded
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: '#facilities-feed'
+          message: >
+            {% if status == 'Dangerous' %}⛔{% else %}⚠️{% endif %} **3D Print Room Air Quality: {{ status }}**
+            CO₂: {{ co2 }} ppm | VOC: {{ voc }} | NOx: {{ nox }} | PM2.5: {{ pm25 }} µg/m³.
+            {% if status == 'Dangerous' %}Ventilate immediately — stop printing if possible.{% else %}Increase ventilation. Open doors or windows.{% endif %}
+          data:
+            username: Air Quality
+            icon: air_filter
+    - conditions:
+      - condition: trigger
+        id: recovered
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: '#facilities-feed'
+          message: '✅ 3D print room air quality has returned to {{ status }}. CO₂: {{ co2 }} ppm | VOC: {{ voc }} | PM2.5: {{ pm25 }} µg/m³.'
+          data:
+            username: Air Quality
+            icon: air_filter
+  mode: single
