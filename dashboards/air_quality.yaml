@@ -11,7 +11,7 @@ views:
         square: false
         cards:
           - type: gauge
-            entity: sensor.air_quality_co2
+            entity: sensor.air_quality_carbon_dioxide
             name: CO₂
             unit: ppm
             min: 400
@@ -88,7 +88,7 @@ views:
         title: CO₂ (ppm)
         hours_to_show: 24
         entities:
-          - entity: sensor.air_quality_co2
+          - entity: sensor.air_quality_carbon_dioxide
             name: CO₂
 
       - type: history-graph
@@ -110,6 +110,13 @@ views:
             name: PM1
           - entity: sensor.air_quality_pm10
             name: PM10
+
+      - type: history-graph
+        title: Ultrafine Particles PM0.3 (#/dL)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_pm0_3
+            name: PM0.3
 
       - type: history-graph
         title: Temperature & Humidity
