@@ -13,6 +13,16 @@ homeassistant:
   allowlist_external_dirs:
     - "/config/www/snapshots"
 
+lovelace:
+  dashboards:
+    air-quality:
+      mode: yaml
+      title: Air Quality
+      icon: mdi:air-filter
+      filename: dashboards/air_quality.yaml
+      show_in_sidebar: true
+      require_admin: false
+
 shell_command:
   git_pull: "git -C /config pull --rebase origin main"
 

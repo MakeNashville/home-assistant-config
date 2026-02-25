@@ -1,0 +1,146 @@
+title: 3D Print Air Quality
+views:
+  - title: Overview
+    path: overview
+    icon: mdi:air-filter
+    cards:
+
+      # ── Current readings ────────────────────────────────────────────
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.air_quality_carbon_dioxide
+            name: CO₂
+            unit: ppm
+            min: 400
+            max: 2000
+            needle: true
+            severity:
+              green: 400
+              yellow: 800
+              red: 1200
+
+          - type: gauge
+            entity: sensor.air_quality_voc_index
+            name: VOC Index
+            min: 0
+            max: 400
+            needle: true
+            severity:
+              green: 0
+              yellow: 150
+              red: 250
+
+          - type: gauge
+            entity: sensor.air_quality_nox_index
+            name: NOx Index
+            min: 0
+            max: 400
+            needle: true
+            severity:
+              green: 0
+              yellow: 20
+              red: 50
+
+          - type: gauge
+            entity: sensor.air_quality_pm2_5
+            name: PM2.5
+            unit: µg/m³
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 0
+              yellow: 12
+              red: 35
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.air_quality_temperature
+            name: Temperature
+            min: 60
+            max: 95
+            needle: true
+            severity:
+              green: 65
+              yellow: 85
+              red: 90
+
+          - type: gauge
+            entity: sensor.air_quality_humidity
+            name: Humidity
+            unit: "%"
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 30
+              yellow: 60
+              red: 75
+
+      # ── 24-hour trends ───────────────────────────────────────────────
+      - type: history-graph
+        title: CO₂ (ppm)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_carbon_dioxide
+            name: CO₂
+
+      - type: history-graph
+        title: VOC & NOx Index
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_voc_index
+            name: VOC Index
+          - entity: sensor.air_quality_nox_index
+            name: NOx Index
+
+      - type: history-graph
+        title: Particulates (µg/m³)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_pm2_5
+            name: PM2.5
+          - entity: sensor.air_quality_pm1
+            name: PM1
+          - entity: sensor.air_quality_pm10
+            name: PM10
+
+      - type: history-graph
+        title: Ultrafine Particles PM0.3 (#/dL)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_pm0_3
+            name: PM0.3
+
+      - type: history-graph
+        title: Temperature & Humidity
+        hours_to_show: 24
+        entities:
+          - entity: sensor.air_quality_temperature
+            name: Temperature
+          - entity: sensor.air_quality_humidity
+            name: Humidity
+
+      # ── Printer context ───────────────────────────────────────────────
+      - type: glance
+        title: Printer Status
+        columns: 6
+        entities:
+          - entity: sensor.kiwi_print_status
+            name: Kiwi
+          - entity: sensor.mango_print_status
+            name: Mango
+          - entity: sensor.papaya_print_status
+            name: Papaya
+          - entity: sensor.strawberry_print_status
+            name: Strawberry
+          - entity: sensor.huckleberry_print_status
+            name: Huckleberry
+          - entity: sensor.pineapple_print_status
+            name: Pineapple
