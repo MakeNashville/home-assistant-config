@@ -79,7 +79,7 @@
   alias: Lifecycle Print Starting
   description: ''
   triggers:
-  - entity_id:
+  - entity_id: &bambu_status
     - sensor.mango_print_status
     - sensor.kiwi_print_status
     - sensor.strawberry_print_status
@@ -142,12 +142,7 @@
   alias: Lifecycle Print Finished
   description: ''
   triggers:
-  - entity_id:
-    - sensor.mango_print_status
-    - sensor.kiwi_print_status
-    - sensor.strawberry_print_status
-    - sensor.papaya_print_status
-    - sensor.huckleberry_print_status
+  - entity_id: *bambu_status
     to:
     - finish
     for:
@@ -195,12 +190,7 @@
   alias: Lifecycle Print Stopped
   description: ''
   triggers:
-  - entity_id:
-    - sensor.mango_print_status
-    - sensor.kiwi_print_status
-    - sensor.strawberry_print_status
-    - sensor.papaya_print_status
-    - sensor.huckleberry_print_status
+  - entity_id: *bambu_status
     to:
     - failed
     for:
@@ -243,7 +233,7 @@
   alias: Lifecycle Print Error
   description: ''
   triggers:
-  - entity_id:
+  - entity_id: &all_status
     - sensor.mango_print_status
     - sensor.kiwi_print_status
     - sensor.strawberry_print_status
@@ -280,12 +270,7 @@
   alias: Lifecycle Print Paused
   description: ''
   triggers:
-  - entity_id:
-    - sensor.mango_print_status
-    - sensor.kiwi_print_status
-    - sensor.strawberry_print_status
-    - sensor.papaya_print_status
-    - sensor.huckleberry_print_status
+  - entity_id: *bambu_status
     to:
     - pause
     for:
@@ -383,7 +368,8 @@
             {%- set _end_raw = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
             {%- set _tl = states('sensor.' ~ p.id ~ '_print_time_left') | int(0) %}
             {%- set end_dt = _end_raw if _end_raw else (now() + timedelta(seconds=_tl) if _tl > 0 else none) %}
-            {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}{%- endif %}
+            {%- set verb = 'paused on' if st in ['pause', 'paused'] else 'printing' %}
+            {{- p.emoji }} @{{ display }} {{ verb }} {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}{%- endif %}
           {%- else %}
             {{- p.emoji }} {{ status_labels.get(st, st | capitalize) }}
           {%- endif %}
@@ -622,3 +608,28 @@
       - sensor.kaeser_monitor_system_pressure
       keep_days: 3
   mode: single
+- id: '1740500000001'
+  alias: Lifecycle Printer Offline
+  description: ''
+  triggers:
+  - entity_id: *all_status
+    to:
+    - unavailable
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+  - data:
+      target: '#3dprint-info'
+      message: '⚠️ {{ printer | capitalize }} has gone offline.'
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
+  mode: parallel
+  max: 6
