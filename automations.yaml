@@ -136,6 +136,15 @@
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
     action: notify.make_nashville
+  - if:
+    - condition: template
+      value_template: "{{ printer == 'pineapple' }}"
+    then:
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.pineapple_last_job
+      data:
+        value: "{{ states('sensor.pineapple_current_object') }}"
   mode: parallel
   max: 4
 - id: '1722191155564'
@@ -318,7 +327,7 @@
   - condition: template
     value_template: |-
       {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
-      {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown'] %}
+      {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] %}
       {% set ns = namespace(active=false) %}
       {% for p in printers %}{% if states('sensor.' ~ p ~ '_print_status') not in not_printing %}{% set ns.active = true %}{% endif %}{% endfor %}
       {{ ns.active }}
@@ -337,7 +346,7 @@
           {"id":"huckleberry","emoji":":huckleberry:"},
           {"id":"pineapple","emoji":":pineapple:"},
         ] %}
-        {%- set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown'] %}
+        {%- set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] %}
         {%- set ns = namespace(active=0) %}
         {%- for p in printers %}
           {%- if states('sensor.' ~ p.id ~ '_print_status') not in not_printing %}
@@ -352,6 +361,7 @@
           {%- set obj = display if obj in ['unknown','unavailable',''] else obj %}
           {%- set status_labels = {
             'idle': 'Ready',
+            'prepare': 'Preparing',
             'finish': 'Finished',
             'completed': 'Finished',
             'failed': 'Stopped',
@@ -633,3 +643,40 @@
     action: notify.make_nashville
   mode: parallel
   max: 6
+- id: '1740600000001'
+  alias: Weekly Print Summary
+  description: Posts 7-day print totals to #3dprint-info every Sunday at 9am
+  triggers:
+  - trigger: time
+    at: '09:00:00'
+  conditions:
+  - condition: template
+    value_template: '{{ now().weekday() == 6 }}'
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: '#3dprint-info'
+      data:
+        username: Fruitbasket
+        icon: basket
+      message: |-
+        {%- set printers = [
+          {"id":"kiwi","emoji":":kiwifruit:"},
+          {"id":"mango","emoji":":mango:"},
+          {"id":"papaya","emoji":":papaya:"},
+          {"id":"strawberry","emoji":":strawberry:"},
+          {"id":"huckleberry","emoji":":huckleberry:"},
+          {"id":"pineapple","emoji":":pineapple:"},
+        ] %}
+        {%- set ns = namespace(total_ok=0, total_fail=0) %}
+        📊 Weekly Print Summary (last 7 days)
+        {%- for p in printers %}
+          {%- set ok = states('sensor.' ~ p.id ~ '_prints_completed_week') | int(0) %}
+          {%- set fail = states('sensor.' ~ p.id ~ '_prints_failed_week') | int(0) %}
+          {%- set ns.total_ok = ns.total_ok + ok %}
+          {%- set ns.total_fail = ns.total_fail + fail %}
+        {{ p.emoji }} {{ p.id | capitalize }}: {{ ok }} ✅  {{ fail }} ❌
+        {%- endfor %}
+        ──────────────────────
+        Total: {{ ns.total_ok }} ✅  {{ ns.total_fail }} ❌
+  mode: single

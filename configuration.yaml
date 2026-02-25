@@ -16,6 +16,11 @@ homeassistant:
 shell_command:
   git_pull: "git -C /config pull --rebase origin main"
 
+input_text:
+  pineapple_last_job:
+    name: Pineapple Last Job
+    max: 255
+
 recorder:
   purge_keep_days: 14
   exclude:
@@ -126,10 +131,10 @@ template:
           {{states('sensor.pineapple_current_object').replace(states('sensor.pineapple_display_name') + '-', '')}}
       - name: "Pineapple Last Display Name"
         state: >
-          {{states('sensor.pineapple_current_object').split('-')[0]}}
+          {{states('input_text.pineapple_last_job').split('-')[0]}}
       - name: "Pineapple Last Object"
         state: >
-          {{states('sensor.pineapple_current_object').replace(states('sensor.pineapple_last_display_name') + '-', '')}}
+          {{states('input_text.pineapple_last_job').replace(states('sensor.pineapple_last_display_name') + '-', '')}}
 
       - name: "Dragonfruit Display Name"
         state: >
@@ -137,3 +142,90 @@ template:
       - name: "Dragonfruit Object"
         state: >
           {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}
+
+sensor:
+  # Weekly print counts — used by the Sunday metrics automation
+  - platform: history_stats
+    name: Kiwi Prints Completed Week
+    entity_id: sensor.kiwi_print_status
+    state: "finish"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Kiwi Prints Failed Week
+    entity_id: sensor.kiwi_print_status
+    state: "failed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Mango Prints Completed Week
+    entity_id: sensor.mango_print_status
+    state: "finish"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Mango Prints Failed Week
+    entity_id: sensor.mango_print_status
+    state: "failed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Papaya Prints Completed Week
+    entity_id: sensor.papaya_print_status
+    state: "finish"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Papaya Prints Failed Week
+    entity_id: sensor.papaya_print_status
+    state: "failed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Strawberry Prints Completed Week
+    entity_id: sensor.strawberry_print_status
+    state: "finish"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Strawberry Prints Failed Week
+    entity_id: sensor.strawberry_print_status
+    state: "failed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Huckleberry Prints Completed Week
+    entity_id: sensor.huckleberry_print_status
+    state: "finish"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Huckleberry Prints Failed Week
+    entity_id: sensor.huckleberry_print_status
+    state: "failed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Pineapple Prints Completed Week
+    entity_id: sensor.pineapple_print_status
+    state: "completed"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Pineapple Prints Failed Week
+    entity_id: sensor.pineapple_print_status
+    state: "stopped"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
