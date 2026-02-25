@@ -7,6 +7,8 @@ on:
       - automations.yaml
       - scripts.yaml
       - configuration.yaml
+      - git_backup.sh
+      - esphome/**
 
 jobs:
   deploy:

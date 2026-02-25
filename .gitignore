@@ -76,4 +76,7 @@ desktop.ini
 esphome/.esphome/
 esphome/secrets.yaml
 
+# === BLUEPRINTS (built-in HA blueprints, not custom) ===
+blueprints/*/homeassistant/
+
 custom_components/

@@ -98,6 +98,8 @@
     - sensor.pineapple_print_status
     to:
     - printing
+    from:
+    - idle
     for:
       hours: 0
       minutes: 0
@@ -123,12 +125,13 @@
         not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: '#3dprint-info'
-      message: "🎉 {% if display_name != object_name %}@{{display_name}},
+      message: "🖨️ {% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
         %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
-        %} on a {{bed_type}}{% endif %}. Estimated duration {{time_until(end_dt)}}{%
-        if end_dt %} (ends at {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}){% endif
-        %} {{states('input_text.'+printer+'_stream')}}"
+        %} on a {{bed_type}}{% endif %}.{% if end_dt %} {% set secs = (as_timestamp(end_dt)
+        - as_timestamp(now())) | int(0) %}{% set h = secs // 3600 %}{% set m = (secs
+        % 3600) // 60 %}{{ h }}h {{ '%02d' | format(m) }}m (ends at {{ as_timestamp(end_dt)
+        | timestamp_custom('%I:%M %p') }}){% endif %} {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -273,6 +276,53 @@
     action: notify.make_nashville
   mode: parallel
   max: 4
+- id: '1740400001000'
+  alias: Lifecycle Print Paused
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
+    to:
+    - pause
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+    from:
+    - running
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - paused
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    trigger: state
+    from:
+    - printing
+  conditions: []
+  actions:
+  - variables:
+      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+      progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
+  - data:
+      target: '#3dprint-info'
+      message: '⏸️ {% if display_name != object_name %}@{{display_name}}, {% endif
+        %}{{object_name}} paused at {{progress}}%. {{states(''input_text.''+printer+''_stream'')}}'
+      data:
+        username: '{{ printer | capitalize }}'
+        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+    action: notify.make_nashville
+  mode: parallel
+  max: 4
 - id: '1722445886802'
   alias: Roundup
   description: ''
@@ -330,7 +380,9 @@
           } %}
           {%- if st not in not_printing %}
             {%- set progress = states('sensor.' ~ p.id ~ '_print_progress') %}
-            {%- set end_dt = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
+            {%- set _end_raw = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
+            {%- set _tl = states('sensor.' ~ p.id ~ '_print_time_left') | int(0) %}
+            {%- set end_dt = _end_raw if _end_raw else (now() + timedelta(seconds=_tl) if _tl > 0 else none) %}
             {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}{%- endif %}
           {%- else %}
             {{- p.emoji }} {{ status_labels.get(st, st | capitalize) }}
@@ -363,6 +415,13 @@
     metadata: {}
     data:
       message: Kaeser Overpressurization Event!
+  - action: notify.make_nashville
+    data:
+      target: '#facilities-feed'
+      message: "\U0001F6A8 Kaeser Overpressurization Event detected!"
+      data:
+        icon: warning
+        username: Kaeser
   mode: single
 - id: '1767137243013'
   alias: Stripe – 3D Print Filament Purchase
@@ -416,6 +475,8 @@
   triggers:
   - at: 03:00:00
     trigger: time
+  - trigger: homeassistant
+    event: start
   actions:
   - sequence:
     - action: hassio.addon_stdin
