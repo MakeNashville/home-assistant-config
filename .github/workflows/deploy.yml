@@ -6,8 +6,10 @@ on:
     paths:
       - automations.yaml
       - scripts.yaml
+      - scenes.yaml
       - configuration.yaml
       - git_backup.sh
+      - themes/**
       - esphome/**
 
 jobs:
@@ -21,9 +23,18 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/shell_command/git_pull"
 
-      # Give git pull a moment to finish before reloading
+      # Give git pull a moment to finish before validating
       - name: Wait for pull
         run: sleep 5
+
+      - name: Validate config
+        run: |
+          result=$(curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/config/core/check_config")
+          echo "$result"
+          echo "$result" | jq -e '.result == "valid"'
 
       - name: Reload automations
         run: |
@@ -39,9 +50,31 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/script/reload"
 
+      - name: Reload scenes
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/scene/reload"
+
+      - name: Reload themes
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.HA_URL }}/api/services/frontend/reload_themes"
+
       - name: Reload core config (templates)
         run: |
           curl -f -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/homeassistant/reload_core_config"
+
+      - name: Notify deployment
+        run: |
+          curl -f -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"target": "#deployment-feed", "message": "✅ Config deployed successfully from GitHub.", "data": {"username": "GitHub Actions", "icon": "github"}}' \
+            "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
