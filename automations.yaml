@@ -98,6 +98,8 @@
     - sensor.pineapple_print_status
     to:
     - printing
+    from:
+    - idle
     for:
       hours: 0
       minutes: 0
@@ -123,12 +125,13 @@
         not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: '#3dprint-info'
-      message: "🎉 {% if display_name != object_name %}@{{display_name}},
+      message: "🖨️ {% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
         %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
-        %} on a {{bed_type}}{% endif %}. Estimated duration {{time_until(end_dt)}}{%
-        if end_dt %} (ends at {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}){% endif
-        %} {{states('input_text.'+printer+'_stream')}}"
+        %} on a {{bed_type}}{% endif %}.{% if end_dt %} {% set secs = (as_timestamp(end_dt)
+        - as_timestamp(now())) | int(0) %}{% set h = secs // 3600 %}{% set m = (secs
+        % 3600) // 60 %}{{ h }}h {{ '%02d' | format(m) }}m (ends at {{ as_timestamp(end_dt)
+        | timestamp_custom('%I:%M %p') }}){% endif %} {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -377,7 +380,9 @@
           } %}
           {%- if st not in not_printing %}
             {%- set progress = states('sensor.' ~ p.id ~ '_print_progress') %}
-            {%- set end_dt = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
+            {%- set _end_raw = as_datetime(states('sensor.' ~ p.id ~ '_end_time'), none) %}
+            {%- set _tl = states('sensor.' ~ p.id ~ '_print_time_left') | int(0) %}
+            {%- set end_dt = _end_raw if _end_raw else (now() + timedelta(seconds=_tl) if _tl > 0 else none) %}
             {{- p.emoji }} @{{ display }} printing {{ obj }} — {{ progress }}%{%- if end_dt %}, ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M %p') }}{%- endif %}
           {%- else %}
             {{- p.emoji }} {{ status_labels.get(st, st | capitalize) }}
