@@ -433,10 +433,10 @@
     - action: shell_command.clear_entity_list
     - action: notify.entity_list_file
       data:
-        message: >-
-          {% for s in states | sort(attribute='entity_id') -%}
+        message: |-
+          {% for s in states | sort(attribute='entity_id') %}
           {{ s.entity_id }} | {{ s.name }}
-          {% endfor %}
+          {%- endfor %}
     - action: hassio.addon_stdin
       data:
         addon: core_ssh
