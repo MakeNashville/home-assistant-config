@@ -56,7 +56,18 @@ AirGradient sensor in the 3D print room. Alerts post to `#facilities-feed` when 
 Pressure and switch state monitored via ESPHome on an ESP32-C6 Feather. Overpressurization events notify Tim via mobile push and `#facilities-feed`.
 
 ### Config backup
-Runs nightly at 3am via the SSH addon. Commits any changed files and pushes to `main`. On success, posts to `#deployment-feed`. A file-based entity list (`/config/entity_list.txt`) is regenerated before each backup.
+Runs nightly at 3am via the SSH addon. Commits any changed files and pushes to `main`. On success, posts to `#deployment-feed`.
+
+### Entity list
+Before each backup, `/config/entity_list.txt` is regenerated with every entity ID and friendly name in the system:
+
+```
+sensor.air_quality_carbon_dioxide | Air Quality Carbon Dioxide
+sensor.kiwi_print_status | Kiwi Print Status
+...
+```
+
+This file is committed to the repo alongside the config. It's the primary reference for contributors who need to look up entity IDs without direct access to the HA instance — use it when writing automations, templates, or dashboard cards. The file is regenerated automatically; do not edit it by hand.
 
 ---
 
