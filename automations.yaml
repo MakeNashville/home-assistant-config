@@ -1,5 +1,6 @@
 - id: '1721495372161'
-  alias: Lifecycle Print Progress  triggers:
+  alias: Lifecycle Print Progress
+  triggers:
   - entity_id:
     - sensor.kiwi_current_layer
     - sensor.papaya_current_layer
@@ -47,7 +48,8 @@
       seconds: 1
     to:
     - '90'
-    trigger: state  actions:
+    trigger: state
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
@@ -64,7 +66,8 @@
     action: notify.make_nashville
   mode: single
 - id: '1722144402850'
-  alias: Lifecycle Print Starting  triggers:
+  alias: Lifecycle Print Starting
+  triggers:
   - entity_id: &bambu_lab_printers
     - sensor.mango_print_status
     - sensor.kiwi_print_status
@@ -86,7 +89,8 @@
     - idle
     for:
       seconds: 10
-    trigger: state  actions:
+    trigger: state
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name")}}'
@@ -128,7 +132,8 @@
   mode: parallel
   max: 4
 - id: '1722191155564'
-  alias: Lifecycle Print Finished  triggers:
+  alias: Lifecycle Print Finished
+  triggers:
   - entity_id: *bambu_lab_printers
     to:
     - finish
@@ -145,7 +150,8 @@
       seconds: 5
     trigger: state
     from:
-    - printing  actions:
+    - printing
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_last_display_name") }}'
@@ -168,7 +174,8 @@
   mode: parallel
   max: 4
 - id: '1722194364076'
-  alias: Lifecycle Print Stopped  triggers:
+  alias: Lifecycle Print Stopped
+  triggers:
   - entity_id: *bambu_lab_printers
     to:
     - failed
@@ -185,7 +192,8 @@
       seconds: 10
     trigger: state
     from:
-    - printing  actions:
+    - printing
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
@@ -203,7 +211,8 @@
   mode: parallel
   max: 4
 - id: '1740355200000'
-  alias: Lifecycle Print Error  triggers:
+  alias: Lifecycle Print Error
+  triggers:
   - entity_id: &all_printers
     - sensor.mango_print_status
     - sensor.kiwi_print_status
@@ -215,7 +224,8 @@
     - error
     for:
       seconds: 10
-    trigger: state  actions:
+    trigger: state
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
@@ -234,7 +244,8 @@
   mode: parallel
   max: 4
 - id: '1740400001000'
-  alias: Lifecycle Print Paused  triggers:
+  alias: Lifecycle Print Paused
+  triggers:
   - entity_id: *bambu_lab_printers
     to:
     - pause
@@ -251,7 +262,8 @@
       seconds: 10
     trigger: state
     from:
-    - printing  actions:
+    - printing
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
@@ -268,7 +280,8 @@
   mode: parallel
   max: 4
 - id: '1722445886802'
-  alias: Roundup  triggers:
+  alias: Roundup
+  triggers:
   - hours: /2
     trigger: time_pattern
   conditions:
@@ -342,7 +355,8 @@
     enabled: true
   mode: single
 - id: '1763702620736'
-  alias: Kaeser Event notifier  triggers:
+  alias: Kaeser Event notifier
+  triggers:
   - type: voltage
     device_id: 475db66f7f774cdfa45430706b46ee05
     entity_id: a04620ed092035484c42bbc3ec1a8e07
@@ -350,7 +364,8 @@
     trigger: device
     above: 130
     for:
-      minutes: 2  actions:
+      minutes: 2
+  actions:
   - action: notify.mobile_app_tim_krentz_iphone    data:
       message: Kaeser Overpressurization Event!
   - action: notify.make_nashville
@@ -362,7 +377,8 @@
         username: Kaeser
   mode: single
 - id: '1767137243013'
-  alias: Stripe – 3D Print Filament Purchase  triggers:
+  alias: Stripe – 3D Print Filament Purchase
+  triggers:
   - webhook_id: !secret stripe_webhook_id
     trigger: webhook
     allowed_methods:
@@ -437,7 +453,8 @@
   mode: single
 
 - id: facilities_pulse_smart_alert
-  alias: Facilities Pulse — Smart Alert  triggers:
+  alias: Facilities Pulse — Smart Alert
+  triggers:
   - trigger: numeric_state
     entity_id:
     - sensor.air_quality_temperature
@@ -523,7 +540,8 @@
   mode: queued
   max: 2
 - id: facilities_pulse_verbose
-  alias: Facilities Pulse — Verbose  triggers:
+  alias: Facilities Pulse — Verbose
+  triggers:
   - trigger: time_pattern
     hours: /1
   conditions:
@@ -607,7 +625,8 @@
   description: Keep only 3 days of Kaeser pressure data to limit DB growth
   triggers:
   - trigger: time
-    at: '03:30:00'  actions:
+    at: '03:30:00'
+  actions:
   - action: recorder.purge_entities
     data:
       entity_id:
@@ -615,13 +634,15 @@
       keep_days: 3
   mode: single
 - id: '1740500000001'
-  alias: Lifecycle Printer Offline  triggers:
+  alias: Lifecycle Printer Offline
+  triggers:
   - entity_id: *all_printers
     to:
     - unavailable
     for:
       minutes: 5
-    trigger: state  actions:
+    trigger: state
+  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
   - data:
@@ -692,7 +713,8 @@
     - Dangerous
     for:
       minutes: 5
-    id: recovered  actions:
+    id: recovered
+  actions:
   - variables:
       co2: '{{ states("sensor.air_quality_carbon_dioxide") }}'
       voc: '{{ states("sensor.air_quality_voc_index") }}'
@@ -762,7 +784,8 @@
   mode: single
 
 - id: lifecycle_multi_printer_offline
-  alias: Lifecycle Multi-Printer Offline — Network/Power Alert  triggers:
+  alias: Lifecycle Multi-Printer Offline — Network/Power Alert
+  triggers:
   - entity_id: *all_printers
     to:
     - unavailable
