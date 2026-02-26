@@ -166,7 +166,7 @@
       target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
       message: ":white_check_mark:{% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
         finished in {{job_time_str}}{% if used_weight %}, used {{used_weight}}{% endif
-        %}! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
+        %}! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}"
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
