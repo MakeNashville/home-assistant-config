@@ -1,7 +1,5 @@
 - id: '1721495372161'
-  alias: Lifecycle Print Progress
-  description: ''
-  triggers:
+  alias: Lifecycle Print Progress  triggers:
   - entity_id:
     - sensor.kiwi_current_layer
     - sensor.papaya_current_layer
@@ -10,8 +8,6 @@
     - sensor.huckleberry_current_layer
     - sensor.pineapple_current_layer
     for:
-      hours: 0
-      minutes: 0
       seconds: 1
     to:
     - '2'
@@ -24,8 +20,6 @@
     - sensor.huckleberry_current_layer
     - sensor.pineapple_current_layer
     for:
-      hours: 0
-      minutes: 0
       seconds: 1
     to:
     - '10'
@@ -38,8 +32,6 @@
     - sensor.huckleberry_print_progress
     - sensor.pineapple_print_progress
     for:
-      hours: 0
-      minutes: 0
       seconds: 1
     to:
     - '50'
@@ -52,21 +44,17 @@
     - sensor.huckleberry_print_progress
     - sensor.pineapple_print_progress
     for:
-      hours: 0
-      minutes: 0
       seconds: 1
     to:
     - '90'
-    trigger: state
-  conditions: []
-  actions:
+    trigger: state  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
   - data:
-      target: '#3dprint-info'
-      message: "\U0001F4AC {% if display_name != object_name %}@{{display_name}},
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ":speech_balloon:{% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is {{ states('sensor.'+printer+'_print_progress',
         with_unit=True)}} complete and on layer {{ states('sensor.'+printer+'_current_layer')
         }} of {{ states('sensor.'+printer+'_total_layer_count') }}. {{states('input_text.'+printer+'_stream')}}"
@@ -76,10 +64,8 @@
     action: notify.make_nashville
   mode: single
 - id: '1722144402850'
-  alias: Lifecycle Print Starting
-  description: ''
-  triggers:
-  - entity_id: &bambu_status
+  alias: Lifecycle Print Starting  triggers:
+  - entity_id: &bambu_lab_printers
     - sensor.mango_print_status
     - sensor.kiwi_print_status
     - sensor.strawberry_print_status
@@ -88,8 +74,6 @@
     to:
     - running
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
     trigger: state
     from:
@@ -101,12 +85,8 @@
     from:
     - idle
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
-    trigger: state
-  conditions: []
-  actions:
+    trigger: state  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name")}}'
@@ -124,8 +104,8 @@
       bed_type: '{{states("sensor."+printer+"_print_bed_type") if states("sensor."+printer+"_print_bed_type")
         not in ["unknown","unavailable",""] else ""}}'
   - data:
-      target: '#3dprint-info'
-      message: "🖨️ {% if display_name != object_name %}@{{display_name}},
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ":printer:{% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
         %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
         %} on a {{bed_type}}{% endif %}.{% if end_dt %} {% set secs = (as_timestamp(end_dt)
@@ -148,15 +128,11 @@
   mode: parallel
   max: 4
 - id: '1722191155564'
-  alias: Lifecycle Print Finished
-  description: ''
-  triggers:
-  - entity_id: *bambu_status
+  alias: Lifecycle Print Finished  triggers:
+  - entity_id: *bambu_lab_printers
     to:
     - finish
     for:
-      hours: 0
-      minutes: 0
       seconds: 5
     trigger: state
     from:
@@ -166,14 +142,10 @@
     to:
     - completed
     for:
-      hours: 0
-      minutes: 0
       seconds: 5
     trigger: state
     from:
-    - printing
-  conditions: []
-  actions:
+    - printing  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_last_display_name") }}'
@@ -185,8 +157,8 @@
         if states("sensor."+printer+"_used_material_weight") not in ["unknown","unavailable"]
         else ""}}'
   - data:
-      target: '#3dprint-info'
-      message: ✅ {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ":white_check_mark:{% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
         finished in {{job_time_str}}{% if used_weight %}, used {{used_weight}}{% endif
         %}! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}
       data:
@@ -196,15 +168,11 @@
   mode: parallel
   max: 4
 - id: '1722194364076'
-  alias: Lifecycle Print Stopped
-  description: ''
-  triggers:
-  - entity_id: *bambu_status
+  alias: Lifecycle Print Stopped  triggers:
+  - entity_id: *bambu_lab_printers
     to:
     - failed
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
     trigger: state
     from:
@@ -214,22 +182,18 @@
     to:
     - stopped
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
     trigger: state
     from:
-    - printing
-  conditions: []
-  actions:
+    - printing  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
-      target: '#3dprint-info'
-      message: '⏹️ {% if display_name != object_name %}@{{display_name}}, {% endif
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ':stop_button:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} stopped at {{progress}}%. Check the print room for more
         details on what happened. {{states(''input_text.''+printer+''_stream'')}}'
       data:
@@ -239,10 +203,8 @@
   mode: parallel
   max: 4
 - id: '1740355200000'
-  alias: Lifecycle Print Error
-  description: ''
-  triggers:
-  - entity_id: &all_status
+  alias: Lifecycle Print Error  triggers:
+  - entity_id: &all_printers
     - sensor.mango_print_status
     - sensor.kiwi_print_status
     - sensor.strawberry_print_status
@@ -252,12 +214,8 @@
     to:
     - error
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
-    trigger: state
-  conditions: []
-  actions:
+    trigger: state  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
@@ -265,8 +223,8 @@
       error_info: '{{states("sensor."+printer+"_print_error") if states("sensor."+printer+"_print_error")
         not in ["unknown","unavailable",""] else ""}}'
   - data:
-      target: '#3dprint-info'
-      message: '🚨 {% if display_name != object_name %}@{{display_name}}, {% endif
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ':rotating_light:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} encountered an error{% if error_info %}: {{error_info}}{%
         endif %}. Check the printer immediately. {{states(''input_text.''+printer+''_stream'')}}'
       data:
@@ -276,15 +234,11 @@
   mode: parallel
   max: 4
 - id: '1740400001000'
-  alias: Lifecycle Print Paused
-  description: ''
-  triggers:
-  - entity_id: *bambu_status
+  alias: Lifecycle Print Paused  triggers:
+  - entity_id: *bambu_lab_printers
     to:
     - pause
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
     trigger: state
     from:
@@ -294,22 +248,18 @@
     to:
     - paused
     for:
-      hours: 0
-      minutes: 0
       seconds: 10
     trigger: state
     from:
-    - printing
-  conditions: []
-  actions:
+    - printing  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
-      target: '#3dprint-info'
-      message: '⏸️ {% if display_name != object_name %}@{{display_name}}, {% endif
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ':double_vertical_bar:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} paused at {{progress}}%. {{states(''input_text.''+printer+''_stream'')}}'
       data:
         username: '{{ printer | capitalize }}'
@@ -318,12 +268,12 @@
   mode: parallel
   max: 4
 - id: '1722445886802'
-  alias: Roundup
-  description: ''
-  triggers:
+  alias: Roundup  triggers:
   - hours: /2
     trigger: time_pattern
   conditions:
+  - condition: template
+    value_template: "{{ now().hour >= 7 and now().hour < 22 }}"
   - condition: template
     value_template: |-
       {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
@@ -333,7 +283,7 @@
       {{ ns.active }}
   actions:
   - data:
-      target: '#3dprint-info'
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
       data:
         username: Fruitbasket
         icon: basket
@@ -392,9 +342,7 @@
     enabled: true
   mode: single
 - id: '1763702620736'
-  alias: Kaeser Event notifier
-  description: ''
-  triggers:
+  alias: Kaeser Event notifier  triggers:
   - type: voltage
     device_id: 475db66f7f774cdfa45430706b46ee05
     entity_id: a04620ed092035484c42bbc3ec1a8e07
@@ -402,45 +350,38 @@
     trigger: device
     above: 130
     for:
-      hours: 0
-      minutes: 2
-      seconds: 0
-  conditions: []
-  actions:
-  - action: notify.mobile_app_tim_krentz_iphone
-    metadata: {}
-    data:
+      minutes: 2  actions:
+  - action: notify.mobile_app_tim_krentz_iphone    data:
       message: Kaeser Overpressurization Event!
   - action: notify.make_nashville
     data:
-      target: '#facilities-feed'
-      message: "\U0001F6A8 Kaeser Overpressurization Event detected!"
+      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+      message: ":rotating_light: Kaeser Overpressurization Event detected!"
       data:
         icon: warning
         username: Kaeser
   mode: single
 - id: '1767137243013'
-  alias: Stripe – 3D Print Filament Purchase
-  description: ''
-  triggers:
-  - webhook_id: stripe_payment_complete
+  alias: Stripe – 3D Print Filament Purchase  triggers:
+  - webhook_id: !secret stripe_webhook_id
     trigger: webhook
     allowed_methods:
     - POST
-    - PUT
     local_only: false
   conditions:
   - condition: template
-    value_template: '{% set desc = trigger.json.data.object.description %}
-
-      {{ desc.startswith(''3D Print Filament – Self Service'') }}
-
-      '
-    enabled: true
+    value_template: >
+      {% set obj = trigger.json.data.object | default({}) %}
+      {% set desc = obj.description | default('') | replace('\u2013', '-') | replace('\u2014', '-') %}
+      {{ trigger.json.livemode | default(false)
+         and '3D Print Filament' in desc
+         and 'Self Service' in desc }}
   actions:
-  - action: light.turn_on
-    metadata: {}
-    target:
+  - action: notify.filament_purchases_log
+    data:
+      message: >-
+        {{ now().isoformat() }},{{ (trigger.json.data.object.amount | default(0)) / 100 | round(2) }},"{{ trigger.json.data.object.description | default('') }}"
+  - action: light.turn_on    target:
       entity_id: light.filament_store_light
     data:
       rgb_color:
@@ -449,13 +390,8 @@
       - 0
       brightness_pct: 100
   - delay:
-      hours: 0
-      minutes: 0
       seconds: 30
-      milliseconds: 0
-  - action: light.turn_on
-    metadata: {}
-    target:
+  - action: light.turn_on    target:
       entity_id: light.filament_store_light
     data:
       rgb_color:
@@ -475,18 +411,33 @@
     event: start
   actions:
   - sequence:
+    - action: shell_command.clear_entity_list
+    - action: notify.entity_list_file
+      data:
+        message: >-
+          {% for s in states | sort(attribute='entity_id') -%}
+          {{ s.entity_id }} | {{ s.name }}
+          {% endfor %}
     - action: hassio.addon_stdin
       data:
         addon: core_ssh
         input: /config/git_backup.sh
+    - action: notify.make_nashville
+      data:
+        target: "{{ (states('input_text.slack_channel_deployment') or '#deployment-feed') }}"
+        message: ":white_check_mark: Config backup to GitHub completed. Reloading HA at {{ now().strftime('%a %b %-d %-I:%M %p') }}."
+        data:
+          username: HA Backup
+          icon: floppy_disk
+    - delay:
+        seconds: 5
     - action: automation.reload
     - action: script.reload
     - action: homeassistant.reload_core_config
   mode: single
-- id: '1769271913348'
-  alias: Facilities Temperature Alert
-  description: ''
-  triggers:
+
+- id: facilities_pulse_smart_alert
+  alias: Facilities Pulse — Smart Alert  triggers:
   - trigger: numeric_state
     entity_id:
     - sensor.air_quality_temperature
@@ -494,96 +445,143 @@
     - sensor.woodshop_climate_sensor_temperature
     - sensor.front_hallway_climate_sensor_temperature
     - sensor.network_closet_climate_sensor_temperature
-    below: 60
+    below: 62
     for:
-      hours: 0
-      minutes: 0
-      seconds: 5
-  conditions: []
+      minutes: 5
+  - trigger: numeric_state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+    above: 82
+    for:
+      minutes: 5
+  - trigger: state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+  - trigger: numeric_state
+    entity_id: sensor.kaeser_monitor_system_pressure
+    below: 80
+    for:
+      minutes: 5
+  - trigger: state
+    entity_id: sensor.total_power_alarm_power_failure_alarm
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+  conditions:
+  - condition: template
+    value_template: >
+      {{ (this.attributes.last_triggered is none or
+          (now() - this.attributes.last_triggered).total_seconds() > 900)
+         and (trigger.platform == 'numeric_state' or
+              trigger.entity_id in ['sensor.total_power_alarm_power_failure_alarm', 'binary_sensor.water_leak_sensor'] or
+              (trigger.from_state.state | float(0) - trigger.to_state.state | float(0)) | abs > 5) }}
   actions:
-  - action: notify.make_nashville
-    metadata: {}
-    data:
-      target: '#facilities-feed'
+  - action: notify.make_nashville    data:
+      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
       data:
         icon: warning
-        username: Alert
-      message: '"{{ trigger.to_state.name }} is currently {{ trigger.to_state.state
-        }}, it may continue to drop."'
-  mode: single
-- id: '1769288567041'
-  alias: Facilities Pulse
-  description: ''
-  triggers:
-  - trigger: time_pattern
-    hours: /6
-  conditions: []
-  actions:
-  - action: notify.make_nashville
-    metadata: {}
-    data:
-      message: '```
+        username: Facilities Pulse
+      message: |
+        :warning: *Facilities Alert* — {{ trigger.to_state.name }} {{ trigger.to_state.state }}{{ trigger.to_state.attributes.unit_of_measurement | default('') }}
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
-        Area               Temp   Humidity
-
-        ----------------------------------
-
-        {% for device_id in label_devices(''facilities_pulse'') -%}
-
+        *:thermometer: Environment*
+        {% set ns = namespace(count=0) -%}
+        {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
-
-        {% set temp_entity = entities | reject(''search'', ''display_temperature'')
-        | select(''search'', ''temperature'') | first | default(none) -%}
-
-        {% set humidity_entity = entities | select(''search'', ''humidity'') | first
-        | default(none) -%}
-
-        {% if temp_entity and states(temp_entity) not in [''unknown'', ''unavailable'',
-        none] -%}
-
-        {% set area = area_name(temp_entity) | default(''Unknown'') -%}
-
-        {{ "%-17s" | format(area) }} {{ "%5.1f°F" | format(states(temp_entity) | float(0))
-        }}  {{ states(humidity_entity) | float(0) | round(0) | int }}%
-
+        {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
+        {% set hum_e  = entities | select('search','humidity') | first | default(none) -%}
+        {% if temp_e and states(temp_e) not in ['unknown','unavailable',none] -%}
+        {% set ns.count = ns.count + 1 -%}
+        {% set t = states(temp_e) | float(0) -%}
+        {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
+        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
         {% endif -%}
-
         {% endfor -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
 
-        {{ "%-17s" | format(''Outside'') }} {{ "%5.1f°F" | format(state_attr(''weather.forecast_home'',
-        ''temperature'') | float(0)) }}  {{ state_attr(''weather.forecast_home'',
-        ''humidity'') | int }}%
+        *:gear: Systems*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
+        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
 
-
-        Power:               {{ states(''sensor.total_power_alarm_power_failure_alarm'')
-        | capitalize }}
-
-        Executive Bathroom:  {{ state_translated(''binary_sensor.water_leak_sensor'')
-        }}
-
-        3D Print VOC Index:  {{ states(''sensor.air_quality_voc_index'') }}
-
-        Kaeser Air Pressure: {{ states(''sensor.kaeser_monitor_system_pressure'')
-        | float(0) | round(1) }} psi
-
-        ```'
+        *:dash: 3D Print Room*
+        {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
+        {{ aq_icon }} Air Quality: {{ aq }}
+        CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
+  mode: queued
+  max: 2
+- id: facilities_pulse_verbose
+  alias: Facilities Pulse — Verbose  triggers:
+  - trigger: time_pattern
+    hours: /1
+  conditions:
+  - condition: template
+    value_template: "{{ is_state('input_boolean.facilities_pulse_verbose', 'on') }}"
+  actions:
+  - action: notify.make_nashville    data:
+      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
       data:
         icon: information_source
         username: Facilities Pulse
-      target: '#facilities-feed'
+      message: |
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+
+        *:thermometer: Environment*
+        {% set ns = namespace(count=0) -%}
+        {% for device_id in label_devices('facilities_pulse') -%}
+        {% set entities = device_entities(device_id) -%}
+        {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
+        {% set hum_e  = entities | select('search','humidity') | first | default(none) -%}
+        {% if temp_e and states(temp_e) not in ['unknown','unavailable',none] -%}
+        {% set ns.count = ns.count + 1 -%}
+        {% set t = states(temp_e) | float(0) -%}
+        {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
+        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
+        {% endif -%}
+        {% endfor -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
+
+        *:gear: Systems*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
+        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
+
+        *:dash: 3D Print Room*
+        {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
+        {{ aq_icon }} Air Quality: {{ aq }}
+        CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
   mode: single
 - id: '1740400000000'
   alias: Gadget AI Failure Detection
   description: Receives OctoEverywhere Gadget webhooks for Bambu Lab printers
   triggers:
   - trigger: webhook
-    webhook_id: octoeverywhere_gadget
+    webhook_id: !secret octoeverywhere_webhook_id
     allowed_methods:
     - POST
     local_only: false
   conditions:
   - condition: template
-    value_template: '{{ trigger.json.EventType in [7, 8] }}'
+    value_template: >
+      {{ trigger.json.EventType in [7, 8]
+         and trigger.json.PrinterName is defined
+         and trigger.json.PrinterName | lower in ['kiwi', 'mango', 'papaya', 'strawberry', 'huckleberry'] }}
   actions:
   - variables:
       event_type: '{{ trigger.json.EventType }}'
@@ -594,9 +592,9 @@
       stream_url: '{{ states("input_text." + printer_id + "_stream") }}'
   - action: notify.make_nashville
     data:
-      target: '#3dprint-info'
-      message: '{% if event_type == 8 %}🚨 Gadget paused {{ printer_name }} after
-        detecting a failure{% else %}⚠️ Gadget detected a possible failure on {{
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: '{% if event_type == 8 %}:rotating_light: Gadget paused {{ printer_name }} after
+        detecting a failure{% else %}:warning: Gadget detected a possible failure on {{
         printer_name }}{% endif %}{% if file_name %} printing {{ file_name }}{% endif
         %} ({{ progress }}% complete). {{ stream_url }}'
       data:
@@ -609,9 +607,7 @@
   description: Keep only 3 days of Kaeser pressure data to limit DB growth
   triggers:
   - trigger: time
-    at: '03:30:00'
-  conditions: []
-  actions:
+    at: '03:30:00'  actions:
   - action: recorder.purge_entities
     data:
       entity_id:
@@ -619,24 +615,18 @@
       keep_days: 3
   mode: single
 - id: '1740500000001'
-  alias: Lifecycle Printer Offline
-  description: ''
-  triggers:
-  - entity_id: *all_status
+  alias: Lifecycle Printer Offline  triggers:
+  - entity_id: *all_printers
     to:
     - unavailable
     for:
-      hours: 0
       minutes: 5
-      seconds: 0
-    trigger: state
-  conditions: []
-  actions:
+    trigger: state  actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
   - data:
-      target: '#3dprint-info'
-      message: '⚠️ {{ printer | capitalize }} has gone offline.'
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      message: ':warning: {{ printer | capitalize }} has gone offline.'
       data:
         username: '{{ printer | capitalize }}'
         icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
@@ -655,7 +645,7 @@
   actions:
   - action: notify.make_nashville
     data:
-      target: '#3dprint-info'
+      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
       data:
         username: Fruitbasket
         icon: basket
@@ -669,14 +659,143 @@
           {"id":"pineapple","emoji":":pineapple:"},
         ] %}
         {%- set ns = namespace(total_ok=0, total_fail=0) %}
-        📊 Weekly Print Summary (last 7 days)
+        :bar_chart: Weekly Print Summary (last 7 days)
         {%- for p in printers %}
           {%- set ok = states('sensor.' ~ p.id ~ '_prints_completed_week') | int(0) %}
           {%- set fail = states('sensor.' ~ p.id ~ '_prints_failed_week') | int(0) %}
           {%- set ns.total_ok = ns.total_ok + ok %}
           {%- set ns.total_fail = ns.total_fail + fail %}
-        {{ p.emoji }} {{ p.id | capitalize }}: {{ ok }} ✅  {{ fail }} ❌
+        {{ p.emoji }} {{ p.id | capitalize }}: {{ ok }} :white_check_mark:  {{ fail }} :x:
         {%- endfor %}
         ──────────────────────
-        Total: {{ ns.total_ok }} ✅  {{ ns.total_fail }} ❌
+        Total: {{ ns.total_ok }} :white_check_mark:  {{ ns.total_fail }} :x:
+  mode: single
+- id: '1740600000002'
+  alias: Air Quality Alert
+  description: Notify #facilities-feed when 3D print room air quality degrades or recovers
+  triggers:
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 3
+    id: degraded
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Good
+    - Moderate
+    from:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 5
+    id: recovered  actions:
+  - variables:
+      co2: '{{ states("sensor.air_quality_carbon_dioxide") }}'
+      voc: '{{ states("sensor.air_quality_voc_index") }}'
+      nox: '{{ states("sensor.air_quality_nox_index") }}'
+      pm25: '{{ states("sensor.air_quality_pm2_5") }}'
+      status: '{{ states("sensor.air_quality_overall_status") }}'
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: degraded
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+          message: >
+            {% if status == 'Dangerous' %}:no_entry:{% else %}:warning:{% endif %} *3D Print Room Air Quality: {{ status }}*
+            CO2: {{ co2 }} ppm | VOC: {{ voc }} | NOx: {{ nox }} | PM2.5: {{ pm25 }} ug/m3.
+            {% if status == 'Dangerous' %}Ventilate immediately — stop printing if possible.{% else %}Increase ventilation. Open doors or windows.{% endif %}
+            {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] -%}
+            {% set ns = namespace(active=[]) -%}
+            {% for p in ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] -%}
+            {% if states('sensor.' ~ p ~ '_print_status') not in not_printing -%}
+            {% set ns.active = ns.active + [p | capitalize] -%}
+            {% endif -%}
+            {% endfor -%}
+            :printer: Printers running: {{ ns.active | join(', ') if ns.active else 'none' }}
+          data:
+            username: Air Quality
+            icon: air_filter
+    - conditions:
+      - condition: trigger
+        id: recovered
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+          message: ':white_check_mark: 3D print room air quality has returned to {{ status }}. CO2: {{ co2 }} ppm | VOC: {{ voc }} | PM2.5: {{ pm25 }} ug/m3.'
+          data:
+            username: Air Quality
+            icon: air_filter
+  mode: single
+- id: initialize_slack_channels
+  alias: Initialize Slack Channel Defaults
+  description: Sets default Slack channel values on first start when entities are empty
+  triggers:
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: template
+    value_template: "{{ states('input_text.slack_channel_3dprint') == '' }}"
+  actions:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.slack_channel_3dprint
+    data:
+      value: '#3dprint-info'
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.slack_channel_facilities
+    data:
+      value: '#facilities-feed'
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.slack_channel_deployment
+    data:
+      value: '#deployment-feed'
+  mode: single
+
+- id: lifecycle_multi_printer_offline
+  alias: Lifecycle Multi-Printer Offline — Network/Power Alert  triggers:
+  - entity_id: *all_printers
+    to:
+    - unavailable
+    for:
+      minutes: 5
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: >
+      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
+      {% set ns = namespace(offline=0) %}
+      {% for p in printers %}
+        {% if states('sensor.' ~ p ~ '_print_status') in ['unavailable','unknown','offline'] %}
+          {% set ns.offline = ns.offline + 1 %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.offline >= 3 }}
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+      message: >
+        {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
+        {% set ns = namespace(offline=0, names=[]) %}
+        {% for p in printers %}
+          {% if states('sensor.' ~ p ~ '_print_status') in ['unavailable','unknown','offline'] %}
+            {% set ns.offline = ns.offline + 1 %}
+            {% set ns.names = ns.names + [p | capitalize] %}
+          {% endif %}
+        {% endfor %}
+        :warning: {{ ns.offline }} printers offline simultaneously — possible network or power issue.
+        Offline: {{ ns.names | join(', ') }}
+      data:
+        username: Fruitbasket
+        icon: warning
   mode: single
