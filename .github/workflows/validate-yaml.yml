@@ -34,6 +34,7 @@ jobs:
 
           files = (
               glob.glob('*.yaml') +
+              glob.glob('automations/*.yaml') +
               glob.glob('dashboards/*.yaml') +
               glob.glob('esphome/*.yaml')
           )

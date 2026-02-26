@@ -9,7 +9,10 @@ Manages 3D printer lifecycle notifications, facilities monitoring, air quality a
 
 ```
 .
-├── automations.yaml          # All automations (see Systems below)
+├── automations/
+│   ├── main.yaml             # All automations (see Systems below)
+│   ├── webhooks.yaml         # ⛔ Not committed — Stripe + OctoEverywhere webhooks
+│   └── webhooks.yaml.example # Template for webhooks.yaml (placeholder IDs)
 ├── configuration.yaml        # Core HA config: recorder, template sensors,
 │                             #   input helpers, notify platforms, shell commands
 ├── secrets.yaml              # ⛔ Not committed — see Secrets
@@ -86,14 +89,16 @@ feature branch → PR → YAML check passes → merge to main → auto-deploy
 
 ## Secrets
 
-Neither `secrets.yaml` nor `esphome/secrets.yaml` is committed to the repo. Both are gitignored. Each file must be created manually on the HA host.
+Neither `secrets.yaml`, `esphome/secrets.yaml`, nor `automations/webhooks.yaml` is committed to the repo. All are gitignored and must be created manually on the HA host.
 
-**`/config/secrets.yaml`**
+**`/config/automations/webhooks.yaml`**
+
+Copy from `automations/webhooks.yaml.example` and replace the two placeholder IDs with real random strings (32+ chars each):
 ```yaml
-stripe_webhook_id: <random 32+ char string>
-octoeverywhere_webhook_id: <random 32+ char string>
+webhook_id: REPLACE_WITH_STRIPE_WEBHOOK_ID        # in the Stripe automation
+webhook_id: REPLACE_WITH_OCTOEVERYWHERE_WEBHOOK_ID # in the Gadget automation
 ```
-After changing either webhook ID, update the destination URL in the Stripe and OctoEverywhere dashboards.
+After setting each ID, paste the matching webhook URL into the Stripe dashboard and OctoEverywhere Gadget settings. The webhook URL format is `https://<your-ha-url>/api/webhook/<id>`.
 
 **`/config/esphome/secrets.yaml`**
 ```yaml

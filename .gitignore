@@ -76,6 +76,9 @@ desktop.ini
 esphome/.esphome/
 esphome/secrets.yaml
 
+# === WEBHOOK AUTOMATIONS (contain secret webhook IDs) ===
+automations/webhooks.yaml
+
 # === BLUEPRINTS (built-in HA blueprints, not custom) ===
 blueprints/*/homeassistant/
 
