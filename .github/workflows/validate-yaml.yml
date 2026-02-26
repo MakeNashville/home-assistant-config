@@ -1,0 +1,50 @@
+name: Validate YAML
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate YAML files
+        run: |
+          python3 - <<'EOF'
+          import yaml, sys, glob
+
+          class PassThruLoader(yaml.SafeLoader):
+              pass
+
+          for tag in ('!include', '!include_dir_merge_named', '!include_dir_list',
+                      '!include_dir_merge_list', '!include_dir_named', '!secret',
+                      '!env_var', '!input'):
+              PassThruLoader.add_constructor(tag, lambda loader, node: loader.construct_scalar(node))
+
+          files = (
+              glob.glob('*.yaml') +
+              glob.glob('dashboards/*.yaml') +
+              glob.glob('esphome/*.yaml')
+          )
+          ok = True
+          for f in sorted(files):
+              try:
+                  with open(f) as fh:
+                      yaml.load(fh, Loader=PassThruLoader)
+                  print(f'OK  {f}')
+              except yaml.YAMLError as e:
+                  print(f'ERR {f}: {e}')
+                  ok = False
+          sys.exit(0 if ok else 1)
+          EOF

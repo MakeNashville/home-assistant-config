@@ -366,7 +366,8 @@
     for:
       minutes: 2
   actions:
-  - action: notify.mobile_app_tim_krentz_iphone    data:
+  - action: notify.mobile_app_tim_krentz_iphone
+    data:
       message: Kaeser Overpressurization Event!
   - action: notify.make_nashville
     data:
@@ -397,7 +398,8 @@
     data:
       message: >-
         {{ now().isoformat() }},{{ (trigger.json.data.object.amount | default(0)) / 100 | round(2) }},"{{ trigger.json.data.object.description | default('') }}"
-  - action: light.turn_on    target:
+  - action: light.turn_on
+    target:
       entity_id: light.filament_store_light
     data:
       rgb_color:
@@ -407,7 +409,8 @@
       brightness_pct: 100
   - delay:
       seconds: 30
-  - action: light.turn_on    target:
+  - action: light.turn_on
+    target:
       entity_id: light.filament_store_light
     data:
       rgb_color:
@@ -500,7 +503,8 @@
               trigger.entity_id in ['sensor.total_power_alarm_power_failure_alarm', 'binary_sensor.water_leak_sensor'] or
               (trigger.from_state.state | float(0) - trigger.to_state.state | float(0)) | abs > 5) }}
   actions:
-  - action: notify.make_nashville    data:
+  - action: notify.make_nashville
+    data:
       target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
       data:
         icon: warning
@@ -548,7 +552,8 @@
   - condition: template
     value_template: "{{ is_state('input_boolean.facilities_pulse_verbose', 'on') }}"
   actions:
-  - action: notify.make_nashville    data:
+  - action: notify.make_nashville
+    data:
       target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
       data:
         icon: information_source
