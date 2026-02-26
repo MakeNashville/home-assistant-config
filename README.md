@@ -1,28 +1,125 @@
 # MakeNashville Home Assistant Config
 
 Home Assistant configuration for the [MakeNashville](https://makenashville.org) makerspace.
+Manages 3D printer lifecycle notifications, facilities monitoring, air quality alerting, and automated config backup.
 
-## Structure
+---
+
+## Repository layout
 
 ```
 .
-├── automations.yaml       # All automations (3D printers, facilities monitoring, etc.)
-├── configuration.yaml     # Core HA config, recorder, templates, shell commands
-├── scripts.yaml           # Scripts
-├── scenes.yaml            # Scenes
-├── esphome/               # ESPHome device configs
-│   └── kaeser-monitor.yaml  # Kaeser air compressor pressure monitor
-├── blueprints/            # Automation blueprints
-└── git_backup.sh          # Backup script
+├── automations.yaml          # All automations (see Systems below)
+├── configuration.yaml        # Core HA config: recorder, template sensors,
+│                             #   input helpers, notify platforms, shell commands
+├── secrets.yaml              # ⛔ Not committed — see Secrets
+├── git_backup.sh             # Nightly backup script (runs inside HA via SSH addon)
+│
+├── dashboards/
+│   ├── air_quality.yaml      # Air quality dashboard (3D print room)
+│   └── facilities.yaml       # Facilities overview dashboard
+│
+├── esphome/
+│   ├── kaeser-monitor.yaml   # Kaeser air compressor pressure/switch sensor
+│   └── secrets.yaml          # ⛔ Not committed — see Secrets
+│
+├── blueprints/               # Automation blueprints
+│
+└── .github/workflows/
+    ├── validate-yaml.yml     # YAML lint check on every PR (required to merge)
+    └── deploy.yml            # Auto-deploy to HA on merge to main
 ```
 
-## Deploy
+---
 
-Merging a PR to `main` automatically deploys to the HA instance via GitHub Actions (`.github/workflows/deploy.yml`). Changes to `automations.yaml`, `scripts.yaml`, or `configuration.yaml` trigger a `git pull` on the HA host followed by a config reload.
+## Systems
 
-**`main` is a protected branch — all changes must go through a pull request.** Direct pushes are not allowed.
+### 3D printers — Lifecycle notifications
+Six printers post to `#3dprint-info` via Slack on key state transitions: starting, progress milestones (layer 2, 10, 50%, 90%), finished, stopped, paused, error, and offline. A bi-hourly roundup posts active printer status (suppressed midnight–7am). A weekly summary posts Sunday at 9am.
 
-### Initial HA host setup
+Printer names follow a fruit convention. Bambu Lab printers (Kiwi, Mango, Papaya, Strawberry, Huckleberry) use the Bambu integration. Pineapple is a Prusa printer via the Prusa integration. Dragonfruit is an additional printer.
+
+### Facilities Pulse
+Posts to `#facilities-feed` when any monitored space goes out of range:
+- Temperature below 62°F or above 82°F (sustained 5 min)
+- Kaeser pressure below 80 psi (sustained 5 min)
+- Power alarm or water leak state change
+
+Includes a 15-minute cooldown and a 5°F magnitude guard to suppress sensor noise. An opt-in hourly verbose mode is toggled from the Facilities dashboard.
+
+Environment data is pulled dynamically via the `facilities_pulse` HA label — tag any climate sensor device with that label and it appears automatically in pulse messages and the dashboard.
+
+### Air Quality
+AirGradient sensor in the 3D print room. Alerts post to `#facilities-feed` when overall status degrades to Poor or Dangerous (sustained 3 min), with active printer context included. Recovery alerts fire when status returns to Good or Moderate (sustained 5 min).
+
+### Kaeser compressor
+Pressure and switch state monitored via ESPHome on an ESP32-C6 Feather. Overpressurization events notify Tim via mobile push and `#facilities-feed`.
+
+### Config backup
+Runs nightly at 3am via the SSH addon. Commits any changed files and pushes to `main`. On success, posts to `#deployment-feed`. A file-based entity list (`/config/entity_list.txt`) is regenerated before each backup.
+
+---
+
+## Branch and deploy workflow
+
+```
+feature branch → PR → YAML check passes → merge to main → auto-deploy
+```
+
+1. **Branch off `main`** — `main` is protected; direct pushes are blocked.
+2. **Open a PR** — the `validate-yaml.yml` workflow runs immediately and must pass.
+3. **Merge** — `deploy.yml` triggers on merge, pulls the new config onto the HA host, validates it, and reloads all relevant subsystems.
+4. **Deployment status** posts to `#deployment-feed` on success or failure.
+
+---
+
+## Secrets
+
+Neither `secrets.yaml` nor `esphome/secrets.yaml` is committed to the repo. Both are gitignored. Each file must be created manually on the HA host.
+
+**`/config/secrets.yaml`**
+```yaml
+stripe_webhook_id: <random 32+ char string>
+octoeverywhere_webhook_id: <random 32+ char string>
+```
+After changing either webhook ID, update the destination URL in the Stripe and OctoEverywhere dashboards.
+
+**`/config/esphome/secrets.yaml`**
+```yaml
+wifi_ssid: <network name>
+wifi_password: <password>
+ap_password: <fallback hotspot password>
+kaeser_api_password: <strong password>
+kaeser_ota_password: <strong password>
+```
+After changing ESPHome passwords, flash the device once via USB using the `old_password` migration field (already configured), then remove `old_password` from `kaeser-monitor.yaml`.
+
+---
+
+## Slack channels
+
+Channel targets are stored as HA `input_text` entities — not hardcoded in automations. They default to the values below on first HA start and fall back to `#sandbox` if ever cleared.
+
+| Entity | Default | Used by |
+|--------|---------|---------|
+| `input_text.slack_channel_3dprint` | `#3dprint-info` | All printer automations |
+| `input_text.slack_channel_facilities` | `#facilities-feed` | Facilities pulse, AQ alerts, Kaeser |
+| `input_text.slack_channel_deployment` | `#deployment-feed` | Backup heartbeat |
+
+To redirect all notifications to `#sandbox` during development, clear any of these values in HA > Settings > Helpers — the `or '#sandbox'` fallback activates automatically.
+
+---
+
+## GitHub Actions secrets required
+
+| Secret | Value |
+|--------|-------|
+| `HA_TOKEN` | Long-lived access token from HA profile |
+| `HA_URL` | Externally accessible HA URL (e.g. Nabu Casa) |
+
+---
+
+## Initial HA host setup
 
 ```bash
 cd /config
@@ -32,9 +129,18 @@ git fetch origin main
 git reset --hard origin/main
 ```
 
-### GitHub Actions secrets required
+Then create `secrets.yaml` and `esphome/secrets.yaml` with the values above before restarting HA.
 
-| Secret | Value |
-|--------|-------|
-| `HA_TOKEN` | Long-lived access token from HA profile |
-| `HA_URL` | Externally accessible HA URL (e.g. Nabu Casa) |
+---
+
+## Adding a new printer
+
+1. Add it to the printer lists in `automations.yaml` (search for the `bambu_lab_printers` anchor or the `pineapple` Prusa-specific blocks).
+2. Add `history_stats` sensors for weekly completed/failed counts in `configuration.yaml`.
+3. Add template sensors for Display Name, Object, Last Display Name, Last Object in `configuration.yaml`.
+4. Add the printer to the `Roundup` and `Weekly Print Summary` printers lists.
+5. Add a `recorder` exclude glob for any high-frequency sensors the integration creates.
+
+## Adding a facilities sensor
+
+Tag the device with the `facilities_pulse` label in HA > Settings > Devices. It will appear automatically in Facilities Pulse messages and the Facilities dashboard temperature grid without any YAML changes.
