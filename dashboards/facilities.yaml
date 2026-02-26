@@ -1,0 +1,126 @@
+title: Facilities
+views:
+  - title: Facilities
+    path: overview
+    icon: mdi:office-building-cog
+    cards:
+
+      # ── Status header ─────────────────────────────────────────────────────
+      - type: markdown
+        content: >
+          {% set temps = [
+            states('sensor.air_quality_temperature'),
+            states('sensor.ceramics_climate_sensor_temperature'),
+            states('sensor.woodshop_climate_sensor_temperature'),
+            states('sensor.front_hallway_climate_sensor_temperature'),
+            states('sensor.network_closet_climate_sensor_temperature')
+          ] | reject('in', ['unknown','unavailable']) | map('float') | list %}
+          {% set t_min = temps | min if temps else none %}
+          {% set t_max = temps | max if temps else none %}
+          {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower %}
+          {% set leak = states('binary_sensor.water_leak_sensor') %}
+          {% set aq = states('sensor.air_quality_overall_status') %}
+          ## 🏢 Facilities — **{{ now().strftime('%-I:%M %p') }}**
+
+          Temp range: **{{ t_min | round(1) if t_min is not none else 'N/A' }}–{{ t_max | round(1) if t_max is not none else 'N/A' }}°F** |
+          Power: **{{ 'OK' if pwr == 'ok' else '⚠️ ALARM' }}** |
+          Water: **{{ 'OK' if leak == 'off' else '⚠️ LEAK' }}** |
+          Air Quality: **{{ aq }}**
+
+      # ── Settings ──────────────────────────────────────────────────────────
+      - type: entities
+        title: Settings
+        entities:
+          - entity: input_boolean.facilities_pulse_verbose
+            name: Hourly Verbose Mode
+
+      # ── Environment grid ──────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: glance
+            title: 3D Print Room
+            entities:
+              - entity: sensor.air_quality_temperature
+                name: Temperature
+              - entity: sensor.air_quality_humidity
+                name: Humidity
+
+          - type: glance
+            title: Ceramics
+            entities:
+              - entity: sensor.ceramics_climate_sensor_temperature
+                name: Temperature
+              - entity: sensor.ceramics_climate_sensor_humidity
+                name: Humidity
+
+          - type: glance
+            title: Woodshop
+            entities:
+              - entity: sensor.woodshop_climate_sensor_temperature
+                name: Temperature
+              - entity: sensor.woodshop_climate_sensor_humidity
+                name: Humidity
+
+          - type: glance
+            title: Front Hallway
+            entities:
+              - entity: sensor.front_hallway_climate_sensor_temperature
+                name: Temperature
+              - entity: sensor.front_hallway_climate_sensor_humidity
+                name: Humidity
+
+          - type: glance
+            title: Network Closet
+            entities:
+              - entity: sensor.network_closet_climate_sensor_temperature
+                name: Temperature
+              - entity: sensor.network_closet_climate_sensor_humidity
+                name: Humidity
+
+          - type: weather-forecast
+            entity: weather.forecast_home
+            name: Outside
+            show_forecast: false
+
+      # ── Systems ───────────────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.kaeser_monitor_system_pressure
+            name: Kaeser Pressure
+            unit: psi
+            min: 0
+            max: 150
+            needle: true
+            severity:
+              green: 80
+              yellow: 60
+              red: 40
+
+          - type: entity
+            entity: sensor.total_power_alarm_power_failure_alarm
+            name: Power Alarm
+
+          - type: entity
+            entity: binary_sensor.water_leak_sensor
+            name: Exec Bathroom Water
+
+      # ── 3D Print Room Air Quality ─────────────────────────────────────────
+      - type: glance
+        title: 3D Print Room Air Quality
+        columns: 3
+        entities:
+          - entity: sensor.air_quality_overall_status
+            name: Overall
+          - entity: sensor.air_quality_carbon_dioxide
+            name: CO₂
+          - entity: sensor.air_quality_voc_index
+            name: VOC
+          - entity: sensor.air_quality_nox_index
+            name: NOx
+          - entity: sensor.air_quality_pm2_5
+            name: PM2.5

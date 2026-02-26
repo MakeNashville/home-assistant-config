@@ -40,7 +40,7 @@ views:
           {% set st = states('sensor.air_quality_overall_status') %}
           {% set icon = '🟢' if st == 'Good' else '🟡' if st == 'Moderate' else '🟠' if st == 'Poor' else '🔴' %}
           ## {{ icon }} 3D Print Room — Air Quality {{ st }}
-          *Updated {{ now().strftime('%-I:%M %p') }}*
+          **Updated {{ now().strftime('%-I:%M %p') }}**
 
       # ── Primary pollutant gauges ─────────────────────────────────────
       - type: grid
@@ -49,7 +49,7 @@ views:
         cards:
           - type: gauge
             entity: sensor.air_quality_carbon_dioxide
-            name: CO₂
+            name: "CO₂ · Poor >1,200 ppm"
             unit: ppm
             min: 400
             max: 2000
@@ -61,7 +61,8 @@ views:
 
           - type: gauge
             entity: sensor.air_quality_voc_index
-            name: VOC Index
+            name: "VOC Index · Poor >200"
+            unit: index
             min: 0
             max: 400
             needle: true
@@ -72,7 +73,8 @@ views:
 
           - type: gauge
             entity: sensor.air_quality_nox_index
-            name: NOx Index
+            name: "NOx Index · Poor >150"
+            unit: index
             min: 0
             max: 300
             needle: true
@@ -83,7 +85,7 @@ views:
 
           - type: gauge
             entity: sensor.air_quality_pm2_5
-            name: PM2.5
+            name: "PM2.5 · Poor >35.4 µg/m³"
             unit: µg/m³
             min: 0
             max: 150
@@ -100,7 +102,7 @@ views:
         cards:
           - type: gauge
             entity: sensor.air_quality_pm1
-            name: PM1
+            name: "PM1 · High >15 µg/m³"
             unit: µg/m³
             min: 0
             max: 50
@@ -112,7 +114,7 @@ views:
 
           - type: gauge
             entity: sensor.air_quality_pm10
-            name: PM10
+            name: "PM10 · High >154 µg/m³"
             unit: µg/m³
             min: 0
             max: 200
@@ -124,8 +126,8 @@ views:
 
           - type: gauge
             entity: sensor.air_quality_pm0_3
-            name: PM0.3
-            unit: "#/dL"
+            name: "PM0.3 Ultrafine Particles"
+            unit: particles/dL
             min: 0
             max: 8000
             needle: true

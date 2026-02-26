@@ -6,8 +6,6 @@ frontend:
   themes: !include_dir_merge_named themes
 
 automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
 
 homeassistant:
   allowlist_external_dirs:
@@ -22,14 +20,46 @@ lovelace:
       filename: dashboards/air_quality.yaml
       show_in_sidebar: true
       require_admin: false
+    facilities:
+      mode: yaml
+      title: Facilities
+      icon: mdi:office-building-cog
+      filename: dashboards/facilities.yaml
+      show_in_sidebar: true
+      require_admin: false
+
+notify:
+  - name: entity_list_file
+    platform: file
+    filename: /config/entity_list.txt
+    timestamp: false
+  - name: filament_purchases_log
+    platform: file
+    filename: /config/filament_purchases.csv
+    timestamp: false
 
 shell_command:
   git_pull: "git -C /config pull --rebase origin main"
+  clear_entity_list: "truncate -s 0 /config/entity_list.txt"
 
 input_text:
   pineapple_last_job:
     name: Pineapple Last Job
     max: 255
+  slack_channel_3dprint:
+    name: Slack Channel — 3D Print
+    max: 64
+  slack_channel_facilities:
+    name: Slack Channel — Facilities
+    max: 64
+  slack_channel_deployment:
+    name: Slack Channel — Deployment
+    max: 64
+
+input_boolean:
+  facilities_pulse_verbose:
+    name: Facilities Pulse Verbose Mode
+    icon: mdi:bell-outline
 
 recorder:
   purge_keep_days: 14
@@ -44,6 +74,10 @@ recorder:
       - sun.sun
       - binary_sensor.filament_store_light_motion
       - sensor.filament_store_light_illuminance
+      - input_boolean.facilities_pulse_verbose
+      - input_text.slack_channel_3dprint
+      - input_text.slack_channel_facilities
+      - input_text.slack_channel_deployment
     entity_globs:
       # Fan speeds / signals (already present)
       - sensor.*_wi_fi_signal
@@ -64,9 +98,7 @@ recorder:
       - sensor.*_real_time_flow
       - sensor.*_current_object
       # Fans
-      - fan.*_aux_fan
-      - fan.*_chamber_fan
-      - fan.*_cooling_fan
+      - fan.*_fan
       # Distance / proximity sensors
       - sensor.*_estimated_distance*
 
@@ -74,6 +106,10 @@ template:
   - sensor:
       - name: "Air Quality Overall Status"
         unique_id: air_quality_overall_status
+        availability: >
+          {{ states('sensor.air_quality_carbon_dioxide') not in ['unknown', 'unavailable']
+             and states('sensor.air_quality_voc_index') not in ['unknown', 'unavailable']
+             and states('sensor.air_quality_pm2_5') not in ['unknown', 'unavailable'] }}
         state: >
           {% set co2  = states('sensor.air_quality_carbon_dioxide') | int(0) %}
           {% set voc  = states('sensor.air_quality_voc_index')      | int(0) %}
@@ -85,83 +121,134 @@ template:
           {% else %}Good{% endif %}
 
       - name: "Kiwi Display Name"
+        unique_id: kiwi_display_name
+        availability: "{{ states('sensor.kiwi_gcode_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.kiwi_gcode_filename').split('-')[0]}}
       - name: "Kiwi Object"
+        unique_id: kiwi_object
+        availability: "{{ states('sensor.kiwi_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.kiwi_gcode_filename').replace(states('sensor.kiwi_display_name') + '-', '')}}
       - name: "Kiwi Last Display Name"
+        unique_id: kiwi_last_display_name
+        availability: "{{ states('sensor.kiwi_task_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.kiwi_task_name').split('-')[0]}}
       - name: "Kiwi Last Object"
+        unique_id: kiwi_last_object
+        availability: "{{ states('sensor.kiwi_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
-          {{states('sensor.kiwi_task_name').replace(states('sensor.kiwi_task_name') + '-', '')}}
+          {{states('sensor.kiwi_task_name').replace(states('sensor.kiwi_last_display_name') + '-', '')}}
       - name: "Mango Display Name"
+        unique_id: mango_display_name
+        availability: "{{ states('sensor.mango_gcode_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.mango_gcode_filename').split('-')[0]}}
       - name: "Mango Object"
+        unique_id: mango_object
+        availability: "{{ states('sensor.mango_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.mango_gcode_filename').replace(states('sensor.mango_display_name') + '-', '')}}
       - name: "Mango Last Display Name"
+        unique_id: mango_last_display_name
+        availability: "{{ states('sensor.mango_task_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.mango_task_name').split('-')[0]}}
       - name: "Mango Last Object"
+        unique_id: mango_last_object
+        availability: "{{ states('sensor.mango_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
-          {{states('sensor.mango_task_name').replace(states('sensor.mango_task_name') + '-', '')}}
+          {{states('sensor.mango_task_name').replace(states('sensor.mango_last_display_name') + '-', '')}}
       - name: "Papaya Display Name"
+        unique_id: papaya_display_name
+        availability: "{{ states('sensor.papaya_gcode_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.papaya_gcode_filename').split('-')[0]}}
       - name: "Papaya Object"
+        unique_id: papaya_object
+        availability: "{{ states('sensor.papaya_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.papaya_gcode_filename').replace(states('sensor.papaya_display_name') + '-', '')}}
       - name: "Papaya Last Display Name"
+        unique_id: papaya_last_display_name
+        availability: "{{ states('sensor.papaya_task_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.papaya_task_name').split('-')[0]}}
       - name: "Papaya Last Object"
+        unique_id: papaya_last_object
+        availability: "{{ states('sensor.papaya_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
-          {{states('sensor.papaya_task_name').replace(states('sensor.papaya_task_name') + '-', '')}}
+          {{states('sensor.papaya_task_name').replace(states('sensor.papaya_last_display_name') + '-', '')}}
       - name: "Strawberry Display Name"
+        unique_id: strawberry_display_name
+        availability: "{{ states('sensor.strawberry_gcode_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.strawberry_gcode_filename').split('-')[0]}}
       - name: "Strawberry Object"
+        unique_id: strawberry_object
+        availability: "{{ states('sensor.strawberry_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.strawberry_gcode_filename').replace(states('sensor.strawberry_display_name') + '-', '')}}
       - name: "Strawberry Last Display Name"
+        unique_id: strawberry_last_display_name
+        availability: "{{ states('sensor.strawberry_task_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.strawberry_task_name').split('-')[0]}}
       - name: "Strawberry Last Object"
+        unique_id: strawberry_last_object
+        availability: "{{ states('sensor.strawberry_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
-          {{states('sensor.strawberry_task_name').replace(states('sensor.strawberry_task_name') + '-', '')}}
+          {{states('sensor.strawberry_task_name').replace(states('sensor.strawberry_last_display_name') + '-', '')}}
       - name: "Huckleberry Display Name"
+        unique_id: huckleberry_display_name
+        availability: "{{ states('sensor.huckleberry_gcode_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.huckleberry_gcode_filename').split('-')[0]}}
       - name: "Huckleberry Object"
+        unique_id: huckleberry_object
+        availability: "{{ states('sensor.huckleberry_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.huckleberry_gcode_filename').replace(states('sensor.huckleberry_display_name') + '-', '')}}
       - name: "Huckleberry Last Display Name"
+        unique_id: huckleberry_last_display_name
+        availability: "{{ states('sensor.huckleberry_task_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.huckleberry_task_name').split('-')[0]}}
       - name: "Huckleberry Last Object"
+        unique_id: huckleberry_last_object
+        availability: "{{ states('sensor.huckleberry_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
-          {{states('sensor.huckleberry_task_name').replace(states('sensor.huckleberry_task_name') + '-', '')}}
+          {{states('sensor.huckleberry_task_name').replace(states('sensor.huckleberry_last_display_name') + '-', '')}}
 
       - name: "Pineapple Display Name"
+        unique_id: pineapple_display_name
+        availability: "{{ states('sensor.pineapple_current_object') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.pineapple_current_object').split('-')[0]}}
       - name: "Pineapple Object"
+        unique_id: pineapple_object
+        availability: "{{ states('sensor.pineapple_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.pineapple_current_object').replace(states('sensor.pineapple_display_name') + '-', '')}}
       - name: "Pineapple Last Display Name"
+        unique_id: pineapple_last_display_name
         state: >
           {{states('input_text.pineapple_last_job').split('-')[0]}}
       - name: "Pineapple Last Object"
+        unique_id: pineapple_last_object
+        availability: "{{ states('sensor.pineapple_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('input_text.pineapple_last_job').replace(states('sensor.pineapple_last_display_name') + '-', '')}}
 
       - name: "Dragonfruit Display Name"
+        unique_id: dragonfruit_display_name
+        availability: "{{ states('sensor.dragonfruit_filename') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.dragonfruit_filename').split('-')[0]}}
       - name: "Dragonfruit Object"
+        unique_id: dragonfruit_object
+        availability: "{{ states('sensor.dragonfruit_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}
 
@@ -177,7 +264,9 @@ sensor:
   - platform: history_stats
     name: Kiwi Prints Failed Week
     entity_id: sensor.kiwi_print_status
-    state: "failed"
+    state:
+      - "failed"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
@@ -191,7 +280,9 @@ sensor:
   - platform: history_stats
     name: Mango Prints Failed Week
     entity_id: sensor.mango_print_status
-    state: "failed"
+    state:
+      - "failed"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
@@ -205,7 +296,9 @@ sensor:
   - platform: history_stats
     name: Papaya Prints Failed Week
     entity_id: sensor.papaya_print_status
-    state: "failed"
+    state:
+      - "failed"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
@@ -219,7 +312,9 @@ sensor:
   - platform: history_stats
     name: Strawberry Prints Failed Week
     entity_id: sensor.strawberry_print_status
-    state: "failed"
+    state:
+      - "failed"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
@@ -233,7 +328,9 @@ sensor:
   - platform: history_stats
     name: Huckleberry Prints Failed Week
     entity_id: sensor.huckleberry_print_status
-    state: "failed"
+    state:
+      - "failed"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
