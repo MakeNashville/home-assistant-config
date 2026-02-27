@@ -1,13 +1,7 @@
-# Copy this file to webhooks.yaml and fill in real webhook IDs.
-# webhooks.yaml is gitignored — do not commit it.
-#
-# Webhook IDs must be long random strings (32+ chars).
-# After updating an ID, change the matching URL in the Stripe or OctoEverywhere dashboard.
-
 - id: '1767137243013'
   alias: Stripe – 3D Print Filament Purchase
   triggers:
-  - webhook_id: REPLACE_WITH_STRIPE_WEBHOOK_ID
+  - webhook_id: !secret stripe_webhook_id
     trigger: webhook
     allowed_methods:
     - POST
@@ -47,13 +41,12 @@
       brightness_pct: 10
       transition: 32
   mode: single
-
 - id: '1740400000000'
   alias: Gadget AI Failure Detection
   description: Receives OctoEverywhere Gadget webhooks for Bambu Lab printers
   triggers:
   - trigger: webhook
-    webhook_id: REPLACE_WITH_OCTOEVERYWHERE_WEBHOOK_ID
+    webhook_id: !secret octoeverywhere_webhook_id
     allowed_methods:
     - POST
     local_only: false

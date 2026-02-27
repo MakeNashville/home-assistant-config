@@ -1,0 +1,36 @@
+- id: '1763702620736'
+  alias: Kaeser Event notifier
+  triggers:
+  - type: voltage
+    device_id: 475db66f7f774cdfa45430706b46ee05
+    entity_id: a04620ed092035484c42bbc3ec1a8e07
+    domain: sensor
+    trigger: device
+    above: 130
+    for:
+      minutes: 2
+  actions:
+  - action: notify.mobile_app_tim_krentz_iphone
+    data:
+      message: Kaeser Overpressurization Event!
+  - action: notify.make_nashville
+    data:
+      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+      message: ":rotating_light: Kaeser Overpressurization Event detected!"
+      data:
+        icon: warning
+        username: Kaeser
+  mode: single
+- id: '1769999000001'
+  alias: Purge Kaeser Pressure History
+  description: Keep only 3 days of Kaeser pressure data to limit DB growth
+  triggers:
+  - trigger: time
+    at: '03:30:00'
+  actions:
+  - action: recorder.purge_entities
+    data:
+      entity_id:
+      - sensor.kaeser_monitor_system_pressure
+      keep_days: 3
+  mode: single

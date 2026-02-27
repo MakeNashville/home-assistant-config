@@ -10,9 +10,12 @@ Manages 3D printer lifecycle notifications, facilities monitoring, air quality a
 ```
 .
 ├── automations/
-│   ├── main.yaml             # All automations (see Systems below)
-│   ├── webhooks.yaml         # ⛔ Not committed — Stripe + OctoEverywhere webhooks
-│   └── webhooks.yaml.example # Template for webhooks.yaml (placeholder IDs)
+│   ├── printers.yaml         # 3D printer lifecycle, roundup, weekly summary, offline
+│   ├── facilities.yaml       # Facilities Pulse + Air Quality alerts
+│   ├── kaeser.yaml           # Kaeser compressor notifications + history purge
+│   ├── webhooks.yaml         # Stripe filament purchase + OctoEverywhere Gadget
+│   ├── backup.yaml           # Nightly config backup to GitHub
+│   └── system.yaml           # Slack channel initialization
 ├── configuration.yaml        # Core HA config: recorder, template sensors,
 │                             #   input helpers, notify platforms, shell commands
 ├── secrets.yaml              # ⛔ Not committed — see Secrets
@@ -89,16 +92,14 @@ feature branch → PR → YAML check passes → merge to main → auto-deploy
 
 ## Secrets
 
-Neither `secrets.yaml`, `esphome/secrets.yaml`, nor `automations/webhooks.yaml` is committed to the repo. All are gitignored and must be created manually on the HA host.
+Neither `secrets.yaml` nor `esphome/secrets.yaml` is committed to the repo. Both are gitignored. Each file must be created manually on the HA host.
 
-**`/config/automations/webhooks.yaml`**
-
-Copy from `automations/webhooks.yaml.example` and replace the two placeholder IDs with real random strings (32+ chars each):
+**`/config/secrets.yaml`**
 ```yaml
-webhook_id: REPLACE_WITH_STRIPE_WEBHOOK_ID        # in the Stripe automation
-webhook_id: REPLACE_WITH_OCTOEVERYWHERE_WEBHOOK_ID # in the Gadget automation
+stripe_webhook_id: <random 32+ char string>
+octoeverywhere_webhook_id: <random 32+ char string>
 ```
-After setting each ID, paste the matching webhook URL into the Stripe dashboard and OctoEverywhere Gadget settings. The webhook URL format is `https://<your-ha-url>/api/webhook/<id>`.
+After changing either webhook ID, update the destination URL in the Stripe and OctoEverywhere dashboards.
 
 **`/config/esphome/secrets.yaml`**
 ```yaml
