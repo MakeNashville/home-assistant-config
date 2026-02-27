@@ -13,7 +13,7 @@ homeassistant:
 
 lovelace:
   dashboards:
-    airquality:
+    air-quality:
       mode: yaml
       title: Air Quality
       icon: mdi:air-filter
