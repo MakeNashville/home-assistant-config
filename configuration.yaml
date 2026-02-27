@@ -20,7 +20,7 @@ lovelace:
       filename: dashboards/air_quality.yaml
       show_in_sidebar: true
       require_admin: false
-    facilities:
+    facilities-overview:
       mode: yaml
       title: Facilities
       icon: mdi:office-building-cog
