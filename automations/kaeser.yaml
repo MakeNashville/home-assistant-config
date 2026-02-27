@@ -15,7 +15,7 @@
       message: Kaeser Overpressurization Event!
   - action: notify.make_nashville
     data:
-      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+      target: "#facilities-feed"
       message: ":rotating_light: Kaeser Overpressurization Event detected!"
       data:
         icon: warning

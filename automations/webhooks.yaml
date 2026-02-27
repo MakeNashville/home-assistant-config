@@ -66,7 +66,7 @@
       stream_url: '{{ states("input_text." + printer_id + "_stream") }}'
   - action: notify.make_nashville
     data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: '{% if event_type == 8 %}:rotating_light: Gadget paused {{ printer_name }} after
         detecting a failure{% else %}:warning: Gadget detected a possible failure on {{
         printer_name }}{% endif %}{% if file_name %} printing {{ file_name }}{% endif

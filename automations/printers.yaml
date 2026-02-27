@@ -55,7 +55,7 @@
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ":speech_balloon:{% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is {{ states('sensor.'+printer+'_print_progress',
         with_unit=True)}} complete and on layer {{ states('sensor.'+printer+'_current_layer')
@@ -108,7 +108,7 @@
       bed_type: '{{states("sensor."+printer+"_print_bed_type") if states("sensor."+printer+"_print_bed_type")
         not in ["unknown","unavailable",""] else ""}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ":printer:{% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is starting!{% if print_weight %} Printing {{print_weight}}{% endif
         %}{% if total_layers %} over {{total_layers}} layers{% endif %}{% if bed_type
@@ -163,7 +163,7 @@
         if states("sensor."+printer+"_used_material_weight") not in ["unknown","unavailable"]
         else ""}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ":white_check_mark:{% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
         finished in {{job_time_str}}{% if used_weight %}, used {{used_weight}}{% endif
         %}! Please pick up your print and cleanup the space. {{states('input_text.'+printer+'_stream')}}"
@@ -200,7 +200,7 @@
       object_name: '{{states("sensor."+printer+"_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ':stop_button:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} stopped at {{progress}}%. Check the print room for more
         details on what happened. {{states(''input_text.''+printer+''_stream'')}}'
@@ -233,7 +233,7 @@
       error_info: '{{states("sensor."+printer+"_print_error") if states("sensor."+printer+"_print_error")
         not in ["unknown","unavailable",""] else ""}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ':rotating_light:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} encountered an error{% if error_info %}: {{error_info}}{%
         endif %}. Check the printer immediately. {{states(''input_text.''+printer+''_stream'')}}'
@@ -270,7 +270,7 @@
       object_name: '{{states("sensor."+printer+"_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ':double_vertical_bar:{% if display_name != object_name %}@{{display_name}}, {% endif
         %}{{object_name}} paused at {{progress}}%. {{states(''input_text.''+printer+''_stream'')}}'
       data:
@@ -296,7 +296,7 @@
       {{ ns.active }}
   actions:
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       data:
         username: Fruitbasket
         icon: basket
@@ -367,7 +367,7 @@
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
   - data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       message: ':warning: {{ printer | capitalize }} has gone offline.'
       data:
         username: '{{ printer | capitalize }}'
@@ -387,7 +387,7 @@
   actions:
   - action: notify.make_nashville
     data:
-      target: "{{ (states('input_text.slack_channel_3dprint') or '#sandbox') }}"
+      target: "#3dprint-info"
       data:
         username: Fruitbasket
         icon: basket
@@ -435,7 +435,7 @@
   actions:
   - action: notify.make_nashville
     data:
-      target: "{{ (states('input_text.slack_channel_facilities') or '#sandbox') }}"
+      target: "#facilities-feed"
       message: >
         {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
         {% set ns = namespace(offline=0, names=[]) %}
