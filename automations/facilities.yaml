@@ -1,0 +1,200 @@
+- id: facilities_pulse_smart_alert
+  alias: Facilities Pulse — Smart Alert
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+    below: 62
+    for:
+      minutes: 5
+  - trigger: numeric_state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+    above: 82
+    for:
+      minutes: 5
+  - trigger: state
+    entity_id:
+    - sensor.air_quality_temperature
+    - sensor.ceramics_climate_sensor_temperature
+    - sensor.woodshop_climate_sensor_temperature
+    - sensor.front_hallway_climate_sensor_temperature
+    - sensor.network_closet_climate_sensor_temperature
+  - trigger: numeric_state
+    entity_id: sensor.kaeser_monitor_system_pressure
+    below: 80
+    for:
+      minutes: 5
+  - trigger: state
+    entity_id: sensor.total_power_alarm_power_failure_alarm
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+  conditions:
+  - condition: template
+    value_template: >
+      {{ (this.attributes.last_triggered is none or
+          (now() - this.attributes.last_triggered).total_seconds() > 900)
+         and (trigger.platform == 'numeric_state' or
+              trigger.entity_id in ['sensor.total_power_alarm_power_failure_alarm', 'binary_sensor.water_leak_sensor'] or
+              (trigger.from_state.state | float(0) - trigger.to_state.state | float(0)) | abs > 5) }}
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      data:
+        icon: warning
+        username: Facilities Pulse
+      message: |
+        :warning: *Facilities Alert* — {{ trigger.to_state.name }} {{ trigger.to_state.state }}{{ trigger.to_state.attributes.unit_of_measurement | default('') }}
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+
+        *:thermometer: Environment*
+        {% set ns = namespace(count=0) -%}
+        {% for device_id in label_devices('facilities_pulse') -%}
+        {% set entities = device_entities(device_id) -%}
+        {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
+        {% set hum_e  = entities | select('search','humidity') | first | default(none) -%}
+        {% if temp_e and states(temp_e) not in ['unknown','unavailable',none] -%}
+        {% set ns.count = ns.count + 1 -%}
+        {% set t = states(temp_e) | float(0) -%}
+        {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
+        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
+        {% endif -%}
+        {% endfor -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
+
+        *:gear: Systems*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
+        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
+
+        *:dash: 3D Print Room*
+        {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
+        {{ aq_icon }} Air Quality: {{ aq }}
+        CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
+  mode: queued
+  max: 2
+- id: facilities_pulse_verbose
+  alias: Facilities Pulse — Verbose
+  triggers:
+  - trigger: time_pattern
+    hours: /1
+  conditions:
+  - condition: template
+    value_template: "{{ is_state('input_boolean.facilities_pulse_verbose', 'on') }}"
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      data:
+        icon: information_source
+        username: Facilities Pulse
+      message: |
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+
+        *:thermometer: Environment*
+        {% set ns = namespace(count=0) -%}
+        {% for device_id in label_devices('facilities_pulse') -%}
+        {% set entities = device_entities(device_id) -%}
+        {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
+        {% set hum_e  = entities | select('search','humidity') | first | default(none) -%}
+        {% if temp_e and states(temp_e) not in ['unknown','unavailable',none] -%}
+        {% set ns.count = ns.count + 1 -%}
+        {% set t = states(temp_e) | float(0) -%}
+        {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
+        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
+        {% endif -%}
+        {% endfor -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
+
+        *:gear: Systems*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
+        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
+
+        *:dash: 3D Print Room*
+        {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
+        {{ aq_icon }} Air Quality: {{ aq }}
+        CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
+  mode: single
+- id: '1740600000002'
+  alias: Air Quality Alert
+  description: Notify #facilities-feed when 3D print room air quality degrades or recovers
+  triggers:
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 3
+    id: degraded
+  - trigger: state
+    entity_id: sensor.air_quality_overall_status
+    to:
+    - Good
+    - Moderate
+    from:
+    - Poor
+    - Dangerous
+    for:
+      minutes: 5
+    id: recovered
+  actions:
+  - variables:
+      co2: '{{ states("sensor.air_quality_carbon_dioxide") }}'
+      voc: '{{ states("sensor.air_quality_voc_index") }}'
+      nox: '{{ states("sensor.air_quality_nox_index") }}'
+      pm25: '{{ states("sensor.air_quality_pm2_5") }}'
+      status: '{{ states("sensor.air_quality_overall_status") }}'
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: degraded
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: >
+            {% if status == 'Dangerous' %}:no_entry:{% else %}:warning:{% endif %} *3D Print Room Air Quality: {{ status }}*
+            CO2: {{ co2 }} ppm | VOC: {{ voc }} | NOx: {{ nox }} | PM2.5: {{ pm25 }} ug/m3.
+            {% if status == 'Dangerous' %}Ventilate immediately — stop printing if possible.{% else %}Increase ventilation. Open doors or windows.{% endif %}
+            {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] -%}
+            {% set ns = namespace(active=[]) -%}
+            {% for p in ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] -%}
+            {% if states('sensor.' ~ p ~ '_print_status') not in not_printing -%}
+            {% set ns.active = ns.active + [p | capitalize] -%}
+            {% endif -%}
+            {% endfor -%}
+            :printer: Printers running: {{ ns.active | join(', ') if ns.active else 'none' }}
+          data:
+            username: Air Quality
+            icon: air_filter
+    - conditions:
+      - condition: trigger
+        id: recovered
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: ':white_check_mark: 3D print room air quality has returned to {{ status }}. CO2: {{ co2 }} ppm | VOC: {{ voc }} | PM2.5: {{ pm25 }} ug/m3.'
+          data:
+            username: Air Quality
+            icon: air_filter
+  mode: single

@@ -1,0 +1,78 @@
+- id: '1767137243013'
+  alias: Stripe – 3D Print Filament Purchase
+  triggers:
+  - webhook_id: !secret stripe_webhook_id
+    trigger: webhook
+    allowed_methods:
+    - POST
+    local_only: false
+  conditions:
+  - condition: template
+    value_template: >
+      {% set obj = trigger.json.data.object | default({}) %}
+      {% set desc = obj.description | default('') | replace('\u2013', '-') | replace('\u2014', '-') %}
+      {{ trigger.json.livemode | default(false)
+         and '3D Print Filament' in desc
+         and 'Self Service' in desc }}
+  actions:
+  - action: notify.filament_purchases_log
+    data:
+      message: >-
+        {{ now().isoformat() }},{{ (trigger.json.data.object.amount | default(0)) / 100 | round(2) }},"{{ trigger.json.data.object.description | default('') }}"
+  - action: light.turn_on
+    target:
+      entity_id: light.filament_store_light
+    data:
+      rgb_color:
+      - 11
+      - 199
+      - 0
+      brightness_pct: 100
+  - delay:
+      seconds: 30
+  - action: light.turn_on
+    target:
+      entity_id: light.filament_store_light
+    data:
+      rgb_color:
+      - 255
+      - 158
+      - 0
+      brightness_pct: 10
+      transition: 32
+  mode: single
+- id: '1740400000000'
+  alias: Gadget AI Failure Detection
+  description: Receives OctoEverywhere Gadget webhooks for Bambu Lab printers
+  triggers:
+  - trigger: webhook
+    webhook_id: !secret octoeverywhere_webhook_id
+    allowed_methods:
+    - POST
+    local_only: false
+  conditions:
+  - condition: template
+    value_template: >
+      {{ trigger.json.EventType in [7, 8]
+         and trigger.json.PrinterName is defined
+         and trigger.json.PrinterName | lower in ['kiwi', 'mango', 'papaya', 'strawberry', 'huckleberry'] }}
+  actions:
+  - variables:
+      event_type: '{{ trigger.json.EventType }}'
+      printer_name: '{{ trigger.json.PrinterName }}'
+      printer_id: '{{ trigger.json.PrinterName | lower }}'
+      file_name: '{{ trigger.json.FileName | default("") }}'
+      progress: '{{ trigger.json.Progress | default(0) }}'
+      stream_url: '{{ states("input_text." + printer_id + "_stream") }}'
+  - action: notify.make_nashville
+    data:
+      target: "#3dprint-info"
+      message: '{% if event_type == 8 %}:rotating_light: Gadget paused {{ printer_name }} after
+        detecting a failure{% else %}:warning: Gadget detected a possible failure on {{
+        printer_name }}{% endif %}{% if file_name %} printing {{ file_name }}{% endif
+        %} ({{ progress }}% complete). {{ stream_url }}'
+      data:
+        username: Gadget
+        icon: robot_face
+  mode: parallel
+  max: 5

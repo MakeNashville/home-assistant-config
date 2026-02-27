@@ -1,0 +1,35 @@
+- id: backup_config_github
+  alias: Backup Config to GitHub
+  description: Automatically backup HA config to GitHub then reload
+  triggers:
+  - at: 03:00:00
+    trigger: time
+  - trigger: homeassistant
+    event: start
+  actions:
+  - sequence:
+    - action: shell_command.clear_entity_list
+    - action: notify.entity_list_file
+      data:
+        message: |-
+          {% for s in states | sort(attribute='entity_id') %}
+          {{ s.entity_id }} | {{ s.name }}
+          {%- endfor %}
+    - action: hassio.addon_stdin
+      data:
+        addon: core_ssh
+        input: /config/git_backup.sh
+    - action: notify.make_nashville
+      data:
+        target: "#deployment-feed"
+        message: ":white_check_mark: Config backup to GitHub completed. Reloading HA at {{ now().strftime('%a %b %-d %-I:%M %p') }}."
+        data:
+          username: HA Backup
+          icon: floppy_disk
+    - delay:
+        seconds: 5
+    - action: automation.reload
+    - action: script.reload
+    - action: homeassistant.reload_core_config
+  mode: single
+
