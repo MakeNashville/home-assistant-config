@@ -8,7 +8,7 @@
     event: start
   actions:
   - sequence:
-    - action: python_script.write_entity_list
+    - action: shell_command.write_entity_list
     - action: hassio.addon_stdin
       data:
         addon: core_ssh

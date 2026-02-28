@@ -28,11 +28,9 @@ lovelace:
       show_in_sidebar: true
       require_admin: false
 
-python_script:
-
 shell_command:
   git_pull: "git -C /config pull --rebase origin main"
-  clear_entity_list: "truncate -s 0 /config/entity_list.txt"
+  write_entity_list: "bash /config/write_entity_list.sh"
 
 input_text:
   pineapple_last_job:
