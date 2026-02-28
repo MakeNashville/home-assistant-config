@@ -207,7 +207,6 @@ sensor.front_hallway_climate_sensor_battery | Battery
 sensor.front_hallway_climate_sensor_humidity | Humidity
 sensor.front_hallway_climate_sensor_temperature | Temperature
 sensor.hallway_exit_door_sensor_battery | Battery
-sensor.huckleberry_active_tray | Active tray
 sensor.huckleberry_aux_fan_speed | Aux fan speed
 sensor.huckleberry_bed_target_temperature | Bed target temperature
 sensor.huckleberry_bed_temperature | Bed temperature
@@ -288,7 +287,6 @@ sensor.kiwi_total_layer_count | Total layer count
 sensor.kiwi_total_usage | Total usage
 sensor.kiwi_wi_fi_signal | Wi-Fi signal
 sensor.make_nashville_do_not_disturb_until | None
-sensor.mango_active_tray | Active tray
 sensor.mango_ams_humidity | Humidity
 sensor.mango_ams_humidity_index | Humidity index
 sensor.mango_ams_temperature | Temperature
