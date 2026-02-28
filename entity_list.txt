@@ -70,7 +70,7 @@ binary_sensor.strawberry_mqtt_encryption_firmware | MQTT encryption firmware
 binary_sensor.strawberry_online | Online
 binary_sensor.strawberry_print_error | Print error
 binary_sensor.strawberry_recording_timelapse | Recording timelapse
-binary_sensor.water_leak_sensor | None
+binary_sensor.water_leak_sensor | 
 binary_sensor.water_leak_sensor_opening | Opening
 button.air_quality_calibrate_co2_sensor | Calibrate CO2 sensor
 button.air_quality_test_led_bar | Test LED bar
@@ -144,7 +144,7 @@ input_text.mango_stream | Mango Stream
 input_text.papaya_stream | Papaya Stream
 input_text.pineapple_last_job | Pineapple Last Job
 input_text.strawberry_stream | Strawberry Stream
-light.filament_store_light | None
+light.filament_store_light | 
 light.huckleberry_chamber_light | Chamber light
 light.kiwi_chamber_light | Chamber light
 light.mango_chamber_light | Chamber light
@@ -286,7 +286,7 @@ sensor.kiwi_task_name | Task name
 sensor.kiwi_total_layer_count | Total layer count
 sensor.kiwi_total_usage | Total usage
 sensor.kiwi_wi_fi_signal | Wi-Fi signal
-sensor.make_nashville_do_not_disturb_until | None
+sensor.make_nashville_do_not_disturb_until | 
 sensor.mango_ams_humidity | Humidity
 sensor.mango_ams_humidity_index | Humidity index
 sensor.mango_ams_temperature | Temperature
