@@ -58,13 +58,6 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/scene/reload"
 
-      - name: Reload Lovelace dashboards
-        run: |
-          curl -f -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            "${{ secrets.HA_URL }}/api/services/lovelace/reload_resources"
-
       - name: Reload themes
         run: |
           curl -f -s -X POST \
