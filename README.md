@@ -14,12 +14,13 @@ Manages 3D printer lifecycle notifications, facilities monitoring, air quality a
 │   ├── facilities.yaml       # Facilities Pulse + Air Quality alerts
 │   ├── kaeser.yaml           # Kaeser compressor notifications + history purge
 │   ├── webhooks.yaml         # Stripe filament purchase + OctoEverywhere Gadget
-│   ├── backup.yaml           # Nightly config backup to GitHub
-│   └── system.yaml           # Slack channel initialization
+│   └── backup.yaml           # Nightly config backup to GitHub
 ├── configuration.yaml        # Core HA config: recorder, template sensors,
-│                             #   input helpers, notify platforms, shell commands
+│                             #   input helpers, shell commands
 ├── secrets.yaml              # ⛔ Not committed — see Secrets
-├── git_backup.sh             # Nightly backup script (runs inside HA via SSH addon)
+├── git_backup.sh             # Backup script: commits config, pushes to ha-backup branch
+├── write_entity_list.sh      # Regenerates entity_list.txt from the entity_list label
+├── entity_list.txt           # Auto-generated entity ID reference — do not edit by hand
 │
 ├── dashboards/
 │   ├── air_quality.yaml      # Air quality dashboard (3D print room)
@@ -62,10 +63,10 @@ AirGradient sensor in the 3D print room. Alerts post to `#facilities-feed` when 
 Pressure and switch state monitored via ESPHome on an ESP32-C6 Feather. Overpressurization events notify Tim via mobile push and `#facilities-feed`.
 
 ### Config backup
-Runs nightly at 3am via the SSH addon. Commits any changed files and pushes to `main`. On success, posts to `#deployment-feed`.
+Runs nightly at 3am via the SSH addon. Checks out the `ha-backup` branch, merges `main`, commits any changed files, pushes to `ha-backup`, and opens (or surfaces) a PR back to `main`. On success, posts to `#deployment-feed`.
 
 ### Entity list
-Before each backup, `/config/entity_list.txt` is regenerated with every entity ID and friendly name in the system:
+Before each backup, `write_entity_list.sh` regenerates `/config/entity_list.txt` with opted-in entities:
 
 ```
 sensor.air_quality_carbon_dioxide | Air Quality Carbon Dioxide
@@ -73,7 +74,9 @@ sensor.kiwi_print_status | Kiwi Print Status
 ...
 ```
 
-This file is committed to the repo alongside the config. It's the primary reference for contributors who need to look up entity IDs without direct access to the HA instance — use it when writing automations, templates, or dashboard cards. The file is regenerated automatically; do not edit it by hand.
+To add an entity, apply the `entity_list` label in HA > Settings > Labels, then tag the entity via its settings page.
+
+This file is committed to the repo. It's the primary reference for contributors who need entity IDs without direct HA access — use it when writing automations, templates, or dashboard cards. Do not edit it by hand.
 
 ---
 
@@ -113,20 +116,6 @@ After changing ESPHome passwords, flash the device once via USB using the `old_p
 
 ---
 
-## Slack channels
-
-Channel targets are stored as HA `input_text` entities — not hardcoded in automations. They default to the values below on first HA start and fall back to `#sandbox` if ever cleared.
-
-| Entity | Default | Used by |
-|--------|---------|---------|
-| `input_text.slack_channel_3dprint` | `#3dprint-info` | All printer automations |
-| `input_text.slack_channel_facilities` | `#facilities-feed` | Facilities pulse, AQ alerts, Kaeser |
-| `input_text.slack_channel_deployment` | `#deployment-feed` | Backup heartbeat |
-
-To redirect all notifications to `#sandbox` during development, clear any of these values in HA > Settings > Helpers — the `or '#sandbox'` fallback activates automatically.
-
----
-
 ## GitHub Actions secrets required
 
 | Secret | Value |
@@ -152,10 +141,10 @@ Then create `secrets.yaml` and `esphome/secrets.yaml` with the values above befo
 
 ## Adding a new printer
 
-1. Add it to the printer lists in `automations.yaml` (search for the `bambu_lab_printers` anchor or the `pineapple` Prusa-specific blocks).
+1. Add it to the printer lists in `automations/printers.yaml` (search for the `bambu_lab_printers` anchor or the `pineapple` Prusa-specific blocks).
 2. Add `history_stats` sensors for weekly completed/failed counts in `configuration.yaml`.
 3. Add template sensors for Display Name, Object, Last Display Name, Last Object in `configuration.yaml`.
-4. Add the printer to the `Roundup` and `Weekly Print Summary` printers lists.
+4. Add the printer to the `Roundup` and `Weekly Print Summary` printers lists in `automations/printers.yaml`.
 5. Add a `recorder` exclude glob for any high-frequency sensors the integration creates.
 
 ## Adding a facilities sensor

@@ -15,10 +15,6 @@
          and '3D Print Filament' in desc
          and 'Self Service' in desc }}
   actions:
-  - action: notify.filament_purchases_log
-    data:
-      message: >-
-        {{ now().isoformat() }},{{ (trigger.json.data.object.amount | default(0)) / 100 | round(2) }},"{{ trigger.json.data.object.description | default('') }}"
   - action: light.turn_on
     target:
       entity_id: light.filament_store_light
