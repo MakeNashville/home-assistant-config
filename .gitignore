@@ -1,5 +1,6 @@
 # === SECRETS & CREDENTIALS ===
 secrets.yaml
+.github_token
 *.key
 *.pem
 *.crt
