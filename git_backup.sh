@@ -80,22 +80,27 @@ open_or_find_pr() {
   fi
 }
 
+if [ ! -f "$GITHUB_TOKEN_FILE" ]; then
+  echo "ERROR: No GitHub token found at $GITHUB_TOKEN_FILE" >&2
+  notify ":warning: Config backup failed — no GitHub token at /config/.github_token."
+  exit 1
+fi
+GITHUB_TOKEN=$(cat "$GITHUB_TOKEN_FILE")
+
+# Inline credential helper so git never prompts for a username/password
+GIT_AUTH=(-c "credential.helper=!f() { echo username=oauth2; echo password=${GITHUB_TOKEN}; }; f")
+
 cd /config
 git add .
 
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
   git commit -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
 
-  if git pull --rebase origin main; then
-    if git push --force origin HEAD:"$BACKUP_BRANCH"; then
+  if git "${GIT_AUTH[@]}" pull --rebase origin main; then
+    if git "${GIT_AUTH[@]}" push --force origin HEAD:"$BACKUP_BRANCH"; then
       echo "Backup pushed to $BACKUP_BRANCH"
 
-      if [ -f "$GITHUB_TOKEN_FILE" ]; then
-        open_or_find_pr "$(cat "$GITHUB_TOKEN_FILE")"
-      else
-        echo "No token at $GITHUB_TOKEN_FILE — skipping PR creation"
-        notify ":floppy_disk: Config backed up to ${BACKUP_BRANCH}. Add a GitHub token to /config/.github_token to auto-open PRs."
-      fi
+      open_or_find_pr "$GITHUB_TOKEN"
     else
       notify ":warning: Config backup failed — push error. Manual intervention may be required."
       echo "Backup failed: push error"
