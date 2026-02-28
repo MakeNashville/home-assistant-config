@@ -12,7 +12,7 @@ fi
 
 count=$(jq -r '
   .data.entities
-  | map(select(.labels | index("entity_list")))
+  | map(select((.labels // []) | contains(["entity_list"])))
   | sort_by(.entity_id)
   | .[]
   | "\(.entity_id) | \(.name // .original_name // "")"
