@@ -1,12 +1,12 @@
 #!/bin/bash
-# Checks out ha-backup, merges main, commits changed config files, pushes,
-# and opens (or surfaces) a PR to main. Returns to main on exit.
+# Checks out a date-stamped ha-backup/YYYY-MM-DD branch, merges main,
+# commits changed config files, pushes, and opens a PR to main. Returns to main on exit.
 # Requires a GitHub PAT at /config/.github_token with repo scope to create PRs.
 
 set -euo pipefail
 
 GITHUB_TOKEN_FILE="/config/.github_token"
-BACKUP_BRANCH="ha-backup"
+BACKUP_BRANCH="ha-backup/$(date +'%Y-%m-%d')"
 
 notify() {
   local msg="$1"
