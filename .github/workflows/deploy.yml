@@ -60,7 +60,7 @@ jobs:
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"target": "#deployment-feed", "message": ":arrows_counterclockwise: Config deployed from GitHub — full restart required for core config changes. Restarting now.", "data": {"username": "GitHub Actions", "icon": "github"}}' \
+            -d '{"target": "#deployment-feed", "message": ":arrows_counterclockwise: Config deployed from GitHub — full restart required for core config changes. Restarting now.", "data": {"username": "GitHub Actions", "icon": "rocket"}}' \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
 
       - name: Restart HA
@@ -119,5 +119,5 @@ jobs:
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"target": "#deployment-feed", "message": ":white_check_mark: Config deployed from GitHub — automations, scripts, scenes, and templates reloaded.", "data": {"username": "GitHub Actions", "icon": "github"}}' \
+            -d '{"target": "#deployment-feed", "message": ":white_check_mark: Config deployed from GitHub — automations, scripts, scenes, and templates reloaded.", "data": {"username": "GitHub Actions", "icon": "rocket"}}' \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
