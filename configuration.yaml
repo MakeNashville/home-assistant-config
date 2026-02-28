@@ -13,14 +13,14 @@ homeassistant:
 
 lovelace:
   dashboards:
-    airquality:
+    air-quality:
       mode: yaml
       title: Air Quality
       icon: mdi:air-filter
       filename: dashboards/air_quality.yaml
       show_in_sidebar: true
       require_admin: false
-    facilities:
+    facilities-overview:
       mode: yaml
       title: Facilities
       icon: mdi:office-building-cog
@@ -28,15 +28,7 @@ lovelace:
       show_in_sidebar: true
       require_admin: false
 
-notify:
-  - name: entity_list_file
-    platform: file
-    filename: /config/entity_list.txt
-    timestamp: false
-  - name: filament_purchases_log
-    platform: file
-    filename: /config/filament_purchases.csv
-    timestamp: false
+python_script:
 
 shell_command:
   git_pull: "git -C /config pull --rebase origin main"
