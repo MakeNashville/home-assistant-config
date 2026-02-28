@@ -285,7 +285,7 @@ sensor.papaya_nozzle_temperature | Nozzle temperature
 sensor.papaya_nozzle_type | Nozzle type
 sensor.papaya_print_bed_type | Print bed type
 sensor.papaya_print_length | Print length
-sensor.papaya_print_progress | Print progres
+sensor.papaya_print_progress | Print progress
 sensor.papaya_print_status | Print status
 sensor.papaya_print_type | Print type
 sensor.papaya_print_weight | Print weight
