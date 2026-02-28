@@ -10,6 +10,7 @@ on:
       - configuration.yaml
       - git_backup.sh
       - themes/**
+      - dashboards/**
       - esphome/**
 
 jobs:
