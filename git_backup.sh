@@ -91,6 +91,7 @@ GITHUB_TOKEN=$(cat "$GITHUB_TOKEN_FILE")
 GIT_AUTH=(-c "credential.helper=!f() { echo username=oauth2; echo password=${GITHUB_TOKEN}; }; f")
 
 cd /config
+bash /config/write_entity_list.sh
 git add .
 
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
