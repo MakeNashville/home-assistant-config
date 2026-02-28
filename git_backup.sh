@@ -6,7 +6,7 @@
 set -euo pipefail
 
 GITHUB_TOKEN_FILE="/config/.github_token"
-BACKUP_BRANCH="ha-backup/$(date +'%Y-%m-%d')"
+BACKUP_BRANCH="ha-backup/$(date +'%Y-%m-%d-%H%M')"
 
 notify() {
   local msg="$1"

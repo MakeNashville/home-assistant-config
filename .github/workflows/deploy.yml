@@ -133,6 +133,17 @@ jobs:
             -d "$body" \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
 
+      # --- Post-deploy backup ---
+
+      - name: Trigger config backup
+        if: success()
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"addon": "core_ssh", "input": "bash /config/git_backup.sh"}' \
+            "${{ secrets.HA_URL }}/api/services/hassio/addon_stdin"
+
       # --- Failure notification ---
 
       - name: Notify failure
