@@ -1,0 +1,501 @@
+automation.air_quality_alert | Air Quality Alert
+automation.backup_config_to_github | Backup Config to GitHub
+automation.facilities_pulse_smart_alert | Facilities Pulse — Smart Alert
+automation.facilities_pulse_verbose | Facilities Pulse — Verbose
+automation.gadget_ai_failure_detection | Gadget AI Failure Detection
+automation.kaeser_event_notifier | Kaeser Compressor Overpressurized
+automation.kiwi_print_progress | Lifecycle Print Progress
+automation.lifecycle_multi_printer_offline_network_power_alert | Lifecycle Multi-Printer Offline — Network/Power Alert
+automation.lifecycle_print_error | Lifecycle Print Error
+automation.lifecycle_print_failed | Lifecycle Print Stopped
+automation.lifecycle_print_paused | Lifecycle Print Paused
+automation.lifecycle_print_starting | Lifecycle Print Starting
+automation.lifecycle_printer_finished | Lifecycle Print Finished
+automation.lifecycle_printer_offline | Lifecycle Printer Offline
+automation.purge_kaeser_pressure_history | Purge Kaeser Pressure History
+automation.roundup | Roundup
+automation.stripe_3d_print_filament_purchase | Stripe – 3D Print Filament Purchase
+automation.weekly_print_summary | Weekly Print Summary
+binary_sensor.filament_store_light_motion | Motion
+binary_sensor.hallway_exit_door_sensor_door | Door
+binary_sensor.huckleberry_developer_lan_mode | Developer Lan Mode
+binary_sensor.huckleberry_extruder_filament_state | Extruder filament state
+binary_sensor.huckleberry_firmware_update | Firmware update
+binary_sensor.huckleberry_hms_errors | HMS errors
+binary_sensor.huckleberry_hybrid_mqtt_blocks_control | Hybrid MQTT blocks control
+binary_sensor.huckleberry_mqtt_encryption_firmware | MQTT encryption firmware
+binary_sensor.huckleberry_online | Online
+binary_sensor.huckleberry_print_error | Print error
+binary_sensor.huckleberry_recording_timelapse | Recording timelapse
+binary_sensor.kaeser_monitor_control_valve_solenoid | Control Valve Solenoid
+binary_sensor.kaeser_monitor_pressure_switch | Pressure Switch
+binary_sensor.kiwi_developer_lan_mode | Developer Lan Mode
+binary_sensor.kiwi_extruder_filament_state | Extruder filament state
+binary_sensor.kiwi_firmware_update | Firmware update
+binary_sensor.kiwi_hms_errors | HMS errors
+binary_sensor.kiwi_hybrid_mqtt_blocks_control | Hybrid MQTT blocks control
+binary_sensor.kiwi_mqtt_encryption_firmware | MQTT encryption firmware
+binary_sensor.kiwi_online | Online
+binary_sensor.kiwi_print_error | Print error
+binary_sensor.kiwi_recording_timelapse | Recording timelapse
+binary_sensor.mango_ams_active | Active
+binary_sensor.mango_developer_lan_mode | Developer Lan Mode
+binary_sensor.mango_extruder_filament_state | Extruder filament state
+binary_sensor.mango_firmware_update | Firmware update
+binary_sensor.mango_hms_errors | HMS errors
+binary_sensor.mango_hybrid_mqtt_blocks_control | Hybrid MQTT blocks control
+binary_sensor.mango_mqtt_encryption_firmware | MQTT encryption firmware
+binary_sensor.mango_online | Online
+binary_sensor.mango_print_error | Print error
+binary_sensor.mango_recording_timelapse | Recording timelapse
+binary_sensor.p1s_01p00a433100976_externalspool_active | Active
+binary_sensor.p1s_01p00c5b1900457_ams_1_active | Active
+binary_sensor.p1s_01p00c5b1900457_externalspool_active | Active
+binary_sensor.p1s_01p09a431201152_externalspool_active | Active
+binary_sensor.papaya_developer_lan_mode | Developer Lan Mode
+binary_sensor.papaya_extruder_filament_state | Extruder filament state
+binary_sensor.papaya_firmware_update | Firmware update
+binary_sensor.papaya_hms_errors | HMS errors
+binary_sensor.papaya_hybrid_mqtt_blocks_control | Hybrid MQTT blocks control
+binary_sensor.papaya_mqtt_encryption_firmware | MQTT encryption firmware
+binary_sensor.papaya_online | Online
+binary_sensor.papaya_print_error | Print error
+binary_sensor.papaya_recording_timelapse | Recording timelapse
+binary_sensor.strawberry_developer_lan_mode | Developer Lan Mode
+binary_sensor.strawberry_extruder_filament_state | Extruder filament state
+binary_sensor.strawberry_firmware_update | Firmware update
+binary_sensor.strawberry_hms_errors | HMS errors
+binary_sensor.strawberry_hybrid_mqtt_blocks_control | Hybrid MQTT blocks control
+binary_sensor.strawberry_mqtt_encryption_firmware | MQTT encryption firmware
+binary_sensor.strawberry_online | Online
+binary_sensor.strawberry_print_error | Print error
+binary_sensor.strawberry_recording_timelapse | Recording timelapse
+binary_sensor.water_leak_sensor | None
+binary_sensor.water_leak_sensor_opening | Opening
+button.air_quality_calibrate_co2_sensor | Calibrate CO2 sensor
+button.air_quality_test_led_bar | Test LED bar
+button.filament_store_light_identify | Identify
+button.huckleberry_force_refresh_data | Force refresh data
+button.huckleberry_pause_printing | Pause printing
+button.huckleberry_resume_printing | Resume printing
+button.huckleberry_stop_printing | Stop printing
+button.kiwi_force_refresh_data | Force refresh data
+button.kiwi_pause_printing | Pause printing
+button.kiwi_resume_printing | Resume printing
+button.kiwi_stop_printing | Stop printing
+button.mango_force_refresh_data | Force refresh data
+button.mango_pause_printing | Pause printing
+button.mango_resume_printing | Resume printing
+button.mango_stop_printing | Stop printing
+button.papaya_force_refresh_data | Force refresh data
+button.papaya_pause_printing | Pause printing
+button.papaya_resume_printing | Resume printing
+button.papaya_stop_printing | Stop printing
+button.pineapple_home_xy_then_z | Home (XY then Z)
+button.pineapple_pause_print | Pause Print
+button.pineapple_reconnect | Reconnect
+button.pineapple_resume_print | Resume Print
+button.pineapple_stop_print | Stop Print
+button.strawberry_force_refresh_data | Force refresh data
+button.strawberry_pause_printing | Pause printing
+button.strawberry_resume_printing | Resume printing
+button.strawberry_stop_printing | Stop printing
+camera.huckleberry_camera | Camera
+camera.kiwi_camera | Camera
+camera.mango_camera | Camera
+camera.papaya_camera | Camera
+camera.pineapple_printer_camera | Printer Camera
+camera.strawberry_camera | Camera
+event.backup_automatic_backup | Automatic backup
+fan.huckleberry_aux_fan | Aux fan
+fan.huckleberry_chamber_fan | Chamber fan
+fan.huckleberry_cooling_fan | Cooling fan
+fan.kiwi_aux_fan | Aux fan
+fan.kiwi_chamber_fan | Chamber fan
+fan.kiwi_cooling_fan | Cooling fan
+fan.mango_aux_fan | Aux fan
+fan.mango_chamber_fan | Chamber fan
+fan.mango_cooling_fan | Cooling fan
+fan.papaya_aux_fan | Aux fan
+fan.papaya_chamber_fan | Chamber fan
+fan.papaya_cooling_fan | Cooling fan
+fan.pineapple_case_fan | Case Fan
+fan.pineapple_model_fan | Model Fan
+fan.pineapple_side_fan | Side Fan
+fan.strawberry_aux_fan | Aux fan
+fan.strawberry_chamber_fan | Chamber fan
+fan.strawberry_cooling_fan | Cooling fan
+image.huckleberry_cover_image | Cover Image
+image.huckleberry_pick_image | Pick image
+image.kiwi_cover_image | Cover Image
+image.kiwi_pick_image | Pick image
+image.mango_cover_image | Cover Image
+image.mango_pick_image | Pick image
+image.papaya_cover_image | Cover Image
+image.papaya_pick_image | Pick image
+image.pineapple_current_print_preview | Current Print Preview
+image.strawberry_cover_image | Cover Image
+image.strawberry_pick_image | Pick image
+input_boolean.facilities_pulse_verbose | Facilities Pulse Verbose Mode
+input_number.voc_danger_zone | VOC Danger Zone
+input_text.huckleberry_stream | Huckleberry Stream
+input_text.kiwi_stream | Kiwi Stream
+input_text.mango_stream | Mango Stream
+input_text.papaya_stream | Papaya Stream
+input_text.pineapple_last_job | Pineapple Last Job
+input_text.strawberry_stream | Strawberry Stream
+light.filament_store_light | None
+light.huckleberry_chamber_light | Chamber light
+light.kiwi_chamber_light | Chamber light
+light.mango_chamber_light | Chamber light
+light.papaya_chamber_light | Chamber light
+light.pineapple_light | Light
+light.strawberry_chamber_light | Chamber light
+number.air_quality_display_brightness | Display brightness
+number.air_quality_led_bar_brightness | LED bar brightness
+number.filament_store_light_on_level | On level
+number.filament_store_light_on_off_transition_time | On/Off transition time
+number.filament_store_light_start_up_color_temperature | Start-up color temperature
+number.filament_store_light_start_up_current_level | Start-up current level
+number.huckleberry_bed_target_temperature | Bed target temperature
+number.huckleberry_nozzle_target_temperature | Nozzle target temperature
+number.kiwi_bed_target_temperature | Bed target temperature
+number.kiwi_nozzle_target_temperature | Nozzle target temperature
+number.mango_bed_target_temperature | Bed target temperature
+number.mango_nozzle_target_temperature | Nozzle target temperature
+number.papaya_bed_target_temperature | Bed target temperature
+number.papaya_nozzle_target_temperature | Nozzle target temperature
+number.pineapple_bed_target | Bed Target
+number.pineapple_nozzle_target | Nozzle Target
+number.pineapple_print_tuning | Print Tuning %
+number.strawberry_bed_target_temperature | Bed target temperature
+number.strawberry_nozzle_target_temperature | Nozzle target temperature
+number.water_leak_sensor_siren_time | Siren time
+select.air_quality_co2_automatic_baseline_duration | CO2 automatic baseline duration
+select.air_quality_configuration_source | Configuration source
+select.air_quality_display_pm_standard | Display PM standard
+select.air_quality_display_temperature_unit | Display temperature unit
+select.air_quality_led_bar_mode | LED bar mode
+select.air_quality_nox_index_learning_offset | NOx index learning offset
+select.air_quality_voc_index_learning_offset | VOC index learning offset
+select.filament_store_light_start_up_behavior | Start-up behavior
+select.huckleberry_printing_speed | Printing speed
+select.kiwi_printing_speed | Printing speed
+select.mango_printing_speed | Printing speed
+select.papaya_printing_speed | Printing speed
+select.strawberry_printing_speed | Printing speed
+sensor.air_quality_carbon_dioxide | Carbon dioxide
+sensor.air_quality_humidity | Humidity
+sensor.air_quality_nox_index | NOx index
+sensor.air_quality_overall_status | Air Quality Overall Status
+sensor.air_quality_pm0_3 | PM0.3
+sensor.air_quality_pm1 | PM1
+sensor.air_quality_pm10 | PM10
+sensor.air_quality_pm2_5 | PM2.5
+sensor.air_quality_temperature | Temperature
+sensor.air_quality_voc_index | VOC index
+sensor.backup_last_attempted_automatic_backup | Last attempted automatic backup
+sensor.backup_last_successful_automatic_backup | Last successful automatic backup
+sensor.backup_next_scheduled_automatic_backup | Next scheduled automatic backup
+sensor.ceramics_climate_sensor_battery | Battery
+sensor.ceramics_climate_sensor_humidity | Humidity
+sensor.ceramics_climate_sensor_temperature | Temperature
+sensor.dragonfruit_display_name | Dragonfruit Display Name
+sensor.dragonfruit_object | Dragonfruit Object
+sensor.filament_store_light_illuminance | Illuminance
+sensor.front_hallway_climate_sensor_battery | Battery
+sensor.front_hallway_climate_sensor_humidity | Humidity
+sensor.front_hallway_climate_sensor_temperature | Temperature
+sensor.hallway_exit_door_sensor_battery | Battery
+sensor.huckleberry_active_tray | Active tray
+sensor.huckleberry_aux_fan_speed | Aux fan speed
+sensor.huckleberry_bed_target_temperature | Bed target temperature
+sensor.huckleberry_bed_temperature | Bed temperature
+sensor.huckleberry_chamber_fan_speed | Chamber fan speed
+sensor.huckleberry_cooling_fan_speed | Cooling fan speed
+sensor.huckleberry_current_layer | Current layer
+sensor.huckleberry_current_stage | Current stage
+sensor.huckleberry_display_name | Huckleberry Display Name
+sensor.huckleberry_end_time | End time
+sensor.huckleberry_gcode_file_downloaded | Gcode file downloaded
+sensor.huckleberry_gcode_filename | Gcode filename
+sensor.huckleberry_heatbreak_fan_speed | Heatbreak fan speed
+sensor.huckleberry_ip_address | IP address
+sensor.huckleberry_last_display_name | Huckleberry Last Display Name
+sensor.huckleberry_last_object | Huckleberry Last Object
+sensor.huckleberry_model_download | Model download
+sensor.huckleberry_mqtt_connection_mode | MQTT connection mode
+sensor.huckleberry_nozzle_size | Nozzle size
+sensor.huckleberry_nozzle_target_temperature | Nozzle target temperature
+sensor.huckleberry_nozzle_temperature | Nozzle temperature
+sensor.huckleberry_nozzle_type | Nozzle type
+sensor.huckleberry_object | Huckleberry Object
+sensor.huckleberry_print_bed_type | Print bed type
+sensor.huckleberry_print_length | Print length
+sensor.huckleberry_print_progress | Print progress
+sensor.huckleberry_print_status | Print status
+sensor.huckleberry_print_type | Print type
+sensor.huckleberry_print_weight | Print weight
+sensor.huckleberry_printable_objects | Printable objects
+sensor.huckleberry_printer_name | Printer name
+sensor.huckleberry_remaining_time | Remaining time
+sensor.huckleberry_sd_card_status | SD card status
+sensor.huckleberry_skipped_objects | Skipped objects
+sensor.huckleberry_speed_profile | Speed profile
+sensor.huckleberry_start_time | Start time
+sensor.huckleberry_task_name | Task name
+sensor.huckleberry_total_layer_count | Total layer count
+sensor.huckleberry_total_usage | Total usage
+sensor.huckleberry_wi_fi_signal | Wi-Fi signal
+sensor.kaeser_monitor_system_pressure | System Pressure
+sensor.kiwi_aux_fan_speed | Aux fan speed
+sensor.kiwi_bed_temperature | Bed temperature
+sensor.kiwi_chamber_fan_speed | Chamber fan speed
+sensor.kiwi_cooling_fan_speed | Cooling fan speed
+sensor.kiwi_current_layer | Current layer
+sensor.kiwi_current_stage | Current stage
+sensor.kiwi_display_name | Kiwi Display Name
+sensor.kiwi_end_time | End time
+sensor.kiwi_gcode_file_downloaded | Gcode file downloaded
+sensor.kiwi_gcode_filename | Gcode filename
+sensor.kiwi_heatbreak_fan_speed | Heatbreak fan speed
+sensor.kiwi_ip_address | IP address
+sensor.kiwi_last_display_name | Kiwi Last Display Name
+sensor.kiwi_last_object | Kiwi Last Object
+sensor.kiwi_model_download | Model download
+sensor.kiwi_mqtt_connection_mode | MQTT connection mode
+sensor.kiwi_nozzle_size | Nozzle size
+sensor.kiwi_nozzle_target_temperature | Nozzle target temperature
+sensor.kiwi_nozzle_temperature | Nozzle temperature
+sensor.kiwi_nozzle_type | Nozzle type
+sensor.kiwi_object | Kiwi Object
+sensor.kiwi_print_bed_type | Print bed type
+sensor.kiwi_print_length | Print length
+sensor.kiwi_print_progress | Print progress
+sensor.kiwi_print_status | Print status
+sensor.kiwi_print_type | Print type
+sensor.kiwi_print_weight | Print weight
+sensor.kiwi_printable_objects | Printable objects
+sensor.kiwi_printer_name | Printer name
+sensor.kiwi_remaining_time | Remaining time
+sensor.kiwi_sd_card_status | SD card status
+sensor.kiwi_skipped_objects | Skipped objects
+sensor.kiwi_speed_profile | Speed profile
+sensor.kiwi_start_time | Start time
+sensor.kiwi_target_bed_temperature | Bed target temperature
+sensor.kiwi_task_name | Task name
+sensor.kiwi_total_layer_count | Total layer count
+sensor.kiwi_total_usage | Total usage
+sensor.kiwi_wi_fi_signal | Wi-Fi signal
+sensor.make_nashville_do_not_disturb_until | None
+sensor.mango_active_tray | Active tray
+sensor.mango_ams_humidity | Humidity
+sensor.mango_ams_humidity_index | Humidity index
+sensor.mango_ams_temperature | Temperature
+sensor.mango_ams_tray_1 | Tray 1
+sensor.mango_ams_tray_2 | Tray 2
+sensor.mango_ams_tray_3 | Tray 3
+sensor.mango_ams_tray_4 | Tray 4
+sensor.mango_aux_fan_speed | Aux fan speed
+sensor.mango_bed_temperature | Bed temperature
+sensor.mango_chamber_fan_speed | Chamber fan speed
+sensor.mango_cooling_fan_speed | Cooling fan speed
+sensor.mango_current_layer | Current layer
+sensor.mango_current_stage | Current stage
+sensor.mango_display_name | Mango Display Name
+sensor.mango_end_time | End time
+sensor.mango_gcode_file_downloaded | Gcode file downloaded
+sensor.mango_gcode_filename | Gcode filename
+sensor.mango_heatbreak_fan_speed | Heatbreak fan speed
+sensor.mango_ip_address | IP address
+sensor.mango_last_display_name | Mango Last Display Name
+sensor.mango_last_object | Mango Last Object
+sensor.mango_model_download | Model download
+sensor.mango_mqtt_connection_mode | MQTT connection mode
+sensor.mango_nozzle_size | Nozzle size
+sensor.mango_nozzle_target_temperature | Nozzle target temperature
+sensor.mango_nozzle_temperature | Nozzle temperature
+sensor.mango_nozzle_type | Nozzle type
+sensor.mango_object | Mango Object
+sensor.mango_print_bed_type | Print bed type
+sensor.mango_print_length | Print length
+sensor.mango_print_progress | Print progress
+sensor.mango_print_status | Print status
+sensor.mango_print_type | Print type
+sensor.mango_print_weight | Print weight
+sensor.mango_printable_objects | Printable objects
+sensor.mango_printer_name | Printer name
+sensor.mango_remaining_time | Remaining time
+sensor.mango_sd_card_status | SD card status
+sensor.mango_skipped_objects | Skipped objects
+sensor.mango_speed_profile | Speed profile
+sensor.mango_start_time | Start time
+sensor.mango_target_bed_temperature | Bed target temperature
+sensor.mango_task_name | Task name
+sensor.mango_total_layer_count | Total layer count
+sensor.mango_total_usage | Total usage
+sensor.mango_wi_fi_signal | Wi-Fi signal
+sensor.network_closet_climate_sensor_battery | Battery
+sensor.network_closet_climate_sensor_humidity | Humidity
+sensor.network_closet_climate_sensor_temperature | Temperature
+sensor.p1s_01p00a433100976_externalspool_external_spool | External spool
+sensor.p1s_01p00c5b1900457_ams_1_humidity | Humidity
+sensor.p1s_01p00c5b1900457_ams_1_humidity_index | Humidity index
+sensor.p1s_01p00c5b1900457_ams_1_temperature | Temperature
+sensor.p1s_01p00c5b1900457_ams_1_tray_1 | Tray 1
+sensor.p1s_01p00c5b1900457_ams_1_tray_2 | Tray 2
+sensor.p1s_01p00c5b1900457_ams_1_tray_3 | Tray 3
+sensor.p1s_01p00c5b1900457_ams_1_tray_4 | Tray 4
+sensor.p1s_01p00c5b1900457_externalspool_external_spool | External spool
+sensor.p1s_01p09a431201152_externalspool_external_spool | External spool
+sensor.papaya_aux_fan_speed | Aux fan speed
+sensor.papaya_bed_temperature | Bed temperature
+sensor.papaya_chamber_fan_speed | Chamber fan speed
+sensor.papaya_cooling_fan_speed | Cooling fan speed
+sensor.papaya_current_layer | Current layer
+sensor.papaya_current_stage | Current stage
+sensor.papaya_display_name | Papaya Display Name
+sensor.papaya_end_time | End time
+sensor.papaya_gcode_file_downloaded | Gcode file downloaded
+sensor.papaya_gcode_filename | Gcode filename
+sensor.papaya_heatbreak_fan_speed | Heatbreak fan speed
+sensor.papaya_ip_address | IP address
+sensor.papaya_last_display_name | Papaya Last Display Name
+sensor.papaya_last_object | Papaya Last Object
+sensor.papaya_model_download | Model download
+sensor.papaya_mqtt_connection_mode | MQTT connection mode
+sensor.papaya_nozzle_size | Nozzle size
+sensor.papaya_nozzle_target_temperature | Nozzle target temperature
+sensor.papaya_nozzle_temperature | Nozzle temperature
+sensor.papaya_nozzle_type | Nozzle type
+sensor.papaya_object | Papaya Object
+sensor.papaya_print_bed_type | Print bed type
+sensor.papaya_print_length | Print length
+sensor.papaya_print_progress | Print progress
+sensor.papaya_print_status | Print status
+sensor.papaya_print_type | Print type
+sensor.papaya_print_weight | Print weight
+sensor.papaya_printable_objects | Printable objects
+sensor.papaya_printer_name | Printer name
+sensor.papaya_remaining_time | Remaining time
+sensor.papaya_sd_card_status | SD card status
+sensor.papaya_skipped_objects | Skipped objects
+sensor.papaya_speed_profile | Speed profile
+sensor.papaya_start_time | Start time
+sensor.papaya_target_bed_temperature | Bed target temperature
+sensor.papaya_task_name | Task name
+sensor.papaya_total_layer_count | Total layer count
+sensor.papaya_total_usage | Total usage
+sensor.papaya_wi_fi_signal | Wi-Fi signal
+sensor.pineapple_bed_temperature | Bed Temperature
+sensor.pineapple_cfs_box_0_slot_1_color | CFS Box 0 Slot 1 Color
+sensor.pineapple_cfs_box_0_slot_1_filament | CFS Box 0 Slot 1 Filament
+sensor.pineapple_cfs_box_0_slot_1_percent | CFS Box 0 Slot 1 Percent
+sensor.pineapple_cfs_external_color | CFS External Color
+sensor.pineapple_cfs_external_filament | CFS External Filament
+sensor.pineapple_cfs_external_percent | CFS External Percent
+sensor.pineapple_chamber_temperature | Chamber Temperature
+sensor.pineapple_current_object | Current Object
+sensor.pineapple_display_name | Pineapple Display Name
+sensor.pineapple_filament_status | Filament Status
+sensor.pineapple_flow_rate | Flow Rate %
+sensor.pineapple_last_display_name | Pineapple Last Display Name
+sensor.pineapple_last_object | Pineapple Last Object
+sensor.pineapple_max_bed_temperature | Max Bed Temperature
+sensor.pineapple_max_nozzle_temperature | Max Nozzle Temperature
+sensor.pineapple_model | Model
+sensor.pineapple_nozzle_temperature | Nozzle Temperature
+sensor.pineapple_object | Pineapple Object
+sensor.pineapple_object_count | Object Count
+sensor.pineapple_position_x | Position X
+sensor.pineapple_position_y | Position Y
+sensor.pineapple_position_z | Position Z
+sensor.pineapple_print_control | Print Control
+sensor.pineapple_print_job_time | Print Job Time
+sensor.pineapple_print_progress | Print Progress
+sensor.pineapple_print_speed | Print Speed %
+sensor.pineapple_print_status | Print Status
+sensor.pineapple_print_time_left | Print Time Left
+sensor.pineapple_real_time_flow | Real-Time Flow
+sensor.pineapple_system | System
+sensor.pineapple_total_layers | Total Layers
+sensor.pineapple_used_material_length | Used Material Length
+sensor.pineapple_working_layer | Working Layer
+sensor.print_status_labels | Print Status Labels
+sensor.strawberry_aux_fan_speed | Aux fan speed
+sensor.strawberry_bed_temperature | Bed temperature
+sensor.strawberry_chamber_fan_speed | Chamber fan speed
+sensor.strawberry_cooling_fan_speed | Cooling fan speed
+sensor.strawberry_current_layer | Current layer
+sensor.strawberry_current_stage | Current stage
+sensor.strawberry_display_name | Strawberry Display Name
+sensor.strawberry_end_time | End time
+sensor.strawberry_gcode_file_downloaded | Gcode file downloaded
+sensor.strawberry_gcode_filename | Gcode filename
+sensor.strawberry_heatbreak_fan_speed | Heatbreak fan speed
+sensor.strawberry_ip_address | IP address
+sensor.strawberry_last_display_name | Strawberry Last Display Name
+sensor.strawberry_last_object | Strawberry Last Object
+sensor.strawberry_model_download | Model download
+sensor.strawberry_mqtt_connection_mode | MQTT connection mode
+sensor.strawberry_nozzle_size | Nozzle size
+sensor.strawberry_nozzle_target_temperature | Nozzle target temperature
+sensor.strawberry_nozzle_temperature | Nozzle temperature
+sensor.strawberry_nozzle_type | Nozzle type
+sensor.strawberry_object | Strawberry Object
+sensor.strawberry_print_bed_type | Print bed type
+sensor.strawberry_print_length | Print length
+sensor.strawberry_print_progress | Print progress
+sensor.strawberry_print_status | Print status
+sensor.strawberry_print_type | Print type
+sensor.strawberry_print_weight | Print weight
+sensor.strawberry_printable_objects | Printable objects
+sensor.strawberry_printer_name | Printer name
+sensor.strawberry_remaining_time | Remaining time
+sensor.strawberry_sd_card_status | SD card status
+sensor.strawberry_skipped_objects | Skipped objects
+sensor.strawberry_speed_profile | Speed profile
+sensor.strawberry_start_time | Start time
+sensor.strawberry_target_bed_temperature | Bed target temperature
+sensor.strawberry_task_name | Task name
+sensor.strawberry_total_layer_count | Total layer count
+sensor.strawberry_total_usage | Total usage
+sensor.strawberry_wi_fi_signal | Wi-Fi signal
+sensor.sun_next_dawn | Next dawn
+sensor.sun_next_dusk | Next dusk
+sensor.sun_next_midnight | Next midnight
+sensor.sun_next_noon | Next noon
+sensor.sun_next_rising | Next rising
+sensor.sun_next_setting | Next setting
+sensor.total_power_alarm_battery | Battery
+sensor.total_power_alarm_power_failure_alarm | Power failure alarm
+sensor.total_power_alarm_power_failure_alarm_beep | Power failure alarm beep
+sensor.total_power_alarm_power_failure_alarm_mute | Power failure alarm mute
+sensor.total_power_alarm_power_failure_alarm_volume | Power failure alarm volume
+sensor.water_leak_sensor_battery | Battery
+sensor.woodshop_climate_sensor_battery | Battery
+sensor.woodshop_climate_sensor_humidity | Humidity
+sensor.woodshop_climate_sensor_temperature | Temperature
+switch.air_quality_post_data_to_airgradient | Post data to Airgradient
+switch.huckleberry_enable_camera | Enable camera
+switch.huckleberry_use_image_sensor_camera | Use image sensor camera
+switch.kiwi_enable_camera | Enable camera
+switch.kiwi_use_image_sensor_camera | Use image sensor camera
+switch.mango_enable_camera | Enable camera
+switch.mango_use_image_sensor_camera | Use image sensor camera
+switch.papaya_enable_camera | Enable camera
+switch.papaya_use_image_sensor_camera | Use image sensor camera
+switch.strawberry_enable_camera | Enable camera
+switch.strawberry_use_image_sensor_camera | Use image sensor camera
+switch.water_leak_sensor_enable_siren | Enable siren
+update.air_quality_firmware | Firmware
+update.esphome_device_builder_update | Update
+update.filament_store_light_firmware | Firmware
+update.home_assistant_core_update | Update
+update.home_assistant_operating_system_update | Update
+update.home_assistant_supervisor_update | Update
+update.sqlite_web_update | Update
+update.studio_code_server_update | Update
+update.tailscale_update | Update
+update.terminal_ssh_update | Update
+update.water_leak_sensor_firmware | Firmware

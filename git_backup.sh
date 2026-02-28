@@ -95,7 +95,7 @@ bash /config/write_entity_list.sh
 git add .
 
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
-  git commit -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
+  git commit -a -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
 
   if git "${GIT_AUTH[@]}" pull --rebase origin main; then
     if git "${GIT_AUTH[@]}" push --force origin HEAD:"$BACKUP_BRANCH"; then
