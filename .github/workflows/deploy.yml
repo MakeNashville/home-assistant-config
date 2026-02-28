@@ -5,9 +5,11 @@ on:
     branches: [main]
     paths:
       - automations.yaml
+      - automations/**
       - scripts.yaml
       - scenes.yaml
       - configuration.yaml
+      - python_scripts/**
       - git_backup.sh
       - themes/**
       - dashboards/**
