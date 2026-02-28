@@ -1,7 +1,7 @@
 #!/bin/bash
-# Commits changed config files, pushes to the ha-backup branch, and opens
-# (or surfaces) a PR to main. Requires a GitHub PAT at /config/.github_token
-# with repo scope to create PRs.
+# Checks out ha-backup, merges main, commits changed config files, pushes,
+# and opens (or surfaces) a PR to main. Returns to main on exit.
+# Requires a GitHub PAT at /config/.github_token with repo scope to create PRs.
 
 set -euo pipefail
 
@@ -91,26 +91,32 @@ GITHUB_TOKEN=$(cat "$GITHUB_TOKEN_FILE")
 GIT_AUTH=(-c "credential.helper=!f() { echo username=oauth2; echo password=${GITHUB_TOKEN}; }; f")
 
 cd /config
+
+# Always return to main when the script exits
+trap 'git checkout main 2>/dev/null || true' EXIT
+
+# Fetch latest main, switch to backup branch, merge in main
+git "${GIT_AUTH[@]}" fetch origin main
+git checkout "$BACKUP_BRANCH" 2>/dev/null || git checkout -b "$BACKUP_BRANCH"
+if ! git merge --no-edit origin/main; then
+  git merge --abort
+  notify ":warning: Config backup failed — merge conflict with main. Manual intervention may be required."
+  echo "Backup failed: merge conflict"
+  exit 1
+fi
+
 bash /config/write_entity_list.sh
 git add .
 
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
   git commit -a -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
 
-  if git "${GIT_AUTH[@]}" pull --rebase origin main; then
-    if git "${GIT_AUTH[@]}" push --force origin HEAD:"$BACKUP_BRANCH"; then
-      echo "Backup pushed to $BACKUP_BRANCH"
-
-      open_or_find_pr "$GITHUB_TOKEN"
-    else
-      notify ":warning: Config backup failed — push error. Manual intervention may be required."
-      echo "Backup failed: push error"
-      exit 1
-    fi
+  if git "${GIT_AUTH[@]}" push origin "$BACKUP_BRANCH"; then
+    echo "Backup pushed to $BACKUP_BRANCH"
+    open_or_find_pr "$GITHUB_TOKEN"
   else
-    git rebase --abort
-    notify ":warning: Config backup failed — rebase conflict. Manual intervention may be required."
-    echo "Backup failed: rebase conflict"
+    notify ":warning: Config backup failed — push error. Manual intervention may be required."
+    echo "Backup failed: push error"
     exit 1
   fi
 else
