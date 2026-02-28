@@ -4,13 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - automations.yaml
       - automations/**
       - scripts.yaml
       - scenes.yaml
       - configuration.yaml
-      - python_scripts/**
       - git_backup.sh
+      - write_entity_list.sh
       - themes/**
       - dashboards/**
       - esphome/**
@@ -26,7 +25,7 @@ jobs:
       - name: Detect if full restart required
         id: restart_check
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -qE '^(configuration\.yaml|python_scripts/)'; then
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(configuration\.yaml)'; then
             echo "required=true" >> $GITHUB_OUTPUT
           else
             echo "required=false" >> $GITHUB_OUTPUT
@@ -57,10 +56,16 @@ jobs:
       - name: Notify restart
         if: steps.restart_check.outputs.required == 'true'
         run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          body=$(jq -n \
+            --arg msg ":arrows_counterclockwise: Config deployed from GitHub — full restart required for core config changes. Restarting now. <${COMMIT_URL}|${SHORT_SHA}>" \
+            --arg target "#deployment-feed" \
+            '{"target": $target, "message": $msg, "data": {"username": "GitHub Actions", "icon": "rocket"}}')
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"target": "#deployment-feed", "message": ":arrows_counterclockwise: Config deployed from GitHub — full restart required for core config changes. Restarting now.", "data": {"username": "GitHub Actions", "icon": "rocket"}}' \
+            -d "$body" \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
 
       - name: Restart HA
@@ -116,8 +121,32 @@ jobs:
       - name: Notify reload
         if: steps.restart_check.outputs.required == 'false'
         run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          body=$(jq -n \
+            --arg msg ":white_check_mark: Config deployed from GitHub — automations, scripts, scenes, and templates reloaded. <${COMMIT_URL}|${SHORT_SHA}>" \
+            --arg target "#deployment-feed" \
+            '{"target": $target, "message": $msg, "data": {"username": "GitHub Actions", "icon": "rocket"}}')
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"target": "#deployment-feed", "message": ":white_check_mark: Config deployed from GitHub — automations, scripts, scenes, and templates reloaded.", "data": {"username": "GitHub Actions", "icon": "rocket"}}' \
+            -d "$body" \
+            "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
+
+      # --- Failure notification ---
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          body=$(jq -n \
+            --arg msg ":x: Deploy failed for <${COMMIT_URL}|${SHORT_SHA}>. <${RUN_URL}|View run>" \
+            --arg target "#deployment-feed" \
+            '{"target": $target, "message": $msg, "data": {"username": "GitHub Actions", "icon": "rotating_light"}}')
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
