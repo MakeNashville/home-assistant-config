@@ -18,7 +18,7 @@
     - sensor.woodshop_climate_sensor_temperature
     - sensor.front_hallway_climate_sensor_temperature
     - sensor.network_closet_climate_sensor_temperature
-    above: 82
+    above: 85
     for:
       minutes: 5
   - trigger: state
@@ -66,18 +66,19 @@
         {% set ns.count = ns.count + 1 -%}
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
-        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
+        {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
         {% endif -%}
         {% endfor -%}
         {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
-        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
+        :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
-        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {{ ':green_circle:' if pwr == 'ok' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
-        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
-        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
+        {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
@@ -114,18 +115,19 @@
         {% set ns.count = ns.count + 1 -%}
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
-        {{ icon }} {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ "%5.1f°F"|format(t) }}  {{ states(hum_e)|float(0)|round(0)|int }}%
+        {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
         {% endif -%}
         {% endfor -%}
         {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
-        :partly_sunny: {{ "%-17s"|format('Outside') }} {{ "%5.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ state_attr('weather.forecast_home','humidity')|int }}%
+        :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
-        {{ ':white_check_mark:' if pwr == 'ok' else ':warning:' }} Power:               {{ pwr | capitalize }}
+        {{ ':green_circle:' if pwr == 'ok' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
-        {{ ':white_check_mark:' if leak == 'off' else ':droplet:' }} Exec Bathroom:       {{ state_translated('binary_sensor.water_leak_sensor') }}
-        :large_blue_circle: Kaeser:              {{ states('sensor.kaeser_monitor_system_pressure') | float(0) | round(1) }} psi
+        {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
@@ -193,7 +195,7 @@
       - action: notify.make_nashville
         data:
           target: "#integration-sandbox"
-          message: ':white_check_mark: 3D print room air quality has returned to {{ status }}. CO2: {{ co2 }} ppm | VOC: {{ voc }} | PM2.5: {{ pm25 }} ug/m3.'
+          message: ':white_check_mark: CO2: {{ co2 }} ppm | VOC: {{ voc }} | PM2.5: {{ pm25 }} ug/m3 — 3D print room air quality has returned to {{ status }}.'
           data:
             username: Air Quality
             icon: air_filter
