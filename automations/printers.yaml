@@ -57,20 +57,42 @@
       end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
         %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
         %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
-  - data:
-      target: "#3dprint-info"
-      message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
-        }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
-        | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
-        }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
-        %p') }}){% endif %} — {% if display_name != object_name %}@{{display_name}},
-        {% endif %}{{object_name}} {% set prog = states('sensor.'+printer+'_print_progress')
-        | int(0) %}{% if prog >= 90 %}almost done!{% elif prog >= 50 %}halfway there!{%
-        else %}printing away!{% endif %} {{states('input_text.'+printer+'_stream')}}"
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
+            }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
+            | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
+            }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
+            %p') }}){% endif %} — {% if display_name != object_name %}@{{display_name}},
+            {% endif %}{{object_name}} {% set prog = states('sensor.'+printer+'_print_progress')
+            | int(0) %}{% if prog >= 90 %}almost done!{% elif prog >= 50 %}halfway there!{%
+            else %}printing away!{% endif %} {{states('input_text.'+printer+'_stream')}}"
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
+          }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
+          | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
+          }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
+          %p') }}){% endif %} — {% if display_name != object_name %}@{{display_name}},
+          {% endif %}{{object_name}} {% set prog = states('sensor.'+printer+'_print_progress')
+          | int(0) %}{% if prog >= 90 %}almost done!{% elif prog >= 50 %}halfway there!{%
+          else %}printing away!{% endif %} {{states('input_text.'+printer+'_stream')}}"
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
   mode: single
 - id: '1722144402850'
   alias: Lifecycle Print Starting
@@ -114,9 +136,8 @@
         else ""}}'
       bed_type: '{{states("sensor."+printer+"_print_bed_type") if states("sensor."+printer+"_print_bed_type")
         not in ["unknown","unavailable",""] else ""}}'
-  - data:
-      target: "#3dprint-info"
-      message: ":printer: {% if print_weight %}{{print_weight}}{% endif %}{% if total_layers
+  - variables:
+      msg: ":printer: {% if print_weight %}{{print_weight}}{% endif %}{% if total_layers
         %}{% if print_weight %} | {% endif %}{{total_layers}} layers{% endif %}{% if
         end_dt %}{% if print_weight or total_layers %} | {% endif %}{% set secs = (as_timestamp(end_dt)
         - as_timestamp(now())) | int(0) %}{% set h = secs // 3600 %}{% set m = (secs
@@ -125,10 +146,18 @@
         or end_dt %} — {% endif %}{% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} is underway!{% if bed_type %} on a {{bed_type}}{%
         endif %}. {{states('input_text.'+printer+'_stream')}}"
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ 'kiwifruit' if printer == 'kiwi' else printer }}:"
+    response_variable: slack_response
+  - action: input_text.set_value
+    target:
+      entity_id: "input_text.{{ printer }}_slack_thread_ts"
+    data:
+      value: "{{ slack_response.content.ts | default('') }}"
   - if:
     - condition: template
       value_template: "{{ printer == 'pineapple' }}"
@@ -171,15 +200,37 @@
       used_weight: '{{states("sensor."+printer+"_used_material_weight", with_unit=True)
         if states("sensor."+printer+"_used_material_weight") not in ["unknown","unavailable"]
         else ""}}'
-  - data:
-      target: "#3dprint-info"
-      message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
-        %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-        is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
+            %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+            is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
+          %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+          is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
+  - action: input_text.set_value
+    target:
+      entity_id: "input_text.{{ printer }}_slack_thread_ts"
+    data:
+      value: ""
   mode: parallel
   max: 4
 - id: '1722194364076'
@@ -208,15 +259,37 @@
       display_name: '{{states("sensor."+printer+"_display_name") }}'
       object_name: '{{states("sensor."+printer+"_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
-  - data:
-      target: "#3dprint-info"
-      message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
-        {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
-        happened. {{states(''input_text.''+printer+''_stream'')}}'
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
+            {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
+            happened. {{states(''input_text.''+printer+''_stream'')}}'
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
+          {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
+          happened. {{states(''input_text.''+printer+''_stream'')}}'
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
+  - action: input_text.set_value
+    target:
+      entity_id: "input_text.{{ printer }}_slack_thread_ts"
+    data:
+      value: ""
   mode: parallel
   max: 4
 - id: '1740355200000'
@@ -241,15 +314,32 @@
       object_name: '{{states("sensor."+printer+"_object") }}'
       error_info: '{{states("sensor."+printer+"_print_error") if states("sensor."+printer+"_print_error")
         not in ["unknown","unavailable",""] else ""}}'
-  - data:
-      target: "#3dprint-info"
-      message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
-        != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
-        Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
+            != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
+            Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
+          != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
+          Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
   mode: parallel
   max: 4
 - id: '1740400001000'
@@ -281,18 +371,38 @@
       end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
         %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
         %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
-  - data:
-      target: "#3dprint-info"
-      message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
-        (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
-        3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
-        }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
-        %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-        is on hold. Head over when you get a chance! {{states(''input_text.''+printer+''_stream'')}}'
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-    action: notify.make_nashville
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
+            (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
+            3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
+            }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
+            %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+            is on hold. Head over when you get a chance! {{states(''input_text.''+printer+''_stream'')}}'
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
+          (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
+          3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
+          }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
+          %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
+          is on hold. Head over when you get a chance! {{states(''input_text.''+printer+''_stream'')}}'
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
   mode: parallel
   max: 4
 - id: '1722445886802'
