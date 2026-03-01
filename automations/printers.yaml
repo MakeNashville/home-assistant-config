@@ -59,7 +59,7 @@
         %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
   - data:
       target: "#3dprint-info"
-      message: ":speech_balloon:{{ states('sensor.'+printer+'_print_progress', with_unit=True)
+      message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
         }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
         | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
         }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
@@ -116,7 +116,7 @@
         not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: "#3dprint-info"
-      message: ":printer:{% if print_weight %}{{print_weight}}{% endif %}{% if total_layers
+      message: ":printer: {% if print_weight %}{{print_weight}}{% endif %}{% if total_layers
         %}{% if print_weight %} | {% endif %}{{total_layers}} layers{% endif %}{% if
         end_dt %}{% if print_weight or total_layers %} | {% endif %}{% set secs = (as_timestamp(end_dt)
         - as_timestamp(now())) | int(0) %}{% set h = secs // 3600 %}{% set m = (secs
@@ -173,7 +173,7 @@
         else ""}}'
   - data:
       target: "#3dprint-info"
-      message: ":white_check_mark:{{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
+      message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
         %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
         is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
       data:
@@ -210,7 +210,7 @@
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
   - data:
       target: "#3dprint-info"
-      message: ':stop_button:{{progress}}% — {% if display_name != object_name %}@{{display_name}},
+      message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
         {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
         happened. {{states(''input_text.''+printer+''_stream'')}}'
       data:
@@ -243,7 +243,7 @@
         not in ["unknown","unavailable",""] else ""}}'
   - data:
       target: "#3dprint-info"
-      message: ':rotating_light:{% if error_info %}{{error_info}} — {% endif %}{% if display_name
+      message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
         != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
         Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
       data:
@@ -283,7 +283,7 @@
         %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
   - data:
       target: "#3dprint-info"
-      message: ':double_vertical_bar:{{progress}}%{% if end_dt %} | {% set secs =
+      message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
         (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
         3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
         }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
