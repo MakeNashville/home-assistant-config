@@ -74,7 +74,8 @@ jobs:
           curl -f -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
-            "${{ secrets.HA_URL }}/api/services/homeassistant/restart"
+            "${{ secrets.HA_URL }}/api/services/homeassistant/restart" \
+            || [ $? -eq 52 ]
 
       # --- Reload path ---
 
