@@ -13,6 +13,7 @@ on:
       - themes/**
       - dashboards/**
       - esphome/**
+      - .github/workflows/deploy.yml
 
 jobs:
   deploy:
@@ -71,11 +72,14 @@ jobs:
       - name: Restart HA
         if: steps.restart_check.outputs.required == 'true'
         run: |
-          curl -f -s -X POST \
+          # HA shuts down before it can respond, so curl will always
+          # fail with a connection-level error (52, 35, etc.). Fire and
+          # forget — config was already validated above.
+          curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/homeassistant/restart" \
-            || [ $? -eq 52 ]
+            || true
 
       # --- Reload path ---
 
