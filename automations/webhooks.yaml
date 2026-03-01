@@ -60,15 +60,33 @@
       file_name: '{{ trigger.json.FileName | default("") }}'
       progress: '{{ trigger.json.Progress | default(0) }}'
       stream_url: '{{ states("input_text." + printer_id + "_stream") }}'
-  - action: notify.make_nashville
-    data:
-      target: "#3dprint-info"
-      message: '{{ progress }}% — {% if event_type == 8 %}:rotating_light: Gadget paused
-        {{ printer_name }} after detecting a failure{% else %}:warning: Gadget detected
-        a possible failure on {{ printer_name }}{% endif %}{% if file_name %} printing
-        {{ file_name }}{% endif %}. {{ stream_url }}'
+      thread_ts: '{{ states("input_text." + printer_id + "_slack_thread_ts") }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ thread_ts != '' }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#3dprint-info"
+          message: '{{ progress }}% — {% if event_type == 8 %}:rotating_light: Gadget paused
+            {{ printer_name }} after detecting a failure{% else %}:warning: Gadget detected
+            a possible failure on {{ printer_name }}{% endif %}{% if file_name %} printing
+            {{ file_name }}{% endif %}. {{ stream_url }}'
+          data:
+            username: Gadget
+            icon: robot_face
+            thread_ts: '{{ thread_ts }}'
+    default:
+    - action: notify.make_nashville
       data:
-        username: Gadget
-        icon: robot_face
+        target: "#3dprint-info"
+        message: '{{ progress }}% — {% if event_type == 8 %}:rotating_light: Gadget paused
+          {{ printer_name }} after detecting a failure{% else %}:warning: Gadget detected
+          a possible failure on {{ printer_name }}{% endif %}{% if file_name %} printing
+          {{ file_name }}{% endif %}. {{ stream_url }}'
+        data:
+          username: Gadget
+          icon: robot_face
   mode: parallel
   max: 5

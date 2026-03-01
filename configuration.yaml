@@ -34,10 +34,39 @@ shell_command:
   git_pull: "git -C /config pull --rebase origin main"
   write_entity_list: "bash /config/write_entity_list.sh"
 
+rest_command:
+  slack_post_3dprint:
+    url: https://slack.com/api/chat.postMessage
+    method: POST
+    headers:
+      Authorization: !secret slack_bot_token_header
+      Content-Type: "application/json; charset=utf-8"
+    payload: >-
+      {"channel": {{ channel | tojson }}, "text": {{ text | tojson }},
+       "username": {{ username | tojson }}, "icon_emoji": {{ icon_emoji | tojson }}}
+
 input_text:
   pineapple_last_job:
     name: Pineapple Last Job
     max: 255
+  kiwi_slack_thread_ts:
+    name: Kiwi Slack Thread TS
+    max: 30
+  mango_slack_thread_ts:
+    name: Mango Slack Thread TS
+    max: 30
+  papaya_slack_thread_ts:
+    name: Papaya Slack Thread TS
+    max: 30
+  strawberry_slack_thread_ts:
+    name: Strawberry Slack Thread TS
+    max: 30
+  huckleberry_slack_thread_ts:
+    name: Huckleberry Slack Thread TS
+    max: 30
+  pineapple_slack_thread_ts:
+    name: Pineapple Slack Thread TS
+    max: 30
 
 input_boolean:
   facilities_pulse_verbose:
