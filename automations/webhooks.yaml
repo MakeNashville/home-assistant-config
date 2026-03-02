@@ -64,7 +64,7 @@
   - choose:
     - conditions:
       - condition: template
-        value_template: "{{ thread_ts != '' }}"
+        value_template: "{{ '.' in thread_ts }}"
       sequence:
       - action: notify.make_nashville
         data:
