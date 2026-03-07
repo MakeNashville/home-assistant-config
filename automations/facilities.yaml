@@ -18,7 +18,7 @@
     - sensor.woodshop_climate_sensor_temperature
     - sensor.front_hallway_climate_sensor_temperature
     - sensor.network_closet_climate_sensor_temperature
-    above: 85
+    above: 90
     for:
       minutes: 5
   - trigger: state
