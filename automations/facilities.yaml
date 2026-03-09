@@ -22,6 +22,7 @@
     for:
       minutes: 5
   - trigger: state
+    id: temp_state_change
     entity_id:
     - sensor.air_quality_temperature
     - sensor.ceramics_climate_sensor_temperature
@@ -40,11 +41,29 @@
   conditions:
   - condition: template
     value_template: >
-      {{ (this.attributes.last_triggered is none or
-          (now() - this.attributes.last_triggered).total_seconds() > 900)
-         and (trigger.platform == 'numeric_state' or
-              trigger.entity_id in ['sensor.total_power_alarm_power_failure_alarm', 'binary_sensor.water_leak_sensor'] or
-              (trigger.from_state.state | float(0) - trigger.to_state.state | float(0)) | abs > 5) }}
+      {% set cooldown_ok = (
+        this.attributes.last_triggered is none or
+        (now() - this.attributes.last_triggered).total_seconds() > 900
+      ) %}
+
+      {% set valid_temp_change = (
+        trigger.id == 'temp_state_change' and
+        trigger.from_state is not none and
+        trigger.to_state is not none and
+        trigger.from_state.state not in ['unknown', 'unavailable', none] and
+        trigger.to_state.state not in ['unknown', 'unavailable', none] and
+        ((trigger.from_state.state | float(0)) - (trigger.to_state.state | float(0))) | abs > 5
+      ) %}
+
+      {% set allowed_non_temp = (
+        trigger.platform == 'numeric_state' or
+        trigger.entity_id in [
+          'sensor.total_power_alarm_power_failure_alarm',
+          'binary_sensor.water_leak_sensor'
+        ]
+      ) %}
+
+      {{ cooldown_ok and (allowed_non_temp or valid_temp_change) }}
   actions:
   - action: notify.make_nashville
     data:
