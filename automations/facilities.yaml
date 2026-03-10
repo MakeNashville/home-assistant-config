@@ -76,7 +76,7 @@
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
         *:thermometer: Environment*
-        {% set ns = namespace(count=0) -%}
+        {% set ns = namespace(count=0, unavail=[]) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
         {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
@@ -86,24 +86,48 @@
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
         {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
+        {% elif temp_e -%}
+        {% set ns.unavail = ns.unavail + [area_name(temp_e)|default('Unknown')] -%}
         {% endif -%}
         {% endfor -%}
-        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        {% if ns.count == 0 and not ns.unavail %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
         :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {% if pwr not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if pwr == 'normal' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Power'] -%}
+        {% endif -%}
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {% if leak not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
-        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Exec Bathroom Water'] -%}
+        {% endif -%}
+        {% set kpsi_raw = states('sensor.kaeser_monitor_system_pressure') -%}
+        {% if kpsi_raw not in ['unknown','unavailable'] -%}
+        {% set kpsi = kpsi_raw | float(0) -%}
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
+        {% endif -%}
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
         {{ aq_icon }} Air Quality: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
+        {% endif -%}
+
+        {% if ns.unavail -%}
+        *:grey_question: Unavailable*
+        {{ ns.unavail | join(', ') }}
+        {% endif -%}
   mode: queued
   max: 2
 - id: facilities_pulse_verbose
@@ -125,7 +149,7 @@
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
         *:thermometer: Environment*
-        {% set ns = namespace(count=0) -%}
+        {% set ns = namespace(count=0, unavail=[]) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
         {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
@@ -135,24 +159,48 @@
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
         {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
+        {% elif temp_e -%}
+        {% set ns.unavail = ns.unavail + [area_name(temp_e)|default('Unknown')] -%}
         {% endif -%}
         {% endfor -%}
-        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        {% if ns.count == 0 and not ns.unavail %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
         :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {% if pwr not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if pwr == 'normal' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Power'] -%}
+        {% endif -%}
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {% if leak not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
-        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Exec Bathroom Water'] -%}
+        {% endif -%}
+        {% set kpsi_raw = states('sensor.kaeser_monitor_system_pressure') -%}
+        {% if kpsi_raw not in ['unknown','unavailable'] -%}
+        {% set kpsi = kpsi_raw | float(0) -%}
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
+        {% endif -%}
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
+        {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
         {{ aq_icon }} Air Quality: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
+        {% else -%}
+        {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
+        {% endif -%}
+
+        {% if ns.unavail -%}
+        *:grey_question: Unavailable*
+        {{ ns.unavail | join(', ') }}
+        {% endif -%}
   mode: single
 - id: '1740600000002'
   alias: Air Quality Alert
