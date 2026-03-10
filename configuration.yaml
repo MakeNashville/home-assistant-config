@@ -284,6 +284,7 @@ template:
       - name: "Dragonfruit End Time"
         unique_id: dragonfruit_end_time
         device_class: timestamp
+        availability: "{{ states('sensor.dragonfruit_print_finish') not in ['unknown', 'unavailable'] }}"
         state: "{{ states('sensor.dragonfruit_print_finish') }}"
 
 sensor:
