@@ -79,7 +79,7 @@ Six printers, named after fruits:
 | Strawberry | Bambu Lab | |
 | Huckleberry | Bambu Lab | |
 | Pineapple | Prusa | Different state values (e.g. `completed` not `finish`) |
-| Dragonfruit | (additional) | Template sensors only so far |
+| Dragonfruit | PrusaLink (Prusa XL) | Uses alias template sensors for entity name compatibility |
 
 Bambu printers use anchors (`bambu_lab_printers`, `all_printers`) in `automations/printers.yaml` — add new Bambu printers to those anchors.
 

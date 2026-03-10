@@ -32,6 +32,7 @@
     - sensor.strawberry_print_progress
     - sensor.huckleberry_print_progress
     - sensor.pineapple_print_progress
+    - sensor.dragonfruit_print_progress
     for:
       seconds: 1
     to:
@@ -44,6 +45,7 @@
     - sensor.strawberry_print_progress
     - sensor.huckleberry_print_progress
     - sensor.pineapple_print_progress
+    - sensor.dragonfruit_print_progress
     for:
       seconds: 1
     to:
@@ -119,6 +121,16 @@
     for:
       seconds: 10
     trigger: state
+  - entity_id:
+    - sensor.dragonfruit_print_status
+    to:
+    - printing
+    from:
+    - idle
+    - ready
+    for:
+      seconds: 10
+    trigger: state
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
@@ -160,13 +172,13 @@
       value: "{% set ts = (slack_response.content | from_json).ts | default('') | string %}{{ ts if '.' in ts else '' }}"
   - if:
     - condition: template
-      value_template: "{{ printer == 'pineapple' }}"
+      value_template: "{{ printer in ['pineapple', 'dragonfruit'] }}"
     then:
     - action: input_text.set_value
       target:
-        entity_id: input_text.pineapple_last_job
+        entity_id: "input_text.{{ printer }}_last_job"
       data:
-        value: "{{ states('sensor.pineapple_current_object') }}"
+        value: "{{ states('sensor.dragonfruit_filename') if printer == 'dragonfruit' else states('sensor.pineapple_current_object') }}"
   mode: parallel
   max: 4
 - id: '1722191155564'
@@ -184,6 +196,15 @@
     - sensor.pineapple_print_status
     to:
     - completed
+    for:
+      seconds: 5
+    trigger: state
+    from:
+    - printing
+  - entity_id:
+    - sensor.dragonfruit_print_status
+    to:
+    - finished
     for:
       seconds: 5
     trigger: state
@@ -253,6 +274,15 @@
     trigger: state
     from:
     - printing
+  - entity_id:
+    - sensor.dragonfruit_print_status
+    to:
+    - stopped
+    for:
+      seconds: 10
+    trigger: state
+    from:
+    - printing
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
@@ -302,6 +332,7 @@
     - sensor.papaya_print_status
     - sensor.huckleberry_print_status
     - sensor.pineapple_print_status
+    - sensor.dragonfruit_print_status
     to:
     - error
     for:
@@ -362,6 +393,15 @@
     trigger: state
     from:
     - printing
+  - entity_id:
+    - sensor.dragonfruit_print_status
+    to:
+    - paused
+    for:
+      seconds: 10
+    trigger: state
+    from:
+    - printing
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
@@ -415,8 +455,8 @@
     value_template: "{{ now().hour >= 7 and now().hour < 22 }}"
   - condition: template
     value_template: |-
-      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
-      {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] %}
+      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple','dragonfruit'] %}
+      {% set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare','finished','ready','busy','attention'] %}
       {% set ns = namespace(active=false) %}
       {% for p in printers %}{% if states('sensor.' ~ p ~ '_print_status') not in not_printing %}{% set ns.active = true %}{% endif %}{% endfor %}
       {{ ns.active }}
@@ -434,8 +474,9 @@
           {"id":"strawberry","emoji":":strawberry:"},
           {"id":"huckleberry","emoji":":huckleberry:"},
           {"id":"pineapple","emoji":":pineapple:"},
+          {"id":"dragonfruit","emoji":":dragon:"},
         ] %}
-        {%- set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare'] %}
+        {%- set not_printing = ['unavailable','idle','offline','finish','failed','completed','stopped','error','unknown','prepare','finished','ready','busy','attention'] %}
         {%- set ns = namespace(active=0) %}
         {%- for p in printers %}
           {%- if states('sensor.' ~ p.id ~ '_print_status') not in not_printing %}
@@ -451,13 +492,17 @@
           {%- set status_labels = {
             'idle': 'Ready',
             'prepare': 'Preparing',
+            'busy': 'Preparing',
             'finish': 'Finished',
             'completed': 'Finished',
+            'finished': 'Finished',
             'failed': 'Stopped',
             'stopped': 'Stopped',
             'error': 'Error',
             'pause': 'Paused',
             'paused': 'Paused',
+            'attention': 'Attention',
+            'ready': 'Ready',
             'offline': 'Offline',
             'unavailable': 'Offline',
             'unknown': 'Offline',
@@ -525,6 +570,7 @@
           {"id":"strawberry","emoji":":strawberry:"},
           {"id":"huckleberry","emoji":":huckleberry:"},
           {"id":"pineapple","emoji":":pineapple:"},
+          {"id":"dragonfruit","emoji":":dragon:"},
         ] %}
         {%- set ns = namespace(total_ok=0, total_fail=0) %}
         :bar_chart: Weekly Print Summary (last 7 days)
@@ -550,7 +596,7 @@
   conditions:
   - condition: template
     value_template: >
-      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
+      {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple','dragonfruit'] %}
       {% set ns = namespace(offline=0) %}
       {% for p in printers %}
         {% if states('sensor.' ~ p ~ '_print_status') in ['unavailable','unknown','offline'] %}
@@ -563,7 +609,7 @@
     data:
       target: "#facilities-feed"
       message: >
-        {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple'] %}
+        {% set printers = ['kiwi','mango','papaya','strawberry','huckleberry','pineapple','dragonfruit'] %}
         {% set ns = namespace(offline=0, names=[]) %}
         {% for p in printers %}
           {% if states('sensor.' ~ p ~ '_print_status') in ['unavailable','unknown','offline'] %}
