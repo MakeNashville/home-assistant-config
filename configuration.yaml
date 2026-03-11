@@ -67,6 +67,12 @@ input_text:
   pineapple_slack_thread_ts:
     name: Pineapple Slack Thread TS
     max: 30
+  dragonfruit_last_job:
+    name: Dragonfruit Last Job
+    max: 255
+  dragonfruit_slack_thread_ts:
+    name: Dragonfruit Slack Thread TS
+    max: 30
 
 input_boolean:
   facilities_pulse_verbose:
@@ -260,6 +266,26 @@ template:
         availability: "{{ states('sensor.dragonfruit_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}
+      - name: "Dragonfruit Last Display Name"
+        unique_id: dragonfruit_last_display_name
+        state: "{{ states('input_text.dragonfruit_last_job').split('-')[0] }}"
+      - name: "Dragonfruit Last Object"
+        unique_id: dragonfruit_last_object
+        availability: "{{ states('sensor.dragonfruit_last_display_name') not in ['unknown', 'unavailable'] }}"
+        state: >
+          {{states('input_text.dragonfruit_last_job').replace(states('sensor.dragonfruit_last_display_name') + '-', '')}}
+      - name: "Dragonfruit Print Status"
+        unique_id: dragonfruit_print_status
+        state: "{{ states('sensor.dragonfruit') }}"
+      - name: "Dragonfruit Print Progress"
+        unique_id: dragonfruit_print_progress
+        state: "{{ states('sensor.dragonfruit_progress') }}"
+        unit_of_measurement: "%"
+      - name: "Dragonfruit End Time"
+        unique_id: dragonfruit_end_time
+        device_class: timestamp
+        availability: "{{ states('sensor.dragonfruit_print_finish') not in ['unknown', 'unavailable'] }}"
+        state: "{{ states('sensor.dragonfruit_print_finish') }}"
 
 sensor:
   # Weekly print counts — used by the Sunday metrics automation
@@ -354,6 +380,22 @@ sensor:
     name: Pineapple Prints Failed Week
     entity_id: sensor.pineapple_print_status
     state: "stopped"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Dragonfruit Prints Completed Week
+    entity_id: sensor.dragonfruit_print_status
+    state: "finished"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Dragonfruit Prints Failed Week
+    entity_id: sensor.dragonfruit_print_status
+    state:
+      - "stopped"
+      - "error"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
     end: "{{ now() }}"
