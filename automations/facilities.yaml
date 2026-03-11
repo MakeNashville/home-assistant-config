@@ -75,7 +75,7 @@
         :warning: *Facilities Alert* — {{ trigger.to_state.name }} {{ trigger.to_state.state }}{{ trigger.to_state.attributes.unit_of_measurement | default('') }}
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
-        *:thermometer: Environment*
+        *:thermometer: Climate*
         {% set ns = namespace(count=0, unavail=[]) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
@@ -112,13 +112,13 @@
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
         {% else -%}
         {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
-        {% endif -%}
+        {% endif %}
 
-        *:dash: 3D Print Room*
+        *:dash: Air Quality*
         {% set aq = states('sensor.air_quality_overall_status') -%}
         {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
-        {{ aq_icon }} Air Quality: {{ aq }}
+        {{ aq_icon }} 3D Printing: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
         {% else -%}
         {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
@@ -148,7 +148,7 @@
       message: |
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
-        *:thermometer: Environment*
+        *:thermometer: Climate*
         {% set ns = namespace(count=0, unavail=[]) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
@@ -185,13 +185,13 @@
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
         {% else -%}
         {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
-        {% endif -%}
+        {% endif %}
 
-        *:dash: 3D Print Room*
+        *:dash: Air Quality*
         {% set aq = states('sensor.air_quality_overall_status') -%}
         {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
-        {{ aq_icon }} Air Quality: {{ aq }}
+        {{ aq_icon }} 3D Printing: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
         {% else -%}
         {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
