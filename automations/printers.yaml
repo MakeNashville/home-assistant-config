@@ -483,7 +483,12 @@
 - id: '1740500000001'
   alias: Lifecycle Printer Offline
   triggers:
-  - entity_id: *all_printers
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
     to:
     - unavailable
     for:
