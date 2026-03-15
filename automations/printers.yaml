@@ -256,8 +256,8 @@
   actions:
   - variables:
       printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
+      display_name: '{{states("sensor."+printer+"_last_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_last_object") }}'
       progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
       thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
   - choose:
