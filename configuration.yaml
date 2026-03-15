@@ -44,6 +44,11 @@ rest_command:
     payload: >-
       {"channel": {{ channel | tojson }}, "text": {{ text | tojson }},
        "username": {{ username | tojson }}, "icon_emoji": {{ icon_emoji | tojson }}}
+  eventbrite_get_event:
+    url: "{{ url }}"
+    method: GET
+    headers:
+      Authorization: !secret eventbrite_token_header
 
 input_text:
   pineapple_last_job:
@@ -67,6 +72,9 @@ input_text:
   pineapple_slack_thread_ts:
     name: Pineapple Slack Thread TS
     max: 30
+  eventbrite_org_id:
+    name: Eventbrite Org ID
+    max: 30
 
 input_boolean:
   facilities_pulse_verbose:
@@ -87,6 +95,7 @@ recorder:
       - binary_sensor.filament_store_light_motion
       - sensor.filament_store_light_illuminance
       - input_boolean.facilities_pulse_verbose
+      - sensor.eventbrite_daily_signups
     entity_globs:
       # Fan speeds / signals (already present)
       - sensor.*_wi_fi_signal
@@ -110,6 +119,18 @@ recorder:
       - fan.*_fan
       # Distance / proximity sensors
       - sensor.*_estimated_distance*
+
+rest:
+  - resource_template: >-
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/attendees/?changed_since={{ (now() - timedelta(days=1)).strftime('%Y-%m-%dT00:00:00Z') }}
+    headers:
+      Authorization: !secret eventbrite_token_header
+    scan_interval: 3600
+    sensor:
+      - name: Eventbrite Daily Signups
+        value_template: "{{ value_json.pagination.object_count | default(0) }}"
+        json_attributes:
+          - attendees
 
 template:
   - sensor:
