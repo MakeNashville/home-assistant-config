@@ -64,7 +64,7 @@
         attendees: "{{ state_attr('sensor.eventbrite_daily_signups', 'attendees') }}"
         count: "{{ states('sensor.eventbrite_daily_signups') | int(0) }}"
     - variables:
-        event_lines: >-
+        event_lines: |-
           {% set ns = namespace(events={}) %}
           {% for a in attendees %}
             {% set ename = a.event.name.text %}
@@ -72,12 +72,12 @@
             {% set ns.events = dict(ns.events, **{ename: names}) %}
           {% endfor %}
           {% for event, names in ns.events.items() %}
-          - *{{ event }}* — {{ names | join(', ') }}
+          *{{ event }}* — {{ names | join(', ') }}
           {% endfor %}
     - action: notify.make_nashville
       data:
         target: "#integrations_sandbox"
-        message: >-
+        message: |-
           :wave: *Eventbrite Signups Yesterday* ({{ count }} new)
           {{ event_lines }}
         data:
