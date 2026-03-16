@@ -49,3 +49,35 @@ jobs:
                   ok = False
           sys.exit(0 if ok else 1)
           EOF
+
+  check-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create CI scaffolding
+        run: |
+          cat > secrets.yaml <<'EOF'
+          slack_bot_token_header: "Bearer xoxb-dummy"
+          eventbrite_token_header: "Bearer dummy-token"
+          eventbrite_webhook_id: "dummy-webhook-id"
+          stripe_webhook_id: "dummy-stripe-webhook"
+          octoeverywhere_webhook_id: "dummy-octoeverywhere-webhook"
+          EOF
+          mkdir -p www/snapshots
+
+      - name: Check HA config
+        run: |
+          output=$(docker run --rm \
+            -v "${{ github.workspace }}:/config" \
+            homeassistant/home-assistant:stable \
+            python -m homeassistant --script check_config -c /config 2>&1) || true
+          echo "$output"
+          if echo "$output" | grep -qE "(Failed config|Incorrect config)"; then
+            echo "$output" | sed -n '/\(Failed\|Incorrect\) config/,$ p' | while IFS= read -r line; do
+              if echo "$line" | grep -qE '^\s+-\s'; then
+                echo "::error::$line"
+              fi
+            done
+            exit 1
+          fi
