@@ -73,8 +73,8 @@ jobs:
             homeassistant/home-assistant:stable \
             python -m homeassistant --script check_config -c /config 2>&1) || true
           echo "$output"
-          if echo "$output" | grep -q "Failed config"; then
-            echo "$output" | sed -n '/Failed config/,$ p' | while IFS= read -r line; do
+          if echo "$output" | grep -qE "(Failed config|Incorrect config)"; then
+            echo "$output" | sed -n '/\(Failed\|Incorrect\) config/,$ p' | while IFS= read -r line; do
               if echo "$line" | grep -qE '^\s+-\s'; then
                 echo "::error::$line"
               fi
