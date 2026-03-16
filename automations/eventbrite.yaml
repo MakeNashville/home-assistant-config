@@ -1,0 +1,78 @@
+- id: 'eventbrite_new_event'
+  alias: Eventbrite New Event Published
+  triggers:
+    - trigger: webhook
+      webhook_id: !secret eventbrite_webhook_id
+      allowed_methods:
+        - POST
+      local_only: false
+  conditions:
+    - condition: template
+      value_template: >
+        {{ trigger.json.config.action == 'event.published' }}
+  actions:
+    - variables:
+        api_url: "{{ trigger.json.api_url }}"
+    - action: rest_command.eventbrite_get_event
+      data:
+        url: "{{ api_url }}"
+      response_variable: event_response
+    - variables:
+        event: "{{ event_response.content | from_json }}"
+    - variables:
+        event_name: "{{ event.name.text }}"
+        event_date: "{{ event.start.local | as_datetime | timestamp_custom('%A, %B %-d at %-I:%M %p') }}"
+        event_desc: "{{ event.description.text[:200] }}..."
+        event_url: "{{ event.url }}"
+        ticket_info: >-
+          {% set tickets = [] %}
+          {% for t in event.ticket_classes | default([]) %}
+            {% if t.cost %}
+              {% set tickets = tickets + [t.cost.display] %}
+            {% else %}
+              {% set tickets = tickets + ['Free'] %}
+            {% endif %}
+          {% endfor %}
+          {{ tickets | join(', ') if tickets else 'Free' }}
+    - action: notify.make_nashville
+      data:
+        target: "#integration_sandbox"
+        message: >-
+          :calendar: *New Event Published*
+          *{{ event_name }}*
+          :clock1: {{ event_date }}
+          :ticket: {{ ticket_info }}
+          :memo: {{ event_desc }}
+          :link: {{ event_url }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_daily_signup_digest'
+  alias: Eventbrite Daily Signup Digest
+  triggers:
+    - trigger: time
+      at: '09:00:00'
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('sensor.eventbrite_daily_signups') | int(0) > 0 }}
+  actions:
+    - variables:
+        attendees: "{{ state_attr('sensor.eventbrite_daily_signups', 'attendees') }}"
+        count: "{{ states('sensor.eventbrite_daily_signups') | int(0) }}"
+        attendee_lines: >-
+          {% for a in attendees %}
+          - {{ a.profile.name }} — _{{ a.event.name.text }}_
+          {% endfor %}
+    - action: notify.make_nashville
+      data:
+        target: "#integration_sandbox"
+        message: >-
+          :wave: *Eventbrite Signups Yesterday* ({{ count }} new)
+          {{ attendee_lines }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single

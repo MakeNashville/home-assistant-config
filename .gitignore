@@ -62,6 +62,9 @@ ip_bans.yaml
 # === CUSTOM COMPONENTS (optional) ===
 # custom_components/  # Uncomment if you want to exclude custom integrations
 
+# === LOCAL DOCS (specs & plans) ===
+docs/
+
 # === BACKUP FILES ===
 backups/
 *.backup
