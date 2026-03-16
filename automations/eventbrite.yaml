@@ -57,11 +57,13 @@
   conditions:
     - condition: template
       value_template: >
-        {{ states('sensor.eventbrite_daily_signups') | int(0) > 0 }}
+        {{ states('sensor.eventbrite_daily_signups') | int(0) > 0
+           and state_attr('sensor.eventbrite_daily_signups', 'attendees') is not none }}
   actions:
     - variables:
         attendees: "{{ state_attr('sensor.eventbrite_daily_signups', 'attendees') }}"
         count: "{{ states('sensor.eventbrite_daily_signups') | int(0) }}"
+    - variables:
         attendee_lines: >-
           {% for a in attendees %}
           - {{ a.profile.name }} — _{{ a.event.name.text }}_

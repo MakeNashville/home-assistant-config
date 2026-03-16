@@ -128,7 +128,7 @@ rest:
     scan_interval: 3600
     sensor:
       - name: Eventbrite Daily Signups
-        value_template: "{{ value_json.pagination.object_count | default(0) }}"
+        value_template: "{{ (value_json.pagination | default({})).object_count | default(0) }}"
         json_attributes:
           - attendees
 
