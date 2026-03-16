@@ -36,7 +36,7 @@
           {{ tickets | join(', ') if tickets else 'Free' }}
     - action: notify.make_nashville
       data:
-        target: "#integration_sandbox"
+        target: "#integrations_sandbox"
         message: >-
           :calendar: *New Event Published*
           *{{ event_name }}*
@@ -64,16 +64,22 @@
         attendees: "{{ state_attr('sensor.eventbrite_daily_signups', 'attendees') }}"
         count: "{{ states('sensor.eventbrite_daily_signups') | int(0) }}"
     - variables:
-        attendee_lines: >-
+        event_lines: >-
+          {% set ns = namespace(events={}) %}
           {% for a in attendees %}
-          - {{ a.profile.name }} — _{{ a.event.name.text }}_
+            {% set ename = a.event.name.text %}
+            {% set names = ns.events.get(ename, []) + [a.profile.name] %}
+            {% set ns.events = dict(ns.events, **{ename: names}) %}
+          {% endfor %}
+          {% for event, names in ns.events.items() %}
+          - *{{ event }}* — {{ names | join(', ') }}
           {% endfor %}
     - action: notify.make_nashville
       data:
-        target: "#integration_sandbox"
+        target: "#integrations_sandbox"
         message: >-
           :wave: *Eventbrite Signups Yesterday* ({{ count }} new)
-          {{ attendee_lines }}
+          {{ event_lines }}
         data:
           username: Eventbrite
           icon: calendar

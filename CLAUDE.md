@@ -10,6 +10,7 @@ Home Assistant configuration for the [MakeNashville](https://makenashville.org) 
 - 3D printer lifecycle notifications (6 printers → `#3dprint-info` Slack)
 - Facilities monitoring: temperature, water, power, Kaeser compressor (→ `#facilities-feed`)
 - Air quality alerting for the 3D print room
+- Eventbrite event + signup notifications (→ `#integrations_sandbox`)
 - Automated nightly config backup to GitHub
 
 ---
@@ -22,6 +23,7 @@ Home Assistant configuration for the [MakeNashville](https://makenashville.org) 
 | `automations/printers.yaml` | All 3D printer automations |
 | `automations/facilities.yaml` | Facilities Pulse smart alert + verbose mode + Air Quality Alert |
 | `automations/kaeser.yaml` | Kaeser compressor overpressure alert + history purge |
+| `automations/eventbrite.yaml` | Eventbrite new event + daily signup digest notifications |
 | `automations/webhooks.yaml` | Stripe filament webhook + OctoEverywhere Gadget webhook |
 | `automations/backup.yaml` | Triggers nightly backup via SSH addon |
 | `git_backup.sh` | Backup script: checkouts ha-backup, merges main, commits, pushes, opens PR |
@@ -43,6 +45,7 @@ feature branch → PR → validate-yaml.yml passes → merge to main → deploy.
 - Always branch off `main`, open a PR, wait for YAML validation, then merge
 - On merge, `deploy.yml` pulls config onto HA, validates it, and reloads or restarts as needed
 - Deployment status posts to `#deployment-feed`
+- New integrations should post to `#integrations_sandbox` first for testing before moving to a production channel
 
 ### Backup branch
 
