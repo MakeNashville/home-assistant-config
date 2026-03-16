@@ -74,6 +74,10 @@ jobs:
             python -m homeassistant --script check_config -c /config 2>&1) || true
           echo "$output"
           if echo "$output" | grep -q "Failed config"; then
-            echo "::error::Home Assistant config check found errors"
+            echo "$output" | sed -n '/Failed config/,$ p' | while IFS= read -r line; do
+              if echo "$line" | grep -qE '^\s+-\s'; then
+                echo "::error::$line"
+              fi
+            done
             exit 1
           fi
