@@ -49,3 +49,25 @@ jobs:
                   ok = False
           sys.exit(0 if ok else 1)
           EOF
+
+  check-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create dummy secrets.yaml
+        run: |
+          cat > secrets.yaml <<'EOF'
+          slack_bot_token_header: "Bearer xoxb-dummy"
+          eventbrite_token_header: "Bearer dummy-token"
+          eventbrite_webhook_id: "dummy-webhook-id"
+          stripe_webhook_id: "dummy-stripe-webhook"
+          octoeverywhere_webhook_id: "dummy-octoeverywhere-webhook"
+          EOF
+
+      - name: Check HA config
+        uses: frenck/action-home-assistant@v1
+        with:
+          path: "."
+          secrets: secrets.yaml
+          version: stable
