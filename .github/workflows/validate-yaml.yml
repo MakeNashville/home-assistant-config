@@ -57,7 +57,7 @@ jobs:
 
       - name: Create CI scaffolding
         run: |
-          cat > fake_secrets.yaml <<'EOF'
+          cat > secrets.yaml <<'EOF'
           slack_bot_token_header: "Bearer xoxb-dummy"
           eventbrite_token_header: "Bearer dummy-token"
           eventbrite_webhook_id: "dummy-webhook-id"
@@ -67,8 +67,8 @@ jobs:
           mkdir -p www/snapshots
 
       - name: Check HA config
-        uses: frenck/action-home-assistant@v1
-        with:
-          path: "."
-          secrets: fake_secrets.yaml
-          version: stable
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/config" \
+            homeassistant/home-assistant:stable \
+            python -m homeassistant --script check_config -c /config
