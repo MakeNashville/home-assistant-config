@@ -68,7 +68,12 @@ jobs:
 
       - name: Check HA config
         run: |
-          docker run --rm \
+          output=$(docker run --rm \
             -v "${{ github.workspace }}:/config" \
             homeassistant/home-assistant:stable \
-            python -m homeassistant --script check_config -c /config
+            python -m homeassistant --script check_config -c /config 2>&1) || true
+          echo "$output"
+          if echo "$output" | grep -q "Failed config"; then
+            echo "::error::Home Assistant config check found errors"
+            exit 1
+          fi
