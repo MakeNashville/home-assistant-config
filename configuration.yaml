@@ -122,7 +122,7 @@ recorder:
 
 rest:
   - resource_template: >-
-      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/attendees/?changed_since={{ (now() - timedelta(days=1)).strftime('%Y-%m-%dT00:00:00Z') }}
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/attendees/?changed_since={{ (now() - timedelta(days=1)).strftime('%Y-%m-%dT00:00:00Z') }}&expand=event
     headers:
       Authorization: !secret eventbrite_token_header
     scan_interval: 3600
