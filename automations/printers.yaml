@@ -394,6 +394,57 @@
       action: notify.make_nashville
   mode: parallel
   max: 4
+- id: 'hms_error_alert'
+  alias: HMS Error Alert
+  triggers:
+  - entity_id:
+    - binary_sensor.kiwi_hms_errors
+    - binary_sensor.mango_hms_errors
+    - binary_sensor.papaya_hms_errors
+    - binary_sensor.strawberry_hms_errors
+    - binary_sensor.huckleberry_hms_errors
+    to: 'on'
+    trigger: state
+  actions:
+  - variables:
+      printer: "{{ trigger.entity_id.split('.')[1] | replace('_hms_errors', '') }}"
+      display_name: '{{states("sensor."+printer+"_display_name") }}'
+      object_name: '{{states("sensor."+printer+"_object") }}'
+      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+  - variables:
+      hms_msg: |-
+        {%- set count = state_attr(trigger.entity_id, 'Count') | int(0) -%}
+        :warning: HMS error{{ 's' if count > 1 else '' }} on {{ printer | capitalize -}}
+        {%- if object_name not in ['unknown','unavailable',''] %} while printing {{ object_name }}{% endif -%}
+        {%- if display_name not in ['unknown','unavailable',''] and display_name != object_name %} (@{{ display_name }}){% endif -%}
+        {%- for i in range(1, count + 1) %}
+        • {%- set sev = state_attr(trigger.entity_id, i ~ '-Severity') | default('') %}{% if sev %} [{{ sev }}]{% endif %} {{ state_attr(trigger.entity_id, i ~ '-Error') | default('Unknown error') -}}
+        {%- set wiki = state_attr(trigger.entity_id, i ~ '-Wiki') %}{% if wiki %} — <{{ wiki }}|More info>{% endif -%}
+        {%- endfor %}
+        {{ states('input_text.'+printer+'_stream') }}
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ '.' in thread_ts }}"
+      sequence:
+      - data:
+          target: "#integrations_sandbox"
+          message: "{{ hms_msg }}"
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#integrations_sandbox"
+        message: "{{ hms_msg }}"
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+      action: notify.make_nashville
+  mode: parallel
+  max: 4
 - id: '1740400001000'
   alias: Lifecycle Print Paused
   triggers:
