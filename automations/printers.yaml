@@ -209,7 +209,7 @@
     target:
       entity_id: "input_text.{{ printer }}_slack_thread_ts"
     data:
-      value: "{% set ts = (slack_response.content | from_json).ts | default('') | string %}{{ ts if '.' in ts else '' }}"
+      value: "{% set ts = slack_response['content']['ts'] | default('') | string %}{{ ts if '.' in ts else '' }}"
   - if:
     - condition: template
       value_template: "{{ printer == 'pineapple' }}"
