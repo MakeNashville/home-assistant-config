@@ -453,6 +453,26 @@
               - type: button
                 text:
                   type: plain_text
+                  text: "Cancel Print"
+                style: danger
+                action_id: cancel_bambu_print
+                value: "{{ printer }}"
+                confirm:
+                  title:
+                    type: plain_text
+                    text: "Cancel Print?"
+                  text:
+                    type: mrkdwn
+                    text: "This will cancel the print entirely. Are you sure?"
+                  confirm:
+                    type: plain_text
+                    text: "Yes, cancel it"
+                  deny:
+                    type: plain_text
+                    text: "Never mind"
+              - type: button
+                text:
+                  type: plain_text
                   text: "Resume Print"
                 action_id: resume_bambu_print
                 value: "{{ printer }}"
@@ -484,6 +504,26 @@
               text: "{{ paused_msg }}"
           - type: actions
             elements:
+            - type: button
+              text:
+                type: plain_text
+                text: "Cancel Print"
+              style: danger
+              action_id: cancel_bambu_print
+              value: "{{ printer }}"
+              confirm:
+                title:
+                  type: plain_text
+                  text: "Cancel Print?"
+                text:
+                  type: mrkdwn
+                  text: "This will cancel the print entirely. Are you sure?"
+                confirm:
+                  type: plain_text
+                  text: "Yes, cancel it"
+                deny:
+                  type: plain_text
+                  text: "Never mind"
             - type: button
               text:
                 type: plain_text
