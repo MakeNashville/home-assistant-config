@@ -141,9 +141,9 @@
                   text: "Never mind"
   mode: parallel
   max: 5
-- id: slack_pause_bambu_print
-  alias: Slack – Pause Bambu Print
-  description: Handles Slack interactive button clicks to pause a Bambu Lab print
+- id: slack_pause_resume_bambu_print
+  alias: Slack – Pause/Resume Bambu Print
+  description: Handles Slack interactive button clicks to pause or resume a Bambu Lab print
   triggers:
   - trigger: webhook
     webhook_id: !secret slack_cancel_print_webhook_id
@@ -155,20 +155,34 @@
     value_template: >
       {% set payload = trigger.data.get('payload', '{}') | from_json %}
       {% set action = (payload.get('actions', [{}])[0]) %}
-      {{ action.get('action_id', '') == 'pause_bambu_print'
+      {{ action.get('action_id', '') in ['pause_bambu_print', 'resume_bambu_print']
          and action.get('value', '') in ['kiwi','mango','papaya','strawberry','huckleberry'] }}
   actions:
   - variables:
       payload: "{{ trigger.data.get('payload', '{}') | from_json }}"
+      action_id: "{{ payload.actions[0].action_id }}"
       printer: "{{ payload.actions[0].value }}"
       response_url: "{{ payload.response_url }}"
       slack_user: "{{ payload.user.name | default('Someone') }}"
-  - action: button.press
-    target:
-      entity_id: "button.{{ printer }}_pause_printing"
-  - action: rest_command.slack_respond
-    data:
-      response_url: "{{ response_url }}"
-      text: ":double_vertical_bar: {{ slack_user }} paused the print on {{ printer | capitalize }}."
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ action_id == 'resume_bambu_print' }}"
+      sequence:
+      - action: button.press
+        target:
+          entity_id: "button.{{ printer }}_resume_printing"
+      - action: rest_command.slack_respond
+        data:
+          response_url: "{{ response_url }}"
+          text: ":arrow_forward: {{ slack_user }} resumed the print on {{ printer | capitalize }}."
+    default:
+    - action: button.press
+      target:
+        entity_id: "button.{{ printer }}_pause_printing"
+    - action: rest_command.slack_respond
+      data:
+        response_url: "{{ response_url }}"
+        text: ":double_vertical_bar: {{ slack_user }} paused the print on {{ printer | capitalize }}."
   mode: parallel
   max: 6

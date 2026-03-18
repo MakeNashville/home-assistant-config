@@ -504,19 +504,19 @@
               - type: button
                 text:
                   type: plain_text
-                  text: "Pause Print"
-                action_id: pause_bambu_print
+                  text: "Resume Print"
+                action_id: resume_bambu_print
                 value: "{{ printer }}"
                 confirm:
                   title:
                     type: plain_text
-                    text: "Pause Print?"
+                    text: "Resume Print?"
                   text:
                     type: mrkdwn
-                    text: "This will pause the current print. Are you sure?"
+                    text: "This will resume the paused print. Are you sure?"
                   confirm:
                     type: plain_text
-                    text: "Yes, pause it"
+                    text: "Yes, resume it"
                   deny:
                     type: plain_text
                     text: "Never mind"
@@ -538,19 +538,19 @@
             - type: button
               text:
                 type: plain_text
-                text: "Pause Print"
-              action_id: pause_bambu_print
+                text: "Resume Print"
+              action_id: resume_bambu_print
               value: "{{ printer }}"
               confirm:
                 title:
                   type: plain_text
-                  text: "Pause Print?"
+                  text: "Resume Print?"
                 text:
                   type: mrkdwn
-                  text: "This will pause the current print. Are you sure?"
+                  text: "This will resume the paused print. Are you sure?"
                 confirm:
                   type: plain_text
-                  text: "Yes, pause it"
+                  text: "Yes, resume it"
                 deny:
                   type: plain_text
                   text: "Never mind"
