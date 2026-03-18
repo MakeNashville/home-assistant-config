@@ -81,6 +81,39 @@ jobs:
             "${{ secrets.HA_URL }}/api/services/homeassistant/restart" \
             || true
 
+      - name: Wait for HA to restart
+        if: steps.restart_check.outputs.required == 'true'
+        run: |
+          echo "Waiting for HA to come back online..."
+          sleep 15
+          for i in $(seq 1 30); do
+            if curl -f -s -o /dev/null \
+              -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+              "${{ secrets.HA_URL }}/api/"; then
+              echo "HA is back online after ~$((i * 10 + 15)) seconds"
+              exit 0
+            fi
+            echo "Attempt $i/30 — not ready yet, waiting 10s..."
+            sleep 10
+          done
+          echo "HA did not come back within 5 minutes"
+          exit 1
+
+      - name: Notify restart complete
+        if: steps.restart_check.outputs.required == 'true'
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          body=$(jq -n \
+            --arg msg ":white_check_mark: Config deployed from GitHub — full restart complete. <${COMMIT_URL}|${SHORT_SHA}>" \
+            --arg target "#deployment-feed" \
+            '{"target": $target, "message": $msg, "data": {"username": "GitHub Actions", "icon": "rocket"}}')
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
+
       # --- Reload path ---
 
       - name: Reload automations
