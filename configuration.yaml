@@ -160,6 +160,16 @@ rest:
         value_template: "{{ (value_json.events | default([])) | length }}"
         json_attributes:
           - events
+  - resource_template: >-
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/events/?start_date.range_start={{ (now() + timedelta(days=7)).strftime('%Y-%m-%dT00:00:00') }}&start_date.range_end={{ (now() + timedelta(days=7)).strftime('%Y-%m-%dT23:59:59') }}&expand=ticket_classes&status=live
+    headers:
+      Authorization: !secret eventbrite_token_header
+    scan_interval: 3600
+    sensor:
+      - name: Eventbrite Next Week Events
+        value_template: "{{ (value_json.events | default([])) | length }}"
+        json_attributes:
+          - events
 
 template:
   - sensor:

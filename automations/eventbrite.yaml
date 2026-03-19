@@ -114,9 +114,10 @@
         event_lines: |-
           {% for event in events %}
           {% set signups = event.ticket_classes | default([]) | map(attribute='quantity_sold') | map('int', default=0) | sum %}
+          {% set capacity = event.ticket_classes | default([]) | selectattr('quantity_total', 'defined') | map(attribute='quantity_total') | map('int', default=0) | sum %}
           *{{ event.name.text }}*
           :clock1: {{ event.start.local | as_datetime | timestamp_custom('%-I:%M %p') }}
-          :busts_in_silhouette: {{ signups }} signup{{ 's' if signups != 1 }}
+          {% if capacity > 0 and signups < (capacity * 0.5) %}:warning: Only {{ signups }} of {{ capacity }} spots filled — consider promoting this event{% else %}:busts_in_silhouette: {{ signups }}{% if capacity > 0 %} of {{ capacity }}{% endif %} spots filled{% endif %}
           :link: {{ event.url }}
           {% endfor %}
     - action: notify.make_nashville
@@ -124,6 +125,40 @@
         target: "#integrations_sandbox"
         message: |-
           :mega: *Events Today*
+          {{ event_lines }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_one_week_out'
+  alias: Eventbrite One Week Out
+  triggers:
+    - trigger: time
+      at: '09:00:00'
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('sensor.eventbrite_next_week_events') | int(0) > 0
+           and state_attr('sensor.eventbrite_next_week_events', 'events') is not none }}
+  actions:
+    - variables:
+        events: "{{ state_attr('sensor.eventbrite_next_week_events', 'events') }}"
+    - variables:
+        event_lines: |-
+          {% for event in events %}
+          {% set signups = event.ticket_classes | default([]) | map(attribute='quantity_sold') | map('int', default=0) | sum %}
+          {% set capacity = event.ticket_classes | default([]) | selectattr('quantity_total', 'defined') | map(attribute='quantity_total') | map('int', default=0) | sum %}
+          *{{ event.name.text }}*
+          :clock1: {{ event.start.local | as_datetime | timestamp_custom('%A, %B %-d at %-I:%M %p') }}
+          {% if capacity > 0 and signups < (capacity * 0.5) %}:warning: Only {{ signups }} of {{ capacity }} spots filled — consider promoting this event{% else %}:busts_in_silhouette: {{ signups }}{% if capacity > 0 %} of {{ capacity }}{% endif %} spots filled{% endif %}
+          :link: {{ event.url }}
+          {% endfor %}
+    - action: notify.make_nashville
+      data:
+        target: "#integrations_sandbox"
+        message: |-
+          :calendar: *One Week Out* — {{ states('sensor.eventbrite_next_week_events') }} upcoming event{{ 's' if states('sensor.eventbrite_next_week_events') | int(0) != 1 }}
           {{ event_lines }}
         data:
           username: Eventbrite
