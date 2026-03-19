@@ -72,7 +72,19 @@
             {% set ns.events = dict(ns.events, **{ename: names}) %}
           {% endfor %}
           {% for event, names in ns.events.items() %}
-          *{{ event }}* — {{ names | join(', ') }}
+            {%- set ns2 = namespace(counts={}) -%}
+            {%- for n in names -%}
+              {%- set ns2.counts = dict(ns2.counts, **{n: ns2.counts.get(n, 0) + 1}) -%}
+            {%- endfor -%}
+            {%- set display = [] -%}
+            {%- for name, c in ns2.counts.items() -%}
+              {%- if c > 1 -%}
+                {%- set display = display + [name ~ ' (' ~ c ~ ')'] -%}
+              {%- else -%}
+                {%- set display = display + [name] -%}
+              {%- endif -%}
+            {%- endfor %}
+          *{{ event }}* — {{ display | join(', ') }}
           {% endfor %}
     - action: notify.make_nashville
       data:
