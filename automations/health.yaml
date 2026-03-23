@@ -17,7 +17,7 @@
     else:
     - action: notify.make_nashville
       data:
-        target: "#integrations_sandbox"
+        target: "#facilities-feed"
         message: ':white_check_mark: Home Assistant is online.'
         data:
           username: Home Assistant
@@ -66,7 +66,7 @@
   actions:
   - action: notify.make_nashville
     data:
-      target: "#integrations_sandbox"
+      target: "#facilities-feed"
       message: ':warning: Eventbrite integration may be down — sensor has been unavailable
         for 2+ hours. Check the API token.'
       data:

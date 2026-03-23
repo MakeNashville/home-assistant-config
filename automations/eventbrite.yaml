@@ -88,7 +88,7 @@
           {% endfor %}
     - action: notify.make_nashville
       data:
-        target: "#integrations_sandbox"
+        target: "#eventbrite-feed"
         message: |-
           :wave: *Eventbrite Signups — Last 24 Hours* ({{ count }} new)
           {{ event_lines }}
