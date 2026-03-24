@@ -260,7 +260,7 @@
       sequence:
       - data:
           target: "#3dprint-info"
-          message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
+          message: ":white_check_mark: 100% | {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
             %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
             is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
           data:
@@ -271,7 +271,7 @@
     default:
     - data:
         target: "#3dprint-info"
-        message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
+        message: ":white_check_mark: 100% | {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
           %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
           is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
         data:
