@@ -64,6 +64,40 @@ rest_command:
     method: GET
     headers:
       Authorization: !secret eventbrite_token_header
+  eventbrite_copy_event:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/copy/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+  eventbrite_update_event:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_update_description:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/structured_content/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_create_venue:
+    url: "https://www.eventbriteapi.com/v3/organizations/{{ org_id }}/venues/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_update_ticket_class:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/ticket_classes/{{ ticket_class_id }}/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
 
 input_text:
   pineapple_last_job:
@@ -89,6 +123,9 @@ input_text:
     max: 30
   eventbrite_org_id:
     name: Eventbrite Org ID
+    max: 30
+  eventbrite_template_id:
+    name: Eventbrite Template Event ID
     max: 30
 
 input_boolean:

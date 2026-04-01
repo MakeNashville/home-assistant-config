@@ -64,6 +64,7 @@ jobs:
           stripe_webhook_id: "dummy-stripe-webhook"
           octoeverywhere_webhook_id: "dummy-octoeverywhere-webhook"
           slack_cancel_print_webhook_id: "dummy-cancel-webhook"
+          eventbrite_form_webhook_id: "dummy-form-webhook"
           EOF
           mkdir -p www/snapshots
 
