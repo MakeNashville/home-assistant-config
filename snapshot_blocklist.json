@@ -1,0 +1,46 @@
+{
+  "state_patterns": [
+    {
+      "entity_glob": "*_gcode_filename",
+      "replacement": "SampleModel-SamplePart.gcode.3mf"
+    },
+    {
+      "entity_glob": "*_task_name",
+      "replacement": "SampleModel-SamplePart"
+    },
+    {
+      "entity_glob": "*_current_object",
+      "replacement": "SampleModel-SamplePart"
+    },
+    {
+      "entity_glob": "*_display_name",
+      "replacement": "SampleModel"
+    },
+    {
+      "entity_glob": "*_last_display_name",
+      "replacement": "SampleModel"
+    },
+    {
+      "entity_glob": "*_object",
+      "replacement": "SamplePart"
+    },
+    {
+      "entity_glob": "*_last_object",
+      "replacement": "SamplePart"
+    },
+    {
+      "entity_glob": "*_last_job",
+      "replacement": "SampleModel-SamplePart"
+    },
+    {
+      "entity_glob": "*_filename",
+      "replacement": "sample_file"
+    }
+  ],
+  "strip_attributes": [
+    "ip_address",
+    "access_token",
+    "entity_picture",
+    "token"
+  ]
+}
