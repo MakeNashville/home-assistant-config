@@ -116,7 +116,13 @@ run_validate() {
   echo "$output"
   echo ""
 
-  if echo "$output" | grep -qE "(Failed config|Incorrect config)"; then
+  # If check_config never started, Docker itself failed
+  if [ -z "$output" ] || ! grep -q "Testing configuration" <<< "$output"; then
+    echo -e "${RED}Docker failed to run. Is the HA image available?${NC}"
+    exit 1
+  fi
+
+  if grep -qE "(Failed config|Incorrect config)" <<< "$output"; then
     echo -e "${RED}Config check FAILED${NC}"
     exit 1
   else
