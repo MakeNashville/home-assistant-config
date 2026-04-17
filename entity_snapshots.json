@@ -1,0 +1,2540 @@
+{
+  "automation.air_quality_alert": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.backup_config_to_github": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.facilities_pulse_smart_alert": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.facilities_pulse_verbose": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.gadget_ai_failure_detection": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.kaeser_event_notifier": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.kiwi_print_progress": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_multi_printer_offline_network_power_alert": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_print_error": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_print_failed": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_print_paused": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_print_starting": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_printer_finished": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.lifecycle_printer_offline": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.purge_kaeser_pressure_history": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.roundup": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.stripe_3d_print_filament_purchase": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "automation.weekly_print_summary": {
+    "attributes": {
+      "current": 0
+    },
+    "state": "on"
+  },
+  "binary_sensor.filament_store_light_motion": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.hallway_exit_door_sensor_door": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_developer_lan_mode": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_extruder_filament_state": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.huckleberry_firmware_update": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_hms_errors": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_hybrid_mqtt_blocks_control": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_mqtt_encryption_firmware": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_online": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.huckleberry_print_error": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.huckleberry_recording_timelapse": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kaeser_monitor_control_valve_solenoid": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kaeser_monitor_pressure_switch": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.kiwi_developer_lan_mode": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_extruder_filament_state": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.kiwi_firmware_update": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_hms_errors": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_hybrid_mqtt_blocks_control": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_mqtt_encryption_firmware": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_online": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.kiwi_print_error": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.kiwi_recording_timelapse": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_ams_active": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_developer_lan_mode": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_extruder_filament_state": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.mango_firmware_update": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_hms_errors": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_hybrid_mqtt_blocks_control": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_mqtt_encryption_firmware": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_online": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.mango_print_error": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.mango_recording_timelapse": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.p1s_01p00a433100976_externalspool_active": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.p1s_01p00c5b1900457_ams_1_active": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.p1s_01p00c5b1900457_externalspool_active": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.p1s_01p09a431201152_externalspool_active": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_developer_lan_mode": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_extruder_filament_state": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.papaya_firmware_update": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_hms_errors": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_hybrid_mqtt_blocks_control": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_mqtt_encryption_firmware": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_online": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.papaya_print_error": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.papaya_recording_timelapse": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_developer_lan_mode": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_extruder_filament_state": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.strawberry_firmware_update": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_hms_errors": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_hybrid_mqtt_blocks_control": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_mqtt_encryption_firmware": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_online": {
+    "attributes": {},
+    "state": "on"
+  },
+  "binary_sensor.strawberry_print_error": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.strawberry_recording_timelapse": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.water_leak_sensor": {
+    "attributes": {},
+    "state": "off"
+  },
+  "binary_sensor.water_leak_sensor_opening": {
+    "attributes": {},
+    "state": "off"
+  },
+  "button.air_quality_calibrate_co2_sensor": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.air_quality_test_led_bar": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.filament_store_light_identify": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.huckleberry_force_refresh_data": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.huckleberry_pause_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.huckleberry_resume_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.huckleberry_stop_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.kiwi_force_refresh_data": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.kiwi_pause_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.kiwi_resume_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.kiwi_stop_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.mango_force_refresh_data": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.mango_pause_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.mango_resume_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.mango_stop_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.papaya_force_refresh_data": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.papaya_pause_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.papaya_resume_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.papaya_stop_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.pineapple_home_xy_then_z": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.pineapple_pause_print": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.pineapple_reconnect": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.pineapple_resume_print": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.pineapple_stop_print": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.strawberry_force_refresh_data": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.strawberry_pause_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.strawberry_resume_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "button.strawberry_stop_printing": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "camera.huckleberry_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "camera.kiwi_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "camera.mango_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "camera.papaya_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "camera.pineapple_printer_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "camera.strawberry_camera": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "event.backup_automatic_backup": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "fan.huckleberry_aux_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.huckleberry_chamber_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.huckleberry_cooling_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.kiwi_aux_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.kiwi_chamber_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.kiwi_cooling_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.mango_aux_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.mango_chamber_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.mango_cooling_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.papaya_aux_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.papaya_chamber_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.papaya_cooling_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.pineapple_case_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.pineapple_model_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.pineapple_side_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.strawberry_aux_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.strawberry_chamber_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "fan.strawberry_cooling_fan": {
+    "attributes": {
+      "percentage": 0
+    },
+    "state": "off"
+  },
+  "image.huckleberry_cover_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.huckleberry_pick_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.kiwi_cover_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.kiwi_pick_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.mango_cover_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.mango_pick_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.papaya_cover_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.papaya_pick_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.pineapple_current_print_preview": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.strawberry_cover_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "image.strawberry_pick_image": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "input_boolean.facilities_pulse_verbose": {
+    "attributes": {},
+    "state": "off"
+  },
+  "input_number.voc_danger_zone": {
+    "attributes": {
+      "unit_of_measurement": "index"
+    },
+    "state": "300"
+  },
+  "input_text.huckleberry_stream": {
+    "attributes": {},
+    "state": ""
+  },
+  "input_text.kiwi_stream": {
+    "attributes": {},
+    "state": ""
+  },
+  "input_text.mango_stream": {
+    "attributes": {},
+    "state": ""
+  },
+  "input_text.papaya_stream": {
+    "attributes": {},
+    "state": ""
+  },
+  "input_text.pineapple_last_job": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "input_text.strawberry_stream": {
+    "attributes": {},
+    "state": ""
+  },
+  "light.filament_store_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.huckleberry_chamber_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.kiwi_chamber_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.mango_chamber_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.papaya_chamber_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.pineapple_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "light.strawberry_chamber_light": {
+    "attributes": {
+      "brightness": 0
+    },
+    "state": "off"
+  },
+  "number.air_quality_display_brightness": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "50"
+  },
+  "number.air_quality_led_bar_brightness": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "50"
+  },
+  "number.filament_store_light_on_level": {
+    "attributes": {},
+    "state": "254"
+  },
+  "number.filament_store_light_on_off_transition_time": {
+    "attributes": {
+      "unit_of_measurement": "s"
+    },
+    "state": "1"
+  },
+  "number.filament_store_light_start_up_color_temperature": {
+    "attributes": {
+      "unit_of_measurement": "mired"
+    },
+    "state": "370"
+  },
+  "number.filament_store_light_start_up_current_level": {
+    "attributes": {},
+    "state": "254"
+  },
+  "number.huckleberry_bed_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.huckleberry_nozzle_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.kiwi_bed_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.kiwi_nozzle_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.mango_bed_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.mango_nozzle_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.papaya_bed_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.papaya_nozzle_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.pineapple_bed_target": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.pineapple_nozzle_target": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.pineapple_print_tuning": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "100"
+  },
+  "number.strawberry_bed_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.strawberry_nozzle_target_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "number.water_leak_sensor_siren_time": {
+    "attributes": {
+      "unit_of_measurement": "s"
+    },
+    "state": "60"
+  },
+  "select.air_quality_co2_automatic_baseline_duration": {
+    "attributes": {},
+    "state": "Auto"
+  },
+  "select.air_quality_configuration_source": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "select.air_quality_display_pm_standard": {
+    "attributes": {},
+    "state": "ugm3"
+  },
+  "select.air_quality_display_temperature_unit": {
+    "attributes": {},
+    "state": "f"
+  },
+  "select.air_quality_led_bar_mode": {
+    "attributes": {},
+    "state": "Off"
+  },
+  "select.air_quality_nox_index_learning_offset": {
+    "attributes": {},
+    "state": "Auto"
+  },
+  "select.air_quality_voc_index_learning_offset": {
+    "attributes": {},
+    "state": "Auto"
+  },
+  "select.filament_store_light_start_up_behavior": {
+    "attributes": {},
+    "state": "previous"
+  },
+  "select.huckleberry_printing_speed": {
+    "attributes": {
+      "options": [
+        "Silent",
+        "Standard",
+        "Sport",
+        "Ludicrous"
+      ]
+    },
+    "state": "Standard"
+  },
+  "select.kiwi_printing_speed": {
+    "attributes": {
+      "options": [
+        "Silent",
+        "Standard",
+        "Sport",
+        "Ludicrous"
+      ]
+    },
+    "state": "Standard"
+  },
+  "select.mango_printing_speed": {
+    "attributes": {
+      "options": [
+        "Silent",
+        "Standard",
+        "Sport",
+        "Ludicrous"
+      ]
+    },
+    "state": "Standard"
+  },
+  "select.papaya_printing_speed": {
+    "attributes": {
+      "options": [
+        "Silent",
+        "Standard",
+        "Sport",
+        "Ludicrous"
+      ]
+    },
+    "state": "Standard"
+  },
+  "select.strawberry_printing_speed": {
+    "attributes": {
+      "options": [
+        "Silent",
+        "Standard",
+        "Sport",
+        "Ludicrous"
+      ]
+    },
+    "state": "Standard"
+  },
+  "sensor.air_quality_carbon_dioxide": {
+    "attributes": {
+      "device_class": "carbon_dioxide",
+      "unit_of_measurement": "ppm"
+    },
+    "state": "450"
+  },
+  "sensor.air_quality_humidity": {
+    "attributes": {
+      "device_class": "humidity",
+      "unit_of_measurement": "%"
+    },
+    "state": "42"
+  },
+  "sensor.air_quality_nox_index": {
+    "attributes": {
+      "unit_of_measurement": "index"
+    },
+    "state": "15"
+  },
+  "sensor.air_quality_overall_status": {
+    "attributes": {},
+    "state": "Good"
+  },
+  "sensor.air_quality_pm0_3": {
+    "attributes": {
+      "unit_of_measurement": "particles/dL"
+    },
+    "state": "320"
+  },
+  "sensor.air_quality_pm1": {
+    "attributes": {
+      "device_class": "pm1",
+      "unit_of_measurement": "µg/m³"
+    },
+    "state": "3.1"
+  },
+  "sensor.air_quality_pm10": {
+    "attributes": {
+      "device_class": "pm10",
+      "unit_of_measurement": "µg/m³"
+    },
+    "state": "8.4"
+  },
+  "sensor.air_quality_pm2_5": {
+    "attributes": {
+      "device_class": "pm25",
+      "unit_of_measurement": "µg/m³"
+    },
+    "state": "5.2"
+  },
+  "sensor.air_quality_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°F"
+    },
+    "state": "72.1"
+  },
+  "sensor.air_quality_voc_index": {
+    "attributes": {
+      "unit_of_measurement": "index"
+    },
+    "state": "85"
+  },
+  "sensor.backup_last_attempted_automatic_backup": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T03:00:00+00:00"
+  },
+  "sensor.backup_last_successful_automatic_backup": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T03:00:00+00:00"
+  },
+  "sensor.backup_next_scheduled_automatic_backup": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T03:00:00+00:00"
+  },
+  "sensor.ceramics_climate_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.ceramics_climate_sensor_humidity": {
+    "attributes": {
+      "device_class": "humidity",
+      "unit_of_measurement": "%"
+    },
+    "state": "45"
+  },
+  "sensor.ceramics_climate_sensor_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°F"
+    },
+    "state": "72.1"
+  },
+  "sensor.dragonfruit_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.dragonfruit_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.filament_store_light_illuminance": {
+    "attributes": {
+      "device_class": "illuminance",
+      "unit_of_measurement": "lx"
+    },
+    "state": "120"
+  },
+  "sensor.front_hallway_climate_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.front_hallway_climate_sensor_humidity": {
+    "attributes": {
+      "device_class": "humidity",
+      "unit_of_measurement": "%"
+    },
+    "state": "45"
+  },
+  "sensor.front_hallway_climate_sensor_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°F"
+    },
+    "state": "72.1"
+  },
+  "sensor.hallway_exit_door_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.huckleberry_aux_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_bed_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.huckleberry_chamber_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_cooling_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_current_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.huckleberry_current_stage": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.huckleberry_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.huckleberry_end_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.huckleberry_gcode_file_downloaded": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_gcode_filename": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart.gcode.3mf"
+  },
+  "sensor.huckleberry_heatbreak_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_ip_address": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.huckleberry_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.huckleberry_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.huckleberry_model_download": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_mqtt_connection_mode": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "sensor.huckleberry_nozzle_size": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0.4"
+  },
+  "sensor.huckleberry_nozzle_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.huckleberry_nozzle_type": {
+    "attributes": {},
+    "state": "stainless_steel"
+  },
+  "sensor.huckleberry_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.huckleberry_print_bed_type": {
+    "attributes": {},
+    "state": "textured_plate"
+  },
+  "sensor.huckleberry_print_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.huckleberry_print_type": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.huckleberry_print_weight": {
+    "attributes": {
+      "unit_of_measurement": "g"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_printable_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.huckleberry_printer_name": {
+    "attributes": {},
+    "state": "Huckleberry"
+  },
+  "sensor.huckleberry_remaining_time": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_sd_card_status": {
+    "attributes": {},
+    "state": "normal"
+  },
+  "sensor.huckleberry_skipped_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.huckleberry_speed_profile": {
+    "attributes": {},
+    "state": "Standard"
+  },
+  "sensor.huckleberry_start_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.huckleberry_task_name": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.huckleberry_total_layer_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.huckleberry_total_usage": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.huckleberry_wi_fi_signal": {
+    "attributes": {
+      "device_class": "signal_strength",
+      "unit_of_measurement": "dBm"
+    },
+    "state": "-55"
+  },
+  "sensor.kaeser_monitor_system_pressure": {
+    "attributes": {
+      "unit_of_measurement": "psi"
+    },
+    "state": "105.3"
+  },
+  "sensor.kiwi_aux_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.kiwi_chamber_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_cooling_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_current_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.kiwi_current_stage": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.kiwi_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.kiwi_end_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.kiwi_gcode_file_downloaded": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_gcode_filename": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart.gcode.3mf"
+  },
+  "sensor.kiwi_heatbreak_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_ip_address": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.kiwi_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.kiwi_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.kiwi_model_download": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_mqtt_connection_mode": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "sensor.kiwi_nozzle_size": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0.4"
+  },
+  "sensor.kiwi_nozzle_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.kiwi_nozzle_type": {
+    "attributes": {},
+    "state": "stainless_steel"
+  },
+  "sensor.kiwi_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.kiwi_print_bed_type": {
+    "attributes": {},
+    "state": "textured_plate"
+  },
+  "sensor.kiwi_print_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.kiwi_print_type": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.kiwi_print_weight": {
+    "attributes": {
+      "unit_of_measurement": "g"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_printable_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.kiwi_printer_name": {
+    "attributes": {},
+    "state": "Kiwi"
+  },
+  "sensor.kiwi_remaining_time": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_sd_card_status": {
+    "attributes": {},
+    "state": "normal"
+  },
+  "sensor.kiwi_skipped_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.kiwi_speed_profile": {
+    "attributes": {},
+    "state": "Standard"
+  },
+  "sensor.kiwi_start_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.kiwi_target_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_task_name": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.kiwi_total_layer_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.kiwi_total_usage": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.kiwi_wi_fi_signal": {
+    "attributes": {
+      "device_class": "signal_strength",
+      "unit_of_measurement": "dBm"
+    },
+    "state": "-55"
+  },
+  "sensor.make_nashville_do_not_disturb_until": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.mango_ams_humidity": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "3"
+  },
+  "sensor.mango_ams_humidity_index": {
+    "attributes": {},
+    "state": "1"
+  },
+  "sensor.mango_ams_temperature": {
+    "attributes": {
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.mango_ams_tray_1": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.mango_ams_tray_2": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.mango_ams_tray_3": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.mango_ams_tray_4": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.mango_aux_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.mango_chamber_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_cooling_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_current_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.mango_current_stage": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.mango_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.mango_end_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.mango_gcode_file_downloaded": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_gcode_filename": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart.gcode.3mf"
+  },
+  "sensor.mango_heatbreak_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_ip_address": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.mango_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.mango_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.mango_model_download": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_mqtt_connection_mode": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "sensor.mango_nozzle_size": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0.4"
+  },
+  "sensor.mango_nozzle_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.mango_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.mango_nozzle_type": {
+    "attributes": {},
+    "state": "stainless_steel"
+  },
+  "sensor.mango_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.mango_print_bed_type": {
+    "attributes": {},
+    "state": "textured_plate"
+  },
+  "sensor.mango_print_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.mango_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.mango_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.mango_print_type": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.mango_print_weight": {
+    "attributes": {
+      "unit_of_measurement": "g"
+    },
+    "state": "0"
+  },
+  "sensor.mango_printable_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.mango_printer_name": {
+    "attributes": {},
+    "state": "Mango"
+  },
+  "sensor.mango_remaining_time": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.mango_sd_card_status": {
+    "attributes": {},
+    "state": "normal"
+  },
+  "sensor.mango_skipped_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.mango_speed_profile": {
+    "attributes": {},
+    "state": "Standard"
+  },
+  "sensor.mango_start_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.mango_target_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.mango_task_name": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.mango_total_layer_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.mango_total_usage": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.mango_wi_fi_signal": {
+    "attributes": {
+      "device_class": "signal_strength",
+      "unit_of_measurement": "dBm"
+    },
+    "state": "-55"
+  },
+  "sensor.network_closet_climate_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.network_closet_climate_sensor_humidity": {
+    "attributes": {
+      "device_class": "humidity",
+      "unit_of_measurement": "%"
+    },
+    "state": "45"
+  },
+  "sensor.network_closet_climate_sensor_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°F"
+    },
+    "state": "72.1"
+  },
+  "sensor.p1s_01p00a433100976_externalspool_external_spool": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_humidity": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_humidity_index": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_temperature": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_tray_1": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_tray_2": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_tray_3": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_ams_1_tray_4": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.p1s_01p00c5b1900457_externalspool_external_spool": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.p1s_01p09a431201152_externalspool_external_spool": {
+    "attributes": {},
+    "state": "PLA Basic"
+  },
+  "sensor.papaya_aux_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.papaya_chamber_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_cooling_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_current_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.papaya_current_stage": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.papaya_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.papaya_end_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.papaya_gcode_file_downloaded": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_gcode_filename": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart.gcode.3mf"
+  },
+  "sensor.papaya_heatbreak_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_ip_address": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.papaya_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.papaya_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.papaya_model_download": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_mqtt_connection_mode": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "sensor.papaya_nozzle_size": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0.4"
+  },
+  "sensor.papaya_nozzle_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.papaya_nozzle_type": {
+    "attributes": {},
+    "state": "stainless_steel"
+  },
+  "sensor.papaya_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.papaya_print_bed_type": {
+    "attributes": {},
+    "state": "textured_plate"
+  },
+  "sensor.papaya_print_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.papaya_print_type": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.papaya_print_weight": {
+    "attributes": {
+      "unit_of_measurement": "g"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_printable_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.papaya_printer_name": {
+    "attributes": {},
+    "state": "Papaya"
+  },
+  "sensor.papaya_remaining_time": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_sd_card_status": {
+    "attributes": {},
+    "state": "normal"
+  },
+  "sensor.papaya_skipped_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.papaya_speed_profile": {
+    "attributes": {},
+    "state": "Standard"
+  },
+  "sensor.papaya_start_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.papaya_target_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_task_name": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.papaya_total_layer_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.papaya_total_usage": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.papaya_wi_fi_signal": {
+    "attributes": {
+      "device_class": "signal_strength",
+      "unit_of_measurement": "dBm"
+    },
+    "state": "-55"
+  },
+  "sensor.pineapple_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.pineapple_cfs_box_0_slot_1_color": {
+    "attributes": {},
+    "state": "#000000"
+  },
+  "sensor.pineapple_cfs_box_0_slot_1_filament": {
+    "attributes": {},
+    "state": "PLA"
+  },
+  "sensor.pineapple_cfs_box_0_slot_1_percent": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "80"
+  },
+  "sensor.pineapple_cfs_external_color": {
+    "attributes": {},
+    "state": "#000000"
+  },
+  "sensor.pineapple_cfs_external_filament": {
+    "attributes": {},
+    "state": "PLA"
+  },
+  "sensor.pineapple_cfs_external_percent": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "80"
+  },
+  "sensor.pineapple_chamber_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.pineapple_current_object": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.pineapple_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.pineapple_filament_status": {
+    "attributes": {},
+    "state": "loaded"
+  },
+  "sensor.pineapple_flow_rate": {
+    "attributes": {
+      "unit_of_measurement": "mm³/s"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.pineapple_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.pineapple_max_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.pineapple_max_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.pineapple_model": {
+    "attributes": {},
+    "state": "Prusa XL"
+  },
+  "sensor.pineapple_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.pineapple_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.pineapple_object_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.pineapple_position_x": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_position_y": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_position_z": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_print_control": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.pineapple_print_job_time": {
+    "attributes": {
+      "unit_of_measurement": "s"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_print_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "100"
+  },
+  "sensor.pineapple_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.pineapple_print_time_left": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_real_time_flow": {
+    "attributes": {
+      "unit_of_measurement": "mm³/s"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_system": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.pineapple_total_layers": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.pineapple_used_material_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.pineapple_working_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.print_status_labels": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.strawberry_aux_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.strawberry_chamber_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_cooling_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_current_layer": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.strawberry_current_stage": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.strawberry_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.strawberry_end_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.strawberry_gcode_file_downloaded": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_gcode_filename": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart.gcode.3mf"
+  },
+  "sensor.strawberry_heatbreak_fan_speed": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_ip_address": {
+    "attributes": {},
+    "state": "unknown"
+  },
+  "sensor.strawberry_last_display_name": {
+    "attributes": {},
+    "state": "SampleModel"
+  },
+  "sensor.strawberry_last_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.strawberry_model_download": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_mqtt_connection_mode": {
+    "attributes": {},
+    "state": "cloud"
+  },
+  "sensor.strawberry_nozzle_size": {
+    "attributes": {
+      "unit_of_measurement": "mm"
+    },
+    "state": "0.4"
+  },
+  "sensor.strawberry_nozzle_target_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_nozzle_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "25.0"
+  },
+  "sensor.strawberry_nozzle_type": {
+    "attributes": {},
+    "state": "stainless_steel"
+  },
+  "sensor.strawberry_object": {
+    "attributes": {},
+    "state": "SamplePart"
+  },
+  "sensor.strawberry_print_bed_type": {
+    "attributes": {},
+    "state": "textured_plate"
+  },
+  "sensor.strawberry_print_length": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_print_progress": {
+    "attributes": {
+      "unit_of_measurement": "%"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_print_status": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.strawberry_print_type": {
+    "attributes": {},
+    "state": "idle"
+  },
+  "sensor.strawberry_print_weight": {
+    "attributes": {
+      "unit_of_measurement": "g"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_printable_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.strawberry_printer_name": {
+    "attributes": {},
+    "state": "Strawberry"
+  },
+  "sensor.strawberry_remaining_time": {
+    "attributes": {
+      "unit_of_measurement": "min"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_sd_card_status": {
+    "attributes": {},
+    "state": "normal"
+  },
+  "sensor.strawberry_skipped_objects": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.strawberry_speed_profile": {
+    "attributes": {},
+    "state": "Standard"
+  },
+  "sensor.strawberry_start_time": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "unknown"
+  },
+  "sensor.strawberry_target_bed_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°C"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_task_name": {
+    "attributes": {},
+    "state": "SampleModel-SamplePart"
+  },
+  "sensor.strawberry_total_layer_count": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.strawberry_total_usage": {
+    "attributes": {
+      "unit_of_measurement": "m"
+    },
+    "state": "0"
+  },
+  "sensor.strawberry_wi_fi_signal": {
+    "attributes": {
+      "device_class": "signal_strength",
+      "unit_of_measurement": "dBm"
+    },
+    "state": "-55"
+  },
+  "sensor.sun_next_dawn": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.sun_next_dusk": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.sun_next_midnight": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.sun_next_noon": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.sun_next_rising": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.sun_next_setting": {
+    "attributes": {
+      "device_class": "timestamp"
+    },
+    "state": "2026-04-01T12:00:00+00:00"
+  },
+  "sensor.total_power_alarm_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.total_power_alarm_power_failure_alarm": {
+    "attributes": {},
+    "state": "Normal"
+  },
+  "sensor.total_power_alarm_power_failure_alarm_beep": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.total_power_alarm_power_failure_alarm_mute": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.total_power_alarm_power_failure_alarm_volume": {
+    "attributes": {},
+    "state": "0"
+  },
+  "sensor.water_leak_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.woodshop_climate_sensor_battery": {
+    "attributes": {
+      "device_class": "battery",
+      "unit_of_measurement": "%"
+    },
+    "state": "95"
+  },
+  "sensor.woodshop_climate_sensor_humidity": {
+    "attributes": {
+      "device_class": "humidity",
+      "unit_of_measurement": "%"
+    },
+    "state": "45"
+  },
+  "sensor.woodshop_climate_sensor_temperature": {
+    "attributes": {
+      "device_class": "temperature",
+      "unit_of_measurement": "°F"
+    },
+    "state": "72.1"
+  },
+  "switch.air_quality_post_data_to_airgradient": {
+    "attributes": {},
+    "state": "off"
+  },
+  "switch.huckleberry_enable_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.huckleberry_use_image_sensor_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.kiwi_enable_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.kiwi_use_image_sensor_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.mango_enable_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.mango_use_image_sensor_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.papaya_enable_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.papaya_use_image_sensor_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.strawberry_enable_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.strawberry_use_image_sensor_camera": {
+    "attributes": {},
+    "state": "on"
+  },
+  "switch.water_leak_sensor_enable_siren": {
+    "attributes": {},
+    "state": "off"
+  },
+  "update.air_quality_firmware": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.esphome_device_builder_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.filament_store_light_firmware": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.home_assistant_core_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.home_assistant_operating_system_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.home_assistant_supervisor_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.sqlite_web_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.studio_code_server_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.tailscale_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.terminal_ssh_update": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  },
+  "update.water_leak_sensor_firmware": {
+    "attributes": {
+      "installed_version": "1.0.0",
+      "latest_version": "1.0.0"
+    },
+    "state": "off"
+  }
+}
