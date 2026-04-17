@@ -177,43 +177,21 @@
       local_only: false
   conditions: []
   actions:
+    # Only extract fields used in Eventbrite API calls; everything else
+    # flows through to Slack automatically via trigger.json iteration.
     - variables:
-        form_title: "{{ trigger.json.title | default('') }}"
-        form_summary: "{{ trigger.json.summary | default('') }}"
-        form_description: "{{ trigger.json.description | default('') }}"
-        form_date: "{{ trigger.json.date | default('') }}"
-        form_start_time: "{{ trigger.json.start_time | default('') }}"
-        form_end_time: "{{ trigger.json.end_time | default('') }}"
-        form_capacity: "{{ trigger.json.capacity | default('20') }}"
-        form_member_price: "{{ trigger.json.member_price | default('0') }}"
-        form_nonmember_price: "{{ trigger.json.nonmember_price | default('0') }}"
-        form_shop: "{{ trigger.json.shop | default('') }}"
-        form_name: "{{ trigger.json.name | default('') }}"
-        form_email: "{{ trigger.json.email | default('') }}"
-        form_contact: "{{ trigger.json.contact | default('') }}"
-        form_member_status: "{{ trigger.json.member_status | default('') }}"
-        form_loa_agreed: "{{ trigger.json.loa_agreed | default('') }}"
-        form_loa_upload: "{{ trigger.json.loa_upload | default('') }}"
-        form_objectives: "{{ trigger.json.objectives | default('') }}"
-        form_location: "{{ trigger.json.location | default('') }}"
-        form_age: "{{ trigger.json.age_level | default('') }}"
-        form_knowledge: "{{ trigger.json.knowledge_level | default('') }}"
-        form_examples: "{{ trigger.json.examples | default('') }}"
-        form_tags: "{{ trigger.json.tags | default('') }}"
-        form_bio: "{{ trigger.json.bio | default('') }}"
-        form_headshot: "{{ trigger.json.headshot | default('') }}"
-        form_marketing: "{{ trigger.json.marketing_notes | default('') }}"
-        form_sessions: "{{ trigger.json.sessions_count | default('') }}"
-        form_recurring: "{{ trigger.json.recurring_info | default('') }}"
-        form_last_date: "{{ trigger.json.last_date | default('') }}"
-        form_cutoff: "{{ trigger.json.cutoff_date | default('') }}"
-        form_min: "{{ trigger.json.min_participants | default('') }}"
-        form_secret_code: "{{ trigger.json.secret_code | default('') }}"
-        form_payment: "{{ trigger.json.payment_method | default('') }}"
-        form_safety: "{{ trigger.json.safety | default('') }}"
-        form_bring: "{{ trigger.json.bring | default('') }}"
-        form_assistant: "{{ trigger.json.assistant | default('') }}"
-        form_anything_else: "{{ trigger.json.anything_else | default('') }}"
+        form_title: "{{ trigger.json['Title of Your Workshop/Class'] | default('') }}"
+        form_summary: "{{ trigger.json['Headline / Summary'] | default('') }}"
+        form_description: "{{ trigger.json['Long Description'] | default('') }}"
+        form_date: "{{ trigger.json['Date of First Class'] | default('') }}"
+        form_start_time: "{{ trigger.json['Class Start Time'] | default('') }}"
+        form_end_time: "{{ trigger.json['Class End Time'] | default('') }}"
+        form_capacity: "{{ trigger.json['Maximum number of participants'] | default('20') }}"
+        form_member_price: "{{ trigger.json['MEMBER TICKET PRICE'] | default('0') }}"
+        form_nonmember_price: "{{ trigger.json['NON MEMBER TICKET PRICE'] | default('0') }}"
+        form_shop: "{{ trigger.json['What shop or studio will you use for class?'] | default('') }}"
+        form_name: "{{ trigger.json['Your Full Name'] | default('') }}"
+        form_email: "{{ trigger.json['Email Address'] | default('') }}"
         template_id: "{{ states('input_text.eventbrite_template_id') }}"
 
     # Compute derived values
@@ -461,71 +439,25 @@
     # --- Build Slack pass-through fields ---
     - variables:
         slack_passthrough: |-
+          {%- set skip = [
+            'Title of Your Workshop/Class',
+            'Headline / Summary',
+            'Long Description',
+            'Date of First Class',
+            'Class Start Time',
+            'Class End Time',
+            'Maximum number of participants',
+            'MEMBER TICKET PRICE',
+            'NON MEMBER TICKET PRICE',
+            'What shop or studio will you use for class?',
+            'Timestamp'
+          ] -%}
           {%- set ns = namespace(lines=[]) -%}
-          {%- if form_name -%}
-            {%- set ns.lines = ns.lines + [':bust_in_silhouette: *Instructor:* ' ~ form_name ~ ' (' ~ form_email ~ ')'] -%}
-          {%- endif -%}
-          {%- if form_contact -%}
-            {%- set ns.lines = ns.lines + [':phone: Contact: ' ~ form_contact] -%}
-          {%- endif -%}
-          {%- if form_member_status -%}
-            {%- set ns.lines = ns.lines + [':identification_card: Member: ' ~ form_member_status] -%}
-          {%- endif -%}
-          {%- if form_loa_upload -%}
-            {%- set ns.lines = ns.lines + [':white_check_mark: LOA: ' ~ form_loa_upload] -%}
-          {%- endif -%}
-          {%- if form_objectives -%}
-            {%- set ns.lines = ns.lines + [':dart: Objectives: ' ~ form_objectives] -%}
-          {%- endif -%}
-          {%- if form_location -%}
-            {%- set ns.lines = ns.lines + [':round_pushpin: Location: ' ~ form_location] -%}
-          {%- endif -%}
-          {%- if form_age or form_knowledge -%}
-            {%- set ns.lines = ns.lines + [':busts_in_silhouette: Ages: ' ~ form_age ~ ' / Knowledge: ' ~ form_knowledge] -%}
-          {%- endif -%}
-          {%- if form_tags -%}
-            {%- set ns.lines = ns.lines + [':label: Tags: ' ~ form_tags] -%}
-          {%- endif -%}
-          {%- if form_bio -%}
-            {%- set ns.lines = ns.lines + [':pencil: Bio: ' ~ form_bio] -%}
-          {%- endif -%}
-          {%- if form_headshot -%}
-            {%- set ns.lines = ns.lines + [':camera_with_flash: Headshot: ' ~ form_headshot] -%}
-          {%- endif -%}
-          {%- if form_examples -%}
-            {%- set ns.lines = ns.lines + [':framed_picture: Examples: ' ~ form_examples] -%}
-          {%- endif -%}
-          {%- if form_sessions or form_recurring -%}
-            {%- set session_info = form_sessions ~ (' — ' ~ form_recurring if form_recurring else '') ~ (', ' ~ form_date ~ ' to ' ~ form_last_date if form_last_date else '') -%}
-            {%- set ns.lines = ns.lines + [':calendar: Sessions: ' ~ session_info] -%}
-          {%- endif -%}
-          {%- if form_cutoff -%}
-            {%- set ns.lines = ns.lines + [':warning: Cutoff: ' ~ form_cutoff] -%}
-          {%- endif -%}
-          {%- if form_min -%}
-            {%- set ns.lines = ns.lines + [':busts_in_silhouette: Min participants: ' ~ form_min] -%}
-          {%- endif -%}
-          {%- if form_secret_code -%}
-            {%- set ns.lines = ns.lines + [':lock: Secret code: ' ~ form_secret_code] -%}
-          {%- endif -%}
-          {%- if form_payment -%}
-            {%- set ns.lines = ns.lines + [':money_with_wings: Payment: ' ~ form_payment] -%}
-          {%- endif -%}
-          {%- if form_safety -%}
-            {%- set ns.lines = ns.lines + [':helmet_with_white_cross: Safety: ' ~ form_safety] -%}
-          {%- endif -%}
-          {%- if form_bring -%}
-            {%- set ns.lines = ns.lines + [':school_satchel: Students should bring: ' ~ form_bring] -%}
-          {%- endif -%}
-          {%- if form_assistant -%}
-            {%- set ns.lines = ns.lines + [':raising_hand: Needs assistant: ' ~ form_assistant] -%}
-          {%- endif -%}
-          {%- if form_anything_else -%}
-            {%- set ns.lines = ns.lines + [':speech_balloon: Other: ' ~ form_anything_else] -%}
-          {%- endif -%}
-          {%- if form_marketing -%}
-            {%- set ns.lines = ns.lines + [':speech_balloon: Marketing notes: ' ~ form_marketing] -%}
-          {%- endif -%}
+          {%- for key, value in trigger.json.items() -%}
+            {%- if key not in skip and value -%}
+              {%- set ns.lines = ns.lines + ['*' ~ key ~ ':* ' ~ value] -%}
+            {%- endif -%}
+          {%- endfor -%}
           {{ ns.lines | join('\n') }}
 
     # --- Post success to Slack ---
