@@ -37,10 +37,6 @@
     below: 80
     for:
       minutes: 5
-
-  - trigger: state
-    entity_id: binary_sensor.water_leak_sensor
-
   conditions:
   - condition: template
     value_template: >
@@ -59,10 +55,7 @@
       ) %}
 
       {% set allowed_non_temp = (
-        trigger.platform == 'numeric_state' or
-        trigger.entity_id in [
-          'binary_sensor.water_leak_sensor'
-        ]
+        trigger.platform == 'numeric_state'
       ) %}
 
       {{ cooldown_ok and (allowed_non_temp or valid_temp_change) }}
@@ -293,4 +286,68 @@
           data:
             username: Air Quality
             icon: air_filter
+  mode: single
+- id: water_leak_alert
+  alias: Water Leak Alert
+  description: Alert on water leak detection or clearance in Exec Bathroom
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: 'on'
+    id: leak_detected
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: 'off'
+    from: 'on'
+    id: leak_cleared
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: leak_detected
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: |
+            :rotating_light: *Water Leak Detected — Exec Bathroom*
+            *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+            Check the executive bathroom immediately.
+          data:
+            username: Facilities Pulse
+            icon: warning
+    - conditions:
+      - condition: trigger
+        id: leak_cleared
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: |
+            :white_check_mark: *Water Leak Cleared — Exec Bathroom*
+            *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+          data:
+            username: Facilities Pulse
+            icon: warning
+  mode: single
+- id: water_leak_sensor_health
+  alias: Water Leak Sensor Health
+  description: Alert when water leak sensor has been unavailable for 6 hours
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: unavailable
+    for:
+      hours: 6
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      message: |
+        :grey_question: *Water Leak Sensor Offline — Exec Bathroom*
+        The sensor has been unavailable for 6+ hours.
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+      data:
+        username: Facilities Pulse
+        icon: warning
   mode: single
