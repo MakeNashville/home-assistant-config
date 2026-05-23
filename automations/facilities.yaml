@@ -454,8 +454,8 @@
   mode: single
 
 - id: warehouse_heat_morning_headsup
-  alias: Warehouse Heat — Morning Heads-up
-  description: 7am forecast-based heat heads-up if today's peak HI will be 88+
+  alias: Warehouse Climate — Daily Forecast
+  description: 7am daily forecast post; tiered messaging (chilly/comfortable/hot) and sets helpers on hot days
   triggers:
   - trigger: time
     at: "07:00:00"
@@ -522,4 +522,30 @@
           entity_id: input_datetime.warehouse_heat_morning_fired_at
         data:
           date: "{{ now().strftime('%Y-%m-%d') }}"
+    - conditions:
+      - condition: template
+        value_template: "{{ peak_hi >= 65 and peak_hi < 88 }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#climate-feed"
+          message: |
+            :sun_with_face: *Today's forecast: peak around {{ peak_hi }}°F*
+            Comfortable conditions in the warehouse.
+          data:
+            username: Heat Watch
+            icon: sun_with_face
+    - conditions:
+      - condition: template
+        value_template: "{{ peak_hi > 0 and peak_hi < 65 }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#climate-feed"
+          message: |
+            :cold_face: *Today's forecast: peak around {{ peak_hi }}°F*
+            Chilly day ahead — layer up if you're stopping by.
+          data:
+            username: Heat Watch
+            icon: cold_face
   mode: single
