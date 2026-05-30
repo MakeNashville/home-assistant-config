@@ -101,6 +101,9 @@ rest_command:
     payload: '{{ payload }}'
 
 input_text:
+  dragonfruit_slack_thread_ts:
+    name: Dragonfruit Slack Thread TS
+    max: 30
   pineapple_last_job:
     name: Pineapple Last Job
     max: 255
@@ -372,7 +375,6 @@ template:
         availability: "{{ states('sensor.pineapple_last_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('input_text.pineapple_last_job').replace(states('sensor.pineapple_last_display_name') + '-', '')}}
-
       - name: "Dragonfruit Display Name"
         unique_id: dragonfruit_display_name
         availability: "{{ states('sensor.dragonfruit_filename') not in ['unknown', 'unavailable'] }}"
@@ -383,6 +385,16 @@ template:
         availability: "{{ states('sensor.dragonfruit_display_name') not in ['unknown', 'unavailable'] }}"
         state: >
           {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_display_name') + '-', '')}}
+      - name: "Dragonfruit Last Display Name"
+        unique_id: dragonfruit_last_display_name
+        availability: "{{ states('sensor.dragonfruit_filename') not in ['unknown', 'unavailable'] }}"
+        state: >
+          {{states('sensor.dragonfruit_filename').split('-')[0]}}
+      - name: "Dragonfruit Last Object"
+        unique_id: dragonfruit_last_object
+        availability: "{{ states('sensor.dragonfruit_last_display_name') not in ['unknown', 'unavailable'] }}"
+        state: >
+          {{states('sensor.dragonfruit_filename').replace(states('sensor.dragonfruit_last_display_name') + '-', '')}}
 
       - name: "Woodshop Heat Index"
         unique_id: woodshop_heat_index
@@ -641,6 +653,20 @@ sensor:
   - platform: history_stats
     name: Pineapple Prints Failed Week
     entity_id: sensor.pineapple_print_status
+    state: "stopped"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Dragonfruit Prints Completed Week
+    entity_id: sensor.dragonfruit_print_status
+    state: "finished"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Dragonfruit Prints Failed Week
+    entity_id: sensor.dragonfruit_print_status
     state: "stopped"
     type: count
     start: "{{ now() - timedelta(days=7) }}"
