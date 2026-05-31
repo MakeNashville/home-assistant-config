@@ -42,9 +42,9 @@ Manages 3D printer lifecycle notifications, facilities monitoring, air quality a
 ## Systems
 
 ### 3D printers — Lifecycle notifications
-Six printers post to `#3dprint-info` via Slack on key state transitions: starting, progress milestones (layer 2, 10, 50%, 90%), finished, stopped, paused, error, and offline. A bi-hourly roundup posts active printer status (suppressed midnight–7am). A weekly summary posts Sunday at 9am.
+Seven printers post to `#3dprint-info` via Slack on key state transitions: starting, progress milestones (layer 2, 10, 50%, 90%), finished, stopped, paused, error, and offline. A bi-hourly roundup posts active printer status (suppressed midnight–7am). A weekly summary posts Sunday at 9am.
 
-Printer names follow a fruit convention. Bambu Lab printers (Kiwi, Mango, Papaya, Strawberry, Huckleberry) use the Bambu integration. Pineapple is a Prusa printer via the Prusa integration. Dragonfruit is an additional printer.
+Printer names follow a fruit convention. Bambu Lab printers (Kiwi, Mango, Papaya, Strawberry, Huckleberry) use the Bambu integration. Pineapple is a Creality printer. Dragonfruit is a Prusa XL via PrusaLink.
 
 ### Facilities Pulse
 Posts to `#facilities-feed` when any monitored space goes out of range:
