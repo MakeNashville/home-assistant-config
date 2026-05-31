@@ -1,4 +1,4 @@
-name: Deploy to Home Assistant
+name: Deploy Config to Home Assistant
 
 on:
   push:
@@ -17,13 +17,14 @@ on:
 
 jobs:
   deploy:
+    name: Pull, validate, and apply config
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Detect if full restart required
+      - name: Check if configuration.yaml changed (requires full restart)
         id: restart_check
         run: |
           if git diff --name-only HEAD~1 HEAD | grep -qE '^(configuration\.yaml)'; then
@@ -32,18 +33,17 @@ jobs:
             echo "required=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Pull latest config on HA
+      - name: Git pull config on HA host
         run: |
           curl -f -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/shell_command/git_pull"
 
-      # Give git pull a moment to finish before validating
-      - name: Wait for pull
+      - name: Wait 5s for git pull to finish
         run: sleep 5
 
-      - name: Validate config
+      - name: Validate HA config via check_config API
         run: |
           result=$(curl -f -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
@@ -54,7 +54,7 @@ jobs:
 
       # --- Restart path ---
 
-      - name: Notify restart
+      - name: Slack — Notify restart beginning
         if: steps.restart_check.outputs.required == 'true'
         run: |
           SHORT_SHA="${GITHUB_SHA:0:7}"
@@ -69,7 +69,16 @@ jobs:
             -d "$body" \
             "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
 
-      - name: Restart HA
+      - name: Flag deploy restart in progress
+        if: steps.restart_check.outputs.required == 'true'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"entity_id": "input_boolean.deploy_restart_in_progress"}' \
+            "${{ secrets.HA_URL }}/api/services/input_boolean/turn_on"
+
+      - name: Trigger HA full restart
         if: steps.restart_check.outputs.required == 'true'
         run: |
           # HA shuts down before it can respond, so curl will always
@@ -81,9 +90,42 @@ jobs:
             "${{ secrets.HA_URL }}/api/services/homeassistant/restart" \
             || true
 
+      - name: Poll /api/ until HA is back online (up to 5 min)
+        if: steps.restart_check.outputs.required == 'true'
+        run: |
+          echo "Waiting for HA to come back online..."
+          sleep 15
+          for i in $(seq 1 30); do
+            if curl -f -s -o /dev/null \
+              -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+              "${{ secrets.HA_URL }}/api/"; then
+              echo "HA is back online after ~$((i * 10 + 15)) seconds"
+              exit 0
+            fi
+            echo "Attempt $i/30 — not ready yet, waiting 10s..."
+            sleep 10
+          done
+          echo "HA did not come back within 5 minutes"
+          exit 1
+
+      - name: Slack — Restart complete
+        if: steps.restart_check.outputs.required == 'true'
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          body=$(jq -n \
+            --arg msg ":white_check_mark: Config deployed from GitHub — full restart complete. <${COMMIT_URL}|${SHORT_SHA}>" \
+            --arg target "#deployment-feed" \
+            '{"target": $target, "message": $msg, "data": {"username": "GitHub Actions", "icon": "rocket"}}')
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${{ secrets.HA_URL }}/api/services/notify/make_nashville"
+
       # --- Reload path ---
 
-      - name: Reload automations
+      - name: Hot-reload automations
         if: steps.restart_check.outputs.required == 'false'
         run: |
           curl -f -s -X POST \
@@ -91,7 +133,7 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/automation/reload"
 
-      - name: Reload scripts
+      - name: Hot-reload scripts
         if: steps.restart_check.outputs.required == 'false'
         run: |
           curl -f -s -X POST \
@@ -99,7 +141,7 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/script/reload"
 
-      - name: Reload scenes
+      - name: Hot-reload scenes
         if: steps.restart_check.outputs.required == 'false'
         run: |
           curl -f -s -X POST \
@@ -107,7 +149,7 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/scene/reload"
 
-      - name: Reload themes
+      - name: Hot-reload themes
         if: steps.restart_check.outputs.required == 'false'
         run: |
           curl -f -s -X POST \
@@ -115,7 +157,7 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/frontend/reload_themes"
 
-      - name: Reload core config (templates)
+      - name: Hot-reload core config and templates
         if: steps.restart_check.outputs.required == 'false'
         run: |
           curl -f -s -X POST \
@@ -123,7 +165,7 @@ jobs:
             -H "Content-Type: application/json" \
             "${{ secrets.HA_URL }}/api/services/homeassistant/reload_core_config"
 
-      - name: Notify reload
+      - name: Slack — Hot-reload complete
         if: steps.restart_check.outputs.required == 'false'
         run: |
           SHORT_SHA="${GITHUB_SHA:0:7}"
@@ -140,7 +182,7 @@ jobs:
 
       # --- Post-deploy backup ---
 
-      - name: Trigger config backup
+      - name: Trigger nightly backup via SSH addon
         if: success()
         run: |
           curl -s -X POST \
@@ -151,7 +193,7 @@ jobs:
 
       # --- Failure notification ---
 
-      - name: Notify failure
+      - name: Slack — Deploy failed
         if: failure()
         run: |
           SHORT_SHA="${GITHUB_SHA:0:7}"

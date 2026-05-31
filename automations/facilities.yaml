@@ -11,6 +11,7 @@
     below: 62
     for:
       minutes: 5
+
   - trigger: numeric_state
     entity_id:
     - sensor.air_quality_temperature
@@ -21,6 +22,7 @@
     above: 90
     for:
       minutes: 5
+
   - trigger: state
     id: temp_state_change
     entity_id:
@@ -29,15 +31,12 @@
     - sensor.woodshop_climate_sensor_temperature
     - sensor.front_hallway_climate_sensor_temperature
     - sensor.network_closet_climate_sensor_temperature
+
   - trigger: numeric_state
     entity_id: sensor.kaeser_monitor_system_pressure
     below: 80
     for:
       minutes: 5
-  - trigger: state
-    entity_id: sensor.total_power_alarm_power_failure_alarm
-  - trigger: state
-    entity_id: binary_sensor.water_leak_sensor
   conditions:
   - condition: template
     value_template: >
@@ -56,14 +55,11 @@
       ) %}
 
       {% set allowed_non_temp = (
-        trigger.platform == 'numeric_state' or
-        trigger.entity_id in [
-          'sensor.total_power_alarm_power_failure_alarm',
-          'binary_sensor.water_leak_sensor'
-        ]
+        trigger.platform == 'numeric_state'
       ) %}
 
       {{ cooldown_ok and (allowed_non_temp or valid_temp_change) }}
+
   actions:
   - action: notify.make_nashville
     data:
@@ -76,7 +72,7 @@
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
         *:thermometer: Environment*
-        {% set ns = namespace(count=0, unavail=[]) -%}
+        {% set ns = namespace(count=0) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
         {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
@@ -86,50 +82,97 @@
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
         {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
-        {% elif temp_e -%}
-        {% set ns.unavail = ns.unavail + [area_name(temp_e)|default('Unknown')] -%}
         {% endif -%}
         {% endfor -%}
-        {% if ns.count == 0 and not ns.unavail %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
         :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
-        {% if pwr not in ['unknown','unavailable'] -%}
-        {{ ':green_circle:' if pwr == 'normal' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Power'] -%}
-        {% endif -%}
+        {{ ':green_circle:' if pwr in ['ok', 'normal'] else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
-        {% if leak not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Exec Bathroom Water'] -%}
-        {% endif -%}
-        {% set kpsi_raw = states('sensor.kaeser_monitor_system_pressure') -%}
-        {% if kpsi_raw not in ['unknown','unavailable'] -%}
-        {% set kpsi = kpsi_raw | float(0) -%}
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
-        {% endif -%}
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
-        {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
         {{ aq_icon }} Air Quality: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
-        {% endif -%}
-
-        {% if ns.unavail -%}
-        *:grey_question: Unavailable*
-        {{ ns.unavail | join(', ') }}
-        {% endif -%}
   mode: queued
   max: 2
+
+- id: facilities_pulse_power_outage
+  alias: Facilities Pulse — Power Outage
+  description: Notify when facility power goes into alarm
+  triggers:
+  - trigger: state
+    entity_id: sensor.total_power_alarm_power_failure_alarm
+    to: "Alert"
+  conditions:
+  - condition: template
+    value_template: >
+      {{ trigger.from_state is not none and
+         trigger.to_state is not none and
+         trigger.from_state.state not in ['unknown', 'unavailable', none] and
+         trigger.to_state.state not in ['unknown', 'unavailable', none] }}
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      data:
+        username: Facilities Pulse
+        icon: warning
+      message: |
+        :rotating_light: *POWER OUTAGE ALERT*
+        Power monitor changed to *{{ trigger.to_state.state }}*.
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+
+        *:gear: Systems Snapshot*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':green_circle:' if pwr in ['ok', 'normal'] else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
+  mode: single
+
+- id: facilities_pulse_power_restored
+  alias: Facilities Pulse — Power Restored
+  description: Notify when facility power returns to normal
+  triggers:
+  - trigger: state
+    entity_id: sensor.total_power_alarm_power_failure_alarm
+    to: "Normal"
+  conditions:
+  - condition: template
+    value_template: >
+      {{ trigger.from_state is not none and
+         trigger.to_state is not none and
+         trigger.from_state.state not in ['unknown', 'unavailable', none] and
+         trigger.to_state.state not in ['unknown', 'unavailable', none] }}
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      data:
+        username: Facilities Pulse
+        icon: electric_plug
+      message: |
+        :white_check_mark: *POWER RESTORED*
+        Power monitor changed to *{{ trigger.to_state.state }}*.
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+
+        *:gear: Systems Snapshot*
+        {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
+        {{ ':green_circle:' if pwr in ['ok', 'normal'] else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
+        {% set leak = states('binary_sensor.water_leak_sensor') -%}
+        {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
+        {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
+  mode: single
+
 - id: facilities_pulse_verbose
   alias: Facilities Pulse — Verbose
   triggers:
@@ -149,7 +192,7 @@
         *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
 
         *:thermometer: Environment*
-        {% set ns = namespace(count=0, unavail=[]) -%}
+        {% set ns = namespace(count=0) -%}
         {% for device_id in label_devices('facilities_pulse') -%}
         {% set entities = device_entities(device_id) -%}
         {% set temp_e = entities | reject('search','display_temperature') | select('search','temperature') | first | default(none) -%}
@@ -159,49 +202,26 @@
         {% set t = states(temp_e) | float(0) -%}
         {% set icon = ':green_circle:' if t >= 65 and t <= 80 else ':yellow_circle:' if t >= 60 and t < 65 or t > 80 and t <= 85 else ':red_circle:' -%}
         {{ icon }} {{ "%.1f°F"|format(t) }}  {{ "%-17s"|format(area_name(temp_e)|default('Unknown')) }} {{ states(hum_e)|float(0)|round(0)|int }}%
-        {% elif temp_e -%}
-        {% set ns.unavail = ns.unavail + [area_name(temp_e)|default('Unknown')] -%}
         {% endif -%}
         {% endfor -%}
-        {% if ns.count == 0 and not ns.unavail %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
+        {% if ns.count == 0 %}:warning: No sensors found — check the facilities_pulse label{% endif -%}
         :partly_sunny: {{ "%.1f°F"|format(state_attr('weather.forecast_home','temperature')|float(0)) }}  {{ "%-17s"|format('Outside') }} {{ state_attr('weather.forecast_home','humidity')|int }}%
 
         *:gear: Systems*
         {% set pwr = states('sensor.total_power_alarm_power_failure_alarm') | lower -%}
-        {% if pwr not in ['unknown','unavailable'] -%}
-        {{ ':green_circle:' if pwr == 'normal' else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Power'] -%}
-        {% endif -%}
+        {{ ':green_circle:' if pwr in ['ok', 'normal'] else ':red_circle:' }} {{ "%-14s"|format(pwr | capitalize) }}  Power
         {% set leak = states('binary_sensor.water_leak_sensor') -%}
-        {% if leak not in ['unknown','unavailable'] -%}
         {{ ':green_circle:' if leak == 'off' else ':red_circle:' }} {{ "%-14s"|format(state_translated('binary_sensor.water_leak_sensor')) }}  Exec Bathroom
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Exec Bathroom Water'] -%}
-        {% endif -%}
-        {% set kpsi_raw = states('sensor.kaeser_monitor_system_pressure') -%}
-        {% if kpsi_raw not in ['unknown','unavailable'] -%}
-        {% set kpsi = kpsi_raw | float(0) -%}
+        {% set kpsi = states('sensor.kaeser_monitor_system_pressure') | float(0) -%}
         {{ ':green_circle:' if kpsi >= 80 else ':red_circle:' }} {{ "%-14s"|format(kpsi | round(1) | string ~ ' psi') }}  Kaeser
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Kaeser'] -%}
-        {% endif -%}
 
         *:dash: 3D Print Room*
         {% set aq = states('sensor.air_quality_overall_status') -%}
-        {% if aq not in ['unknown','unavailable'] -%}
         {% set aq_icon = ':green_circle:' if aq == 'Good' else ':yellow_circle:' if aq == 'Moderate' else ':large_orange_circle:' if aq == 'Poor' else ':red_circle:' -%}
         {{ aq_icon }} Air Quality: {{ aq }}
         CO₂: {{ states('sensor.air_quality_carbon_dioxide') }} ppm  |  VOC: {{ states('sensor.air_quality_voc_index') }}  |  PM2.5: {{ states('sensor.air_quality_pm2_5') | float(0) | round(1) }} ug/m3
-        {% else -%}
-        {% set ns.unavail = ns.unavail + ['Air Quality'] -%}
-        {% endif -%}
-
-        {% if ns.unavail -%}
-        *:grey_question: Unavailable*
-        {{ ns.unavail | join(', ') }}
-        {% endif -%}
   mode: single
+
 - id: '1740600000002'
   alias: Air Quality Alert
   description: Notify #integration-sandbox when 3D print room air quality degrades or recovers
@@ -266,4 +286,266 @@
           data:
             username: Air Quality
             icon: air_filter
+  mode: single
+- id: water_leak_alert
+  alias: Water Leak Alert
+  description: Alert on water leak detection or clearance in Exec Bathroom
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: 'on'
+    id: leak_detected
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: 'off'
+    from: 'on'
+    id: leak_cleared
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: leak_detected
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: |
+            :rotating_light: *Water Leak Detected — Exec Bathroom*
+            *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+            Check the executive bathroom immediately.
+          data:
+            username: Facilities Pulse
+            icon: warning
+    - conditions:
+      - condition: trigger
+        id: leak_cleared
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#facilities-feed"
+          message: |
+            :white_check_mark: *Water Leak Cleared — Exec Bathroom*
+            *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+          data:
+            username: Facilities Pulse
+            icon: warning
+  mode: single
+- id: water_leak_sensor_health
+  alias: Water Leak Sensor Health
+  description: Alert when water leak sensor has been unavailable for 6 hours
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.water_leak_sensor
+    to: unavailable
+    for:
+      hours: 6
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      message: |
+        :grey_question: *Water Leak Sensor Offline — Exec Bathroom*
+        The sensor has been unavailable for 6+ hours.
+        *{{ now().strftime('%a, %b %-d  %-I:%M %p') }}*
+      data:
+        username: Facilities Pulse
+        icon: warning
+  mode: single
+
+- id: warehouse_heat_daily_reset
+  alias: Warehouse Heat — Daily Reset
+  description: Clear the morning-fired flag at midnight so it's fresh each day
+  triggers:
+  - trigger: time
+    at: "00:00:00"
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.warehouse_heat_morning_fired
+  mode: single
+
+- id: warehouse_heat_realtime_warm
+  alias: Warehouse Heat — Real-time (Warm)
+  description: Alert members when indoor heat index crosses 88°F (warm tier)
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.warehouse_max_heat_index
+    above: 88
+    for:
+      minutes: 10
+  conditions:
+  - condition: template
+    value_template: >
+      {% set last = this.attributes.last_triggered %}
+      {{ last is none or (now() - last).total_seconds() > 14400 }}
+  actions:
+  - variables:
+      hottest: "{{ state_attr('sensor.warehouse_max_heat_index', 'hottest_area') }}"
+      hi: "{{ states('sensor.warehouse_max_heat_index') | float(0) | round(0) | int }}"
+  - action: notify.make_nashville
+    data:
+      target: "#climate-feed"
+      message: |
+        :warning: *Warehouse is heating up*
+        *{{ hottest }}* is at *{{ hi }}°F heat index* — it's officially uncomfortable in there. Hydrate and take breaks if you're working.
+      data:
+        username: Heat Watch
+        icon: sun_with_face
+  mode: single
+
+- id: warehouse_heat_realtime_hot
+  alias: Warehouse Heat — Real-time (Hot)
+  description: Alert members when indoor heat index crosses 95°F (hot tier) — fires independently of warm-tier cooldown
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.warehouse_max_heat_index
+    above: 95
+    for:
+      minutes: 10
+  conditions:
+  - condition: template
+    value_template: >
+      {% set last = this.attributes.last_triggered %}
+      {{ last is none or (now() - last).total_seconds() > 14400 }}
+  actions:
+  - variables:
+      hottest: "{{ state_attr('sensor.warehouse_max_heat_index', 'hottest_area') }}"
+      hi: "{{ states('sensor.warehouse_max_heat_index') | float(0) | round(0) | int }}"
+  - action: notify.make_nashville
+    data:
+      target: "#climate-feed"
+      message: |
+        :fire: *Warehouse is HOT*
+        *{{ hottest }}* is at *{{ hi }}°F heat index*. Take it seriously — drink water, take breaks, watch for signs of heat exhaustion in yourself and others.
+      data:
+        username: Heat Watch
+        icon: fire
+  mode: single
+
+- id: warehouse_heat_midday_confirmation
+  alias: Warehouse Heat — Midday Confirmation
+  description: Confirm the morning prediction at 12:30pm if it's actually hot now
+  triggers:
+  - trigger: time
+    at: "12:30:00"
+  conditions:
+  - condition: state
+    entity_id: input_boolean.warehouse_heat_morning_fired
+    state: "on"
+  - condition: template
+    value_template: >
+      {{ states('input_datetime.warehouse_heat_morning_fired_at') == now().strftime('%Y-%m-%d') }}
+  - condition: numeric_state
+    entity_id: sensor.warehouse_max_heat_index
+    above: 88
+  actions:
+  - variables:
+      hottest: "{{ state_attr('sensor.warehouse_max_heat_index', 'hottest_area') }}"
+      hi: "{{ states('sensor.warehouse_max_heat_index') | float(0) | round(0) | int }}"
+  - action: notify.make_nashville
+    data:
+      target: "#climate-feed"
+      message: |
+        :fire: *Yep, it's hot in here*
+        Right now the *{{ hottest }}* is the warmest at *{{ hi }}°F heat index*. Take breaks, hydrate, look out for each other.
+      data:
+        username: Heat Watch
+        icon: fire
+  mode: single
+
+- id: warehouse_heat_morning_headsup
+  alias: Warehouse Climate — Daily Forecast
+  description: 7am daily forecast post; tiered messaging (chilly/comfortable/hot) and sets helpers on hot days
+  triggers:
+  - trigger: time
+    at: "07:00:00"
+  actions:
+  - action: weather.get_forecasts
+    data:
+      type: hourly
+    target:
+      entity_id: weather.forecast_home
+    response_variable: weather_response
+  - variables:
+      forecast_today: >
+        {% set entries = weather_response['weather.forecast_home'].forecast | default([]) %}
+        {% set today = now().date() %}
+        {% set ns = namespace(items=[]) %}
+        {% for e in entries %}
+          {% set dt = e.datetime | as_datetime %}
+          {% if dt.date() == today and dt.hour >= 9 and dt.hour <= 20 %}
+            {% set t = e.temperature | float(0) %}
+            {% set rh = e.humidity | float(0) %}
+            {% if t < 80 %}
+              {% set hi = t %}
+            {% else %}
+              {% set hi = -42.379
+                + 2.04901523 * t
+                + 10.14333127 * rh
+                - 0.22475541 * t * rh
+                - 0.00683783 * t * t
+                - 0.05481717 * rh * rh
+                + 0.00122874 * t * t * rh
+                + 0.00085282 * t * rh * rh
+                - 0.00000199 * t * t * rh * rh %}
+            {% endif %}
+            {% set ns.items = ns.items + [{'hi': hi, 'hour': dt.hour, 'temp': t, 'rh': rh}] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.items }}
+      peak_hi: >
+        {% set hi_values = forecast_today | map(attribute='hi') | list %}
+        {{ (hi_values | max | round(0) | int) if hi_values else 0 }}
+      peak_hour: >
+        {% set sorted = forecast_today | sort(attribute='hi', reverse=true) | list %}
+        {{ sorted[0].hour if sorted else 0 }}
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ peak_hi >= 88 }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#climate-feed"
+          message: |
+            :sun_with_face: *Heads up — it's going to be hot today*
+            Forecast peak: *{{ peak_hi }}°F heat index* around {{ (peak_hour % 12) if (peak_hour % 12) != 0 else 12 }}{{ 'am' if peak_hour < 12 else 'pm' }}.
+            The warehouse usually runs warmer than outside. Dress light, bring water, plan breaks.
+          data:
+            username: Heat Watch
+            icon: sun_with_face
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.warehouse_heat_morning_fired
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.warehouse_heat_morning_fired_at
+        data:
+          date: "{{ now().strftime('%Y-%m-%d') }}"
+    - conditions:
+      - condition: template
+        value_template: "{{ peak_hi >= 65 and peak_hi < 88 }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#climate-feed"
+          message: |
+            :sun_with_face: *Today's forecast: peak around {{ peak_hi }}°F*
+            Comfortable conditions in the warehouse.
+          data:
+            username: Heat Watch
+            icon: sun_with_face
+    - conditions:
+      - condition: template
+        value_template: "{{ peak_hi > 0 and peak_hi < 65 }}"
+      sequence:
+      - action: notify.make_nashville
+        data:
+          target: "#climate-feed"
+          message: |
+            :cold_face: *Today's forecast: peak around {{ peak_hi }}°F*
+            Chilly day ahead — layer up if you're stopping by.
+          data:
+            username: Heat Watch
+            icon: cold_face
   mode: single

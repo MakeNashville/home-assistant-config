@@ -1,0 +1,100 @@
+- id: ha_startup_notification
+  alias: HA Startup Notification
+  triggers:
+  - trigger: homeassistant
+    event: start
+  actions:
+  - delay:
+      seconds: 60
+  - if:
+    - condition: state
+      entity_id: input_boolean.deploy_restart_in_progress
+      state: 'on'
+    then:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.deploy_restart_in_progress
+    else:
+    - action: notify.make_nashville
+      data:
+        target: "#facilities-feed"
+        message: ':white_check_mark: Home Assistant is online.'
+        data:
+          username: Home Assistant
+          icon: house
+  mode: single
+- id: slack_bot_health_check
+  alias: Slack Bot Health Check
+  triggers:
+  - trigger: time_pattern
+    hours: "/6"
+  - trigger: homeassistant
+    event: start
+  actions:
+  - delay:
+      seconds: 90
+  - action: rest_command.slack_auth_test
+    response_variable: slack_health
+  - if:
+    - condition: template
+      value_template: "{{ slack_health['content']['ok'] == true }}"
+    then:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: slack_bot_unhealthy
+    else:
+    - action: persistent_notification.create
+      data:
+        notification_id: slack_bot_unhealthy
+        title: Slack Bot Unhealthy
+        message: >-
+          Slack auth.test failed. The bot token may be expired or invalid.
+          Response: {{ slack_health['content'] }}
+  mode: single
+- id: eventbrite_sensor_stale
+  alias: Eventbrite Sensor Stale
+  triggers:
+  - entity_id:
+    - sensor.eventbrite_daily_signups
+    - sensor.eventbrite_today_events
+    to:
+    - unavailable
+    - unknown
+    for:
+      hours: 2
+    trigger: state
+  actions:
+  - action: notify.make_nashville
+    data:
+      target: "#facilities-feed"
+      message: ':warning: Eventbrite integration may be down — sensor has been unavailable
+        for 2+ hours. Check the API token.'
+      data:
+        username: Home Assistant
+        icon: warning
+  - action: persistent_notification.create
+    data:
+      notification_id: eventbrite_stale
+      title: Eventbrite Sensor Stale
+      message: >-
+        {{ trigger.entity_id }} has been {{ trigger.to_state.state }} for 2+ hours.
+        Check the Eventbrite API token.
+  mode: single
+- id: eventbrite_sensor_recovery
+  alias: Eventbrite Sensor Recovery
+  triggers:
+  - entity_id:
+    - sensor.eventbrite_daily_signups
+    - sensor.eventbrite_today_events
+    from:
+    - unavailable
+    - unknown
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.to_state.state not in ['unavailable', 'unknown'] }}"
+  actions:
+  - action: persistent_notification.dismiss
+    data:
+      notification_id: eventbrite_stale
+  mode: single

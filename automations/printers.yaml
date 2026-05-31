@@ -1,5 +1,6 @@
 - id: '1721495372161'
   alias: Lifecycle Print Progress
+  description: Notifies #3dprint-info at layer 2, 10 and at 50%, 90% progress milestones
   triggers:
   - entity_id:
     - sensor.kiwi_current_layer
@@ -53,51 +54,64 @@
     trigger: state
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
-      end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
-        %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
-        %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
-      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: "{{ '.' in thread_ts }}"
-      sequence:
-      - data:
-          target: "#3dprint-info"
-          message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
-            }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
-            | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
-            }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
-            %p') }}){% endif %} — {% if display_name != object_name %}@{{display_name}},
-            {% endif %}{{object_name}} {% set prog = states('sensor.'+printer+'_print_progress')
-            | int(0) %}{% if prog >= 90 %}almost done!{% elif prog >= 50 %}halfway there!{%
-            else %}printing away!{% endif %} {{states('input_text.'+printer+'_stream')}}"
-          data:
-            username: '{{ printer | capitalize }}'
-            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-            thread_ts: '{{ thread_ts }}'
-        action: notify.make_nashville
-    default:
-    - data:
-        target: "#3dprint-info"
-        message: ":speech_balloon: {{ states('sensor.'+printer+'_print_progress', with_unit=True)
-          }}{% if end_dt %} | {% set secs = (as_timestamp(end_dt) - as_timestamp(now()))
-          | int(0) %}{% set h = secs // 3600 %}{% set m = (secs % 3600) // 60 %}{{ h
-          }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt) | timestamp_custom('%I:%M
-          %p') }}){% endif %} — {% if display_name != object_name %}@{{display_name}},
-          {% endif %}{{object_name}} {% set prog = states('sensor.'+printer+'_print_progress')
-          | int(0) %}{% if prog >= 90 %}almost done!{% elif prog >= 50 %}halfway there!{%
-          else %}printing away!{% endif %} {{states('input_text.'+printer+'_stream')}}"
-        data:
-          username: '{{ printer | capitalize }}'
-          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-      action: notify.make_nashville
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      end_dt: &end_dt_template |-
+        {%- set e = as_datetime(states("sensor." + printer + "_end_time"), none) -%}
+        {%- if e -%}
+          {{ e }}
+        {%- else -%}
+          {%- set s = states("sensor." + printer + "_print_time_left") | int(0) -%}
+          {%- if s > 0 -%}
+            {{ now() + timedelta(seconds=s) }}
+          {%- endif -%}
+        {%- endif -%}
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      progress_msg: |-
+        {%- set prog = states('sensor.' + printer + '_print_progress') | int(0) -%}
+        {%- set time_str = '' -%}
+        {%- if end_dt -%}
+          {%- set secs = (as_timestamp(end_dt) - as_timestamp(now())) | int(0) -%}
+          {%- set h = secs // 3600 -%}
+          {%- set m = (secs % 3600) // 60 -%}
+          {%- set end_time_str = as_timestamp(end_dt) | timestamp_custom('%I:%M %p') -%}
+          {%- set time_str = h ~ 'h ' ~ '%02d' | format(m) ~ 'm (ends ' ~ end_time_str ~ ')' -%}
+        {%- endif -%}
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        {%- set flavor = 'almost done!' if prog >= 90 else ('halfway there!' if prog >= 50 else 'printing away!') -%}
+        :speech_balloon: {{ states('sensor.' + printer + '_print_progress', with_unit=True) }}
+        {%- if time_str %} | {{ time_str }}{% endif %} — {{ owner }}{{ object_name }} {{ flavor }} <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - variables:
+      is_bambu: "{{ printer in ['kiwi','mango','papaya','strawberry','huckleberry'] }}"
+      blocks: >-
+        {%- if is_bambu -%}
+        [{"type": "section", "text": {"type": "mrkdwn", "text": {{ progress_msg | tojson }}}},
+        {"type": "actions", "elements":
+        [{"type": "button",
+        "text": {"type": "plain_text", "text": "Pause Print"},
+        "action_id": "pause_bambu_print",
+        "value": "{{ printer }}",
+        "confirm": {
+        "title": {"type": "plain_text", "text": "Pause Print?"},
+        "text": {"type": "mrkdwn", "text": "This will pause the current print. Are you sure?"},
+        "confirm": {"type": "plain_text", "text": "Yes, pause it"},
+        "deny": {"type": "plain_text", "text": "Never mind"}}}]}]
+        {%- endif -%}
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ progress_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      blocks: "{{ blocks }}"
+      thread_ts: "{{ thread_ts }}"
   mode: single
 - id: '1722144402850'
   alias: Lifecycle Print Starting
+  description: Announces new print to #3dprint-info and captures Slack thread for follow-up messages
   triggers:
   - entity_id: &bambu_lab_printers
     - sensor.mango_print_status
@@ -133,43 +147,80 @@
     trigger: state
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name")}}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
-      end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
-        %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
-        %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
-      print_weight: '{{states("sensor."+printer+"_print_weight", with_unit=True) if
-        states("sensor."+printer+"_print_weight") not in ["unknown","unavailable",""]
-        else ""}}'
-      total_layers: '{{states("sensor."+printer+"_total_layer_count") if states("sensor."+printer+"_total_layer_count")
-        not in ["unknown","unavailable",""] else states("sensor."+printer+"_total_layers")
-        if states("sensor."+printer+"_total_layers") not in ["unknown","unavailable",""]
-        else ""}}'
-      bed_type: '{{states("sensor."+printer+"_print_bed_type") if states("sensor."+printer+"_print_bed_type")
-        not in ["unknown","unavailable",""] else ""}}'
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      end_dt: *end_dt_template
+      print_weight: |-
+        {%- set val = states("sensor." + printer + "_print_weight") -%}
+        {%- if val not in ["unknown", "unavailable", ""] -%}
+          {{ states("sensor." + printer + "_print_weight", with_unit=True) }}
+        {%- endif -%}
+      total_layers: |-
+        {%- set count = states("sensor." + printer + "_total_layer_count") -%}
+        {%- set layers = states("sensor." + printer + "_total_layers") -%}
+        {%- if count not in ["unknown", "unavailable", ""] -%}
+          {{ count }}
+        {%- elif layers not in ["unknown", "unavailable", ""] -%}
+          {{ layers }}
+        {%- endif -%}
+      bed_type: |-
+        {%- set val = states("sensor." + printer + "_print_bed_type") -%}
+        {%- if val not in ["unknown", "unavailable", ""] -%}
+          {{ val }}
+        {%- endif -%}
   - variables:
-      msg: ":printer: {% if print_weight %}{{print_weight}}{% endif %}{% if total_layers
-        %}{% if print_weight %} | {% endif %}{{total_layers}} layers{% endif %}{% if
-        end_dt %}{% if print_weight or total_layers %} | {% endif %}{% set secs = (as_timestamp(end_dt)
-        - as_timestamp(now())) | int(0) %}{% set h = secs // 3600 %}{% set m = (secs
-        % 3600) // 60 %}{{ h }}h {{ '%02d' | format(m) }}m (ends {{ as_timestamp(end_dt)
-        | timestamp_custom('%I:%M %p') }}){% endif %}{% if print_weight or total_layers
-        or end_dt %} — {% endif %}{% if display_name != object_name %}@{{display_name}},
-        {% endif %}{{object_name}} is underway!{% if bed_type %} on a {{bed_type}}{%
-        endif %}. {{states('input_text.'+printer+'_stream')}}"
+      msg: |-
+        {%- set parts = [] -%}
+        {%- if print_weight -%}
+          {%- set parts = parts + [print_weight] -%}
+        {%- endif -%}
+        {%- if total_layers -%}
+          {%- set parts = parts + [total_layers ~ ' layers'] -%}
+        {%- endif -%}
+        {%- if end_dt -%}
+          {%- set secs = (as_timestamp(end_dt) - as_timestamp(now())) | int(0) -%}
+          {%- set h = secs // 3600 -%}
+          {%- set m = (secs % 3600) // 60 -%}
+          {%- set end_time_str = as_timestamp(end_dt) | timestamp_custom('%I:%M %p') -%}
+          {%- set parts = parts + [h ~ 'h ' ~ '%02d' | format(m) ~ 'm (ends ' ~ end_time_str ~ ')'] -%}
+        {%- endif -%}
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :printer: {{ parts | join(' | ') }}
+        {%- if parts %} — {% endif -%}
+        {{ owner }}{{ object_name }} is underway!
+        {%- if bed_type %} on a {{ bed_type }}{% endif -%}
+        . <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - variables:
+      is_bambu: "{{ printer in ['kiwi','mango','papaya','strawberry','huckleberry'] }}"
+      blocks: >-
+        {%- if is_bambu -%}
+        [{"type": "section", "text": {"type": "mrkdwn", "text": {{ msg | tojson }}}},
+        {"type": "actions", "elements":
+        [{"type": "button",
+        "text": {"type": "plain_text", "text": "Pause Print"},
+        "action_id": "pause_bambu_print",
+        "value": "{{ printer }}",
+        "confirm": {
+        "title": {"type": "plain_text", "text": "Pause Print?"},
+        "text": {"type": "mrkdwn", "text": "This will pause the current print. Are you sure?"},
+        "confirm": {"type": "plain_text", "text": "Yes, pause it"},
+        "deny": {"type": "plain_text", "text": "Never mind"}}}]}]
+        {%- endif -%}
   - action: rest_command.slack_post_3dprint
     data:
       channel: "#3dprint-info"
       text: "{{ msg }}"
       username: "{{ printer | capitalize }}"
-      icon_emoji: ":{{ 'kiwifruit' if printer == 'kiwi' else printer }}:"
+      icon_emoji: ":{{ icon_name }}:"
+      blocks: "{{ blocks }}"
     response_variable: slack_response
   - action: input_text.set_value
     target:
       entity_id: "input_text.{{ printer }}_slack_thread_ts"
     data:
-      value: "{% set ts = (slack_response.content | from_json).ts | default('') | string %}{{ ts if '.' in ts else '' }}"
+      value: "{% set ts = slack_response['content']['ts'] | default('') | string %}{{ ts if '.' in ts else '' }}"
   - if:
     - condition: template
       value_template: "{{ printer in ['pineapple', 'dragonfruit'] }}"
@@ -183,6 +234,7 @@
   max: 4
 - id: '1722191155564'
   alias: Lifecycle Print Finished
+  description: Announces print completion in the Slack thread
   triggers:
   - entity_id: *bambu_lab_printers
     to:
@@ -212,41 +264,33 @@
     - printing
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_last_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_last_object") }}'
-      job_secs: '{{states("sensor."+printer+"_print_job_time") | int(0)}}'
-      job_time_str: '{%- set h = (job_secs // 3600) | int %}{%- set m = ((job_secs
-        % 3600) // 60) | int %}{{ h }}h {{ "%02d" | format(m) }}m'
-      used_weight: '{{states("sensor."+printer+"_used_material_weight", with_unit=True)
-        if states("sensor."+printer+"_used_material_weight") not in ["unknown","unavailable"]
-        else ""}}'
-      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: "{{ '.' in thread_ts }}"
-      sequence:
-      - data:
-          target: "#3dprint-info"
-          message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
-            %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-            is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
-          data:
-            username: '{{ printer | capitalize }}'
-            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-            thread_ts: '{{ thread_ts }}'
-        action: notify.make_nashville
-    default:
-    - data:
-        target: "#3dprint-info"
-        message: ":white_check_mark: {{job_time_str}}{% if used_weight %} | {{used_weight}}{% endif
-          %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-          is done! Come grab it and clear the plate for the next maker. {{states('input_text.'+printer+'_stream')}}"
-        data:
-          username: '{{ printer | capitalize }}'
-          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-      action: notify.make_nashville
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_last_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_last_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      job_secs: '{{ states("sensor." + printer + "_print_job_time") | int(0) }}'
+      job_time_str: |-
+        {%- set h = (job_secs // 3600) | int -%}
+        {%- set m = ((job_secs % 3600) // 60) | int -%}
+        {{ h }}h {{ "%02d" | format(m) }}m
+      used_weight: |-
+        {%- set val = states("sensor." + printer + "_used_material_weight") -%}
+        {%- if val not in ["unknown", "unavailable"] -%}
+          {{ states("sensor." + printer + "_used_material_weight", with_unit=True) }}
+        {%- endif -%}
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      finished_msg: |-
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :white_check_mark: 100% | {{ job_time_str }}
+        {%- if used_weight %} | {{ used_weight }}{% endif %} — {{ owner }}{{ object_name }} is done! Come grab it and clear the plate for the next maker. <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ finished_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      thread_ts: "{{ thread_ts }}"
   - action: input_text.set_value
     target:
       entity_id: "input_text.{{ printer }}_slack_thread_ts"
@@ -256,6 +300,7 @@
   max: 4
 - id: '1722194364076'
   alias: Lifecycle Print Stopped
+  description: Announces print failure or cancellation in the Slack thread
   triggers:
   - entity_id: *bambu_lab_printers
     to:
@@ -285,36 +330,23 @@
     - printing
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
-      progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
-      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: "{{ '.' in thread_ts }}"
-      sequence:
-      - data:
-          target: "#3dprint-info"
-          message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
-            {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
-            happened. {{states(''input_text.''+printer+''_stream'')}}'
-          data:
-            username: '{{ printer | capitalize }}'
-            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-            thread_ts: '{{ thread_ts }}'
-        action: notify.make_nashville
-    default:
-    - data:
-        target: "#3dprint-info"
-        message: ':octagonal_sign: {{progress}}% — {% if display_name != object_name %}@{{display_name}},
-          {% endif %}{{object_name}} stopped mid-print. Come take a look and see what
-          happened. {{states(''input_text.''+printer+''_stream'')}}'
-        data:
-          username: '{{ printer | capitalize }}'
-          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-      action: notify.make_nashville
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_last_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_last_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      progress: '{{ states("sensor." + printer + "_print_progress") | int(0) }}'
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      stopped_msg: |-
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :octagonal_sign: {{ progress }}% — {{ owner }}{{ object_name }} stopped mid-print. Come take a look and see what happened. <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ stopped_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      thread_ts: "{{ thread_ts }}"
   - action: input_text.set_value
     target:
       entity_id: "input_text.{{ printer }}_slack_thread_ts"
@@ -324,6 +356,7 @@
   max: 4
 - id: '1740355200000'
   alias: Lifecycle Print Error
+  description: Announces print error in the Slack thread
   triggers:
   - entity_id: &all_printers
     - sensor.mango_print_status
@@ -340,41 +373,87 @@
     trigger: state
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
-      error_info: '{{states("sensor."+printer+"_print_error") if states("sensor."+printer+"_print_error")
-        not in ["unknown","unavailable",""] else ""}}'
-      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      error_info: |-
+        {%- set val = states("sensor." + printer + "_print_error") -%}
+        {%- if val not in ["unknown", "unavailable", ""] -%}
+          {{ val }}
+        {%- endif -%}
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      error_msg: |-
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :rotating_light:
+        {%- if error_info %} {{ error_info }} —{% endif %} {{ owner }}{{ object_name }} hit a snag. Head over and check on it. <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ error_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      thread_ts: "{{ thread_ts }}"
+  mode: parallel
+  max: 4
+- id: 'hms_error_alert'
+  alias: HMS Error Alert
+  description: Posts Bambu HMS hardware error details to #integrations_sandbox
+  enabled: false
+  triggers:
+  - entity_id:
+    - binary_sensor.kiwi_hms_errors
+    - binary_sensor.mango_hms_errors
+    - binary_sensor.papaya_hms_errors
+    - binary_sensor.strawberry_hms_errors
+    - binary_sensor.huckleberry_hms_errors
+    to: 'on'
+    trigger: state
+  actions:
+  - variables:
+      printer: "{{ trigger.entity_id.split('.')[1] | replace('_hms_errors', '') }}"
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      hms_msg: |-
+        {%- set count = state_attr(trigger.entity_id, 'Count') | int(0) -%}
+        :warning: HMS error{{ 's' if count > 1 else '' }} on {{ printer | capitalize -}}
+        {%- if object_name not in ['unknown','unavailable',''] %} while printing {{ object_name }}{% endif -%}
+        {%- if display_name not in ['unknown','unavailable',''] and display_name != object_name %} (@{{ display_name }}){% endif -%}
+        {%- for i in range(1, count + 1) %}
+        • {%- set sev = state_attr(trigger.entity_id, i ~ '-Severity') | default('') %}{% if sev %} [{{ sev }}]{% endif %} {{ state_attr(trigger.entity_id, i ~ '-Error') | default('Unknown error') -}}
+        {%- set wiki = state_attr(trigger.entity_id, i ~ '-Wiki') %}{% if wiki %} — <{{ wiki }}|More info>{% endif -%}
+        {%- endfor %}
+        <{{ states('input_text.'+printer+'_stream') }}|Camera Feed>
   - choose:
     - conditions:
       - condition: template
         value_template: "{{ '.' in thread_ts }}"
       sequence:
       - data:
-          target: "#3dprint-info"
-          message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
-            != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
-            Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
+          target: "#integrations_sandbox"
+          message: "{{ hms_msg }}"
           data:
             username: '{{ printer | capitalize }}'
-            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+            icon: "{{ icon_name }}"
             thread_ts: '{{ thread_ts }}'
         action: notify.make_nashville
     default:
     - data:
-        target: "#3dprint-info"
-        message: ':rotating_light: {% if error_info %}{{error_info}} — {% endif %}{% if display_name
-          != object_name %}@{{display_name}}, {% endif %}{{object_name}} hit a snag.
-          Head over and check on it. {{states(''input_text.''+printer+''_stream'')}}'
+        target: "#integrations_sandbox"
+        message: "{{ hms_msg }}"
         data:
           username: '{{ printer | capitalize }}'
-          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+          icon: "{{ icon_name }}"
       action: notify.make_nashville
   mode: parallel
   max: 4
 - id: '1740400001000'
   alias: Lifecycle Print Paused
+  description: Announces print pause in the Slack thread with a Resume button
   triggers:
   - entity_id: *bambu_lab_printers
     to:
@@ -404,49 +483,124 @@
     - printing
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
-      display_name: '{{states("sensor."+printer+"_display_name") }}'
-      object_name: '{{states("sensor."+printer+"_object") }}'
-      progress: '{{states("sensor."+printer+"_print_progress") | int(0)}}'
-      end_dt: '{% set e = as_datetime(states("sensor."+printer+"_end_time"), none)
-        %}{% if e %}{{ e }}{% else %}{% set s = states("sensor."+printer+"_print_time_left")|int(0)
-        %}{% if s > 0 %}{{ now() + timedelta(seconds=s) }}{% endif %}{% endif %}'
-      thread_ts: '{{ states("input_text."+printer+"_slack_thread_ts") }}'
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: "{{ '.' in thread_ts }}"
-      sequence:
-      - data:
-          target: "#3dprint-info"
-          message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
-            (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
-            3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
-            }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
-            %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-            is on hold. Head over when you get a chance! {{states(''input_text.''+printer+''_stream'')}}'
-          data:
-            username: '{{ printer | capitalize }}'
-            icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-            thread_ts: '{{ thread_ts }}'
-        action: notify.make_nashville
-    default:
-    - data:
-        target: "#3dprint-info"
-        message: ':double_vertical_bar: {{progress}}%{% if end_dt %} | {% set secs =
-          (as_timestamp(end_dt) - as_timestamp(now())) | int(0) %}{% set h = secs //
-          3600 %}{% set m = (secs % 3600) // 60 %}{{ h }}h {{ ''%02d'' | format(m)
-          }}m (ends {{ as_timestamp(end_dt) | timestamp_custom(''%I:%M %p'') }}){% endif
-          %} — {% if display_name != object_name %}@{{display_name}}, {% endif %}{{object_name}}
-          is on hold. Head over when you get a chance! {{states(''input_text.''+printer+''_stream'')}}'
-        data:
-          username: '{{ printer | capitalize }}'
-          icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
-      action: notify.make_nashville
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      progress: '{{ states("sensor." + printer + "_print_progress") | int(0) }}'
+      end_dt: *end_dt_template
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      paused_msg: |-
+        {%- set time_str = '' -%}
+        {%- if end_dt -%}
+          {%- set secs = (as_timestamp(end_dt) - as_timestamp(now())) | int(0) -%}
+          {%- set h = secs // 3600 -%}
+          {%- set m = (secs % 3600) // 60 -%}
+          {%- set end_time_str = as_timestamp(end_dt) | timestamp_custom('%I:%M %p') -%}
+          {%- set time_str = h ~ 'h ' ~ '%02d' | format(m) ~ 'm (ends ' ~ end_time_str ~ ')' -%}
+        {%- endif -%}
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :double_vertical_bar: {{ progress }}%
+        {%- if time_str %} | {{ time_str }}{% endif %} — {{ owner }}{{ object_name }} is on hold. Head over when you get a chance! <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - variables:
+      is_bambu: "{{ printer in ['kiwi','mango','papaya','strawberry','huckleberry'] }}"
+      blocks: >-
+        {%- if is_bambu -%}
+        [{"type": "section", "text": {"type": "mrkdwn", "text": {{ paused_msg | tojson }}}},
+        {"type": "actions", "elements":
+        [{"type": "button",
+        "text": {"type": "plain_text", "text": "Resume Print"},
+        "action_id": "resume_bambu_print",
+        "value": "{{ printer }}",
+        "confirm": {
+        "title": {"type": "plain_text", "text": "Resume Print?"},
+        "text": {"type": "mrkdwn", "text": "This will resume the paused print. Are you sure?"},
+        "confirm": {"type": "plain_text", "text": "Yes, resume it"},
+        "deny": {"type": "plain_text", "text": "Never mind"}}}]}]
+        {%- endif -%}
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ paused_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      blocks: "{{ blocks }}"
+      thread_ts: "{{ thread_ts }}"
+  mode: parallel
+  max: 4
+- id: '1740400002000'
+  alias: Lifecycle Print Resumed
+  description: Announces print resume in the Slack thread with a Pause button
+  triggers:
+  - entity_id: *bambu_lab_printers
+    to:
+    - running
+    for:
+      seconds: 10
+    trigger: state
+    from:
+    - pause
+  - entity_id:
+    - sensor.pineapple_print_status
+    to:
+    - printing
+    for:
+      seconds: 10
+    trigger: state
+    from:
+    - paused
+  actions:
+  - variables:
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      display_name: '{{ states("sensor." + printer + "_display_name") }}'
+      object_name: '{{ states("sensor." + printer + "_object") }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
+      progress: '{{ states("sensor." + printer + "_print_progress") | int(0) }}'
+      end_dt: *end_dt_template
+      thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
+  - variables:
+      resumed_msg: |-
+        {%- set time_str = '' -%}
+        {%- if end_dt -%}
+          {%- set secs = (as_timestamp(end_dt) - as_timestamp(now())) | int(0) -%}
+          {%- set h = secs // 3600 -%}
+          {%- set m = (secs % 3600) // 60 -%}
+          {%- set end_time_str = as_timestamp(end_dt) | timestamp_custom('%I:%M %p') -%}
+          {%- set time_str = h ~ 'h ' ~ '%02d' | format(m) ~ 'm (ends ' ~ end_time_str ~ ')' -%}
+        {%- endif -%}
+        {%- set owner = '@' ~ display_name ~ ', ' if display_name != object_name else '' -%}
+        :arrow_forward: {{ progress }}%
+        {%- if time_str %} | {{ time_str }}{% endif %} — {{ owner }}{{ object_name }} is back at it! <{{ states('input_text.' + printer + '_stream') }}|Camera Feed>
+  - variables:
+      is_bambu: "{{ printer in ['kiwi','mango','papaya','strawberry','huckleberry'] }}"
+      blocks: >-
+        {%- if is_bambu -%}
+        [{"type": "section", "text": {"type": "mrkdwn", "text": {{ resumed_msg | tojson }}}},
+        {"type": "actions", "elements":
+        [{"type": "button",
+        "text": {"type": "plain_text", "text": "Pause Print"},
+        "action_id": "pause_bambu_print",
+        "value": "{{ printer }}",
+        "confirm": {
+        "title": {"type": "plain_text", "text": "Pause Print?"},
+        "text": {"type": "mrkdwn", "text": "This will pause the current print. Are you sure?"},
+        "confirm": {"type": "plain_text", "text": "Yes, pause it"},
+        "deny": {"type": "plain_text", "text": "Never mind"}}}]}]
+        {%- endif -%}
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ resumed_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      blocks: "{{ blocks }}"
+      thread_ts: "{{ thread_ts }}"
   mode: parallel
   max: 4
 - id: '1722445886802'
   alias: Roundup
+  description: Posts bi-hourly status of all printers when at least one is active
   triggers:
   - hours: /2
     trigger: time_pattern
@@ -527,8 +681,14 @@
   mode: single
 - id: '1740500000001'
   alias: Lifecycle Printer Offline
+  description: Alerts when a single printer goes unavailable for 5+ minutes
   triggers:
-  - entity_id: *all_printers
+  - entity_id:
+    - sensor.mango_print_status
+    - sensor.kiwi_print_status
+    - sensor.strawberry_print_status
+    - sensor.papaya_print_status
+    - sensor.huckleberry_print_status
     to:
     - unavailable
     for:
@@ -536,13 +696,14 @@
     trigger: state
   actions:
   - variables:
-      printer: '{{trigger.entity_id.split(''_'')[0].split(''.'')[1]}}'
+      printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
+      icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
   - data:
       target: "#3dprint-info"
       message: ':warning: {{ printer | capitalize }} has gone offline.'
       data:
         username: '{{ printer | capitalize }}'
-        icon: '{{ ''kiwifruit'' if printer == ''kiwi'' else printer }}'
+        icon: "{{ icon_name }}"
     action: notify.make_nashville
   mode: parallel
   max: 6
@@ -578,14 +739,17 @@
           {%- set ok = states('sensor.' ~ p.id ~ '_prints_completed_week') | int(0) %}
           {%- set fail = states('sensor.' ~ p.id ~ '_prints_failed_week') | int(0) %}
           {%- set ns.total_ok = ns.total_ok + ok %}
-          {%- set ns.total_fail = ns.total_fail + fail %}
-        {{ p.emoji }} {{ p.id | capitalize }}: {{ ok }} :white_check_mark:  {{ fail }} :x:
+          {%- if p.id != 'pineapple' %}
+            {%- set ns.total_fail = ns.total_fail + fail %}
+          {%- endif %}
+        {{ p.emoji }} {{ p.id | capitalize }}: {{ ok }} :white_check_mark:  {{ '—' if p.id == 'pineapple' else fail }} :x:
         {%- endfor %}
         ──────────────────────
         Total: {{ ns.total_ok }} :white_check_mark:  {{ ns.total_fail }} :x:
   mode: single
 - id: lifecycle_multi_printer_offline
   alias: Lifecycle Multi-Printer Offline — Network/Power Alert
+  description: Alerts #facilities-feed when 3+ printers go offline simultaneously
   triggers:
   - entity_id: *all_printers
     to:

@@ -1,0 +1,497 @@
+- id: 'eventbrite_new_event'
+  alias: Eventbrite New Event Published
+  triggers:
+    - trigger: webhook
+      webhook_id: !secret eventbrite_webhook_id
+      allowed_methods:
+        - POST
+      local_only: false
+  conditions:
+    - condition: template
+      value_template: >
+        {{ trigger.json.config.action == 'event.published' }}
+  actions:
+    - variables:
+        api_url: "{{ trigger.json.api_url }}"
+    - action: rest_command.eventbrite_get_event
+      data:
+        url: "{{ api_url }}"
+      response_variable: event_response
+    - variables:
+        event: "{{ event_response.content | from_json }}"
+    - variables:
+        event_name: "{{ event.name.text }}"
+        event_date: "{{ event.start.local | as_datetime | timestamp_custom('%A, %B %-d at %-I:%M %p') }}"
+        event_desc: "{{ event.description.text[:200] }}..."
+        event_url: "{{ event.url }}"
+        ticket_info: >-
+          {% set tickets = [] %}
+          {% for t in event.ticket_classes | default([]) %}
+            {% if t.cost %}
+              {% set tickets = tickets + [t.cost.display] %}
+            {% else %}
+              {% set tickets = tickets + ['Free'] %}
+            {% endif %}
+          {% endfor %}
+          {{ tickets | join(', ') if tickets else 'Free' }}
+    - action: notify.make_nashville
+      data:
+        target: "#integrations_sandbox"
+        message: >-
+          :calendar: *New Event Published*
+          *{{ event_name }}*
+          :clock1: {{ event_date }}
+          :ticket: {{ ticket_info }}
+          :memo: {{ event_desc }}
+          :link: {{ event_url }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_daily_signup_digest'
+  alias: Eventbrite Daily Signup Digest
+  triggers:
+    - trigger: time
+      at: '09:00:00'
+  conditions:
+    - condition: template
+      value_template: >
+        {{ (states('sensor.eventbrite_daily_signups') | int(0) > 0
+            and state_attr('sensor.eventbrite_daily_signups', 'attendees') is not none)
+           or (states('sensor.eventbrite_today_events') | int(0) > 0
+               and state_attr('sensor.eventbrite_today_events', 'events') is not none) }}
+  actions:
+    - variables:
+        attendees: "{{ state_attr('sensor.eventbrite_daily_signups', 'attendees') or [] }}"
+        today_events: "{{ state_attr('sensor.eventbrite_today_events', 'events') or [] }}"
+        count: "{{ states('sensor.eventbrite_daily_signups') | int(0) }}"
+    - variables:
+        today_lines: |-
+          {% for event in today_events %}
+          {%- set signups = event.ticket_classes | default([]) | map(attribute='quantity_sold') | map('int', default=0) | sum -%}
+          {%- set capacity = event.ticket_classes | default([]) | selectattr('quantity_total', 'defined') | map(attribute='quantity_total') | map('int', default=0) | sum -%}
+          *{{ event.name.text }}* — {{ signups }}{% if capacity > 0 %} of {{ capacity }}{% endif %} signed up
+          {% endfor %}
+        signup_lines: |-
+          {% set ns = namespace(events={}) %}
+          {% for a in attendees %}
+            {%- set ename = a.event.name.text -%}
+            {%- set existing = ns.events.get(ename, {'date': a.event.start.local, 'names': []}) -%}
+            {%- set names = existing['names'] + [a.profile.name] -%}
+            {%- set ns.events = dict(ns.events, **{ename: {'date': existing['date'], 'names': names}}) -%}
+          {% endfor %}
+          {% for ename, info in ns.events.items() %}
+            {%- set edate = info['date'] | as_datetime | timestamp_custom('%a, %b %-d at %-I:%M %p') -%}
+            {%- set ns2 = namespace(counts={}, display=[]) -%}
+            {%- for n in info['names'] -%}
+              {%- set ns2.counts = dict(ns2.counts, **{n: ns2.counts.get(n, 0) + 1}) -%}
+            {%- endfor -%}
+            {%- for name, c in ns2.counts.items() -%}
+              {%- if c > 1 -%}
+                {%- set ns2.display = ns2.display + [name ~ ' (' ~ c ~ ')'] -%}
+              {%- else -%}
+                {%- set ns2.display = ns2.display + [name] -%}
+              {%- endif -%}
+            {%- endfor %}
+          *{{ ename }}* ({{ edate }}) — {{ ns2.display | join(', ') }}
+          {% endfor %}
+    - action: notify.make_nashville
+      data:
+        target: "#eventbrite-feed"
+        message: |-
+          {%- set ns = namespace(sections=[]) -%}
+          {%- if today_events | length > 0 -%}
+            {%- set ns.sections = ns.sections + [':calendar: *Events Today*\n' ~ today_lines | trim] -%}
+          {%- endif -%}
+          {%- if count > 0 -%}
+            {%- set ns.sections = ns.sections + [':wave: *New Signups — Last 24 Hours* (' ~ count ~ ' new)\n' ~ signup_lines | trim] -%}
+          {%- endif -%}
+          {{ ns.sections | join('\n\n') }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_event_day_alert'
+  alias: Eventbrite Event Day Alert
+  triggers:
+    - trigger: time
+      at: '08:00:00'
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('sensor.eventbrite_today_events') | int(0) > 0
+           and state_attr('sensor.eventbrite_today_events', 'events') is not none }}
+  actions:
+    - variables:
+        events: "{{ state_attr('sensor.eventbrite_today_events', 'events') }}"
+    - variables:
+        event_lines: |-
+          {% for event in events %}
+          {% set signups = event.ticket_classes | default([]) | map(attribute='quantity_sold') | map('int', default=0) | sum %}
+          {% set capacity = event.ticket_classes | default([]) | selectattr('quantity_total', 'defined') | map(attribute='quantity_total') | map('int', default=0) | sum %}
+          *{{ event.name.text }}*
+          :clock1: {{ event.start.local | as_datetime | timestamp_custom('%-I:%M %p') }}
+          {% if capacity > 0 and signups < (capacity * 0.5) %}:warning: Only {{ signups }} of {{ capacity }} spots filled — consider promoting this event{% else %}:busts_in_silhouette: {{ signups }}{% if capacity > 0 %} of {{ capacity }}{% endif %} spots filled{% endif %}
+          :link: {{ event.url }}
+          {% endfor %}
+    - action: notify.make_nashville
+      data:
+        target: "#integrations_sandbox"
+        message: |-
+          :mega: *Events Today*
+          {{ event_lines }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_one_week_out'
+  alias: Eventbrite One Week Out
+  triggers:
+    - trigger: time
+      at: '09:00:00'
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('sensor.eventbrite_next_week_events') | int(0) > 0
+           and state_attr('sensor.eventbrite_next_week_events', 'events') is not none }}
+  actions:
+    - variables:
+        events: "{{ state_attr('sensor.eventbrite_next_week_events', 'events') }}"
+    - variables:
+        event_lines: |-
+          {% for event in events %}
+          {% set signups = event.ticket_classes | default([]) | map(attribute='quantity_sold') | map('int', default=0) | sum %}
+          {% set capacity = event.ticket_classes | default([]) | selectattr('quantity_total', 'defined') | map(attribute='quantity_total') | map('int', default=0) | sum %}
+          *{{ event.name.text }}*
+          :clock1: {{ event.start.local | as_datetime | timestamp_custom('%A, %B %-d at %-I:%M %p') }}
+          {% if capacity > 0 and signups < (capacity * 0.5) %}:warning: Only {{ signups }} of {{ capacity }} spots filled — consider promoting this event{% else %}:busts_in_silhouette: {{ signups }}{% if capacity > 0 %} of {{ capacity }}{% endif %} spots filled{% endif %}
+          :link: {{ event.url }}
+          {% endfor %}
+    - action: notify.make_nashville
+      data:
+        target: "#integrations_sandbox"
+        message: |-
+          :calendar: *One Week Out* — {{ states('sensor.eventbrite_next_week_events') }} upcoming event{{ 's' if states('sensor.eventbrite_next_week_events') | int(0) != 1 }}
+          {{ event_lines }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single
+
+- id: 'eventbrite_form_to_draft'
+  alias: Eventbrite Form to Draft
+  description: >-
+    Creates an Eventbrite draft event from a Google Form submission.
+    Copies a template event, updates fields, and posts to Slack.
+  triggers:
+    - trigger: webhook
+      webhook_id: !secret eventbrite_form_webhook_id
+      allowed_methods:
+        - POST
+      local_only: false
+  conditions: []
+  actions:
+    # Only extract fields used in Eventbrite API calls; everything else
+    # flows through to Slack automatically via trigger.json iteration.
+    - variables:
+        form_title: "{{ trigger.json['Title of Your Workshop/Class'] | default('') }}"
+        form_summary: "{{ trigger.json['Headline / Summary'] | default('') }}"
+        form_description: "{{ trigger.json['Long Description'] | default('') }}"
+        form_date: "{{ trigger.json['Date of First Class'] | default('') }}"
+        form_start_time: "{{ trigger.json['Class Start Time'] | default('') }}"
+        form_end_time: "{{ trigger.json['Class End Time'] | default('') }}"
+        form_capacity: "{{ trigger.json['Maximum number of participants'] | default('20') }}"
+        form_member_price: "{{ trigger.json['MEMBER TICKET PRICE'] | default('0') }}"
+        form_nonmember_price: "{{ trigger.json['NON MEMBER TICKET PRICE'] | default('0') }}"
+        form_shop: "{{ trigger.json['What shop or studio will you use for class?'] | default('') }}"
+        form_name: "{{ trigger.json['Your Full Name'] | default('') }}"
+        form_email: "{{ trigger.json['Email Address'] | default('') }}"
+        template_id: "{{ states('input_text.eventbrite_template_id') }}"
+
+    # Compute derived values
+    - variables:
+        summary_truncated: "{{ form_summary[:140] }}"
+        start_dt: "{{ strptime(form_date ~ ' ' ~ form_start_time, '%m/%d/%Y %H:%M:%S') }}"
+        end_dt: "{{ strptime(form_date ~ ' ' ~ form_end_time, '%m/%d/%Y %H:%M:%S') }}"
+    - variables:
+        start_utc: >-
+          {{ (start_dt.strftime('%Y-%m-%dT%H:%M:%S') | as_datetime | as_timestamp)
+             | timestamp_custom('%Y-%m-%dT%H:%M:%SZ', false) }}
+        end_utc: >-
+          {{ (end_dt.strftime('%Y-%m-%dT%H:%M:%S') | as_datetime | as_timestamp)
+             | timestamp_custom('%Y-%m-%dT%H:%M:%SZ', false) }}
+        event_date_display: >-
+          {{ start_dt.strftime('%Y-%m-%dT%H:%M:%S') | as_datetime
+             | timestamp_custom('%A, %B %-d at %-I:%M %p') }}
+        end_time_display: >-
+          {{ end_dt.strftime('%Y-%m-%dT%H:%M:%S') | as_datetime
+             | timestamp_custom('%-I:%M %p') }}
+        member_cents: >-
+          {{ (form_member_price | replace('$', '') | replace(',', '') | float(0) * 100) | int }}
+        nonmember_cents: >-
+          {{ (form_nonmember_price | replace('$', '') | replace(',', '') | float(0) * 100) | int }}
+        member_display: >-
+          ${{ '%.2f' | format(form_member_price | replace('$', '') | replace(',', '') | float(0)) }}
+        nonmember_display: >-
+          ${{ '%.2f' | format(form_nonmember_price | replace('$', '') | replace(',', '') | float(0)) }}
+
+    # --- API Step 1: Copy template event ---
+    - action: rest_command.eventbrite_copy_event
+      data:
+        event_id: "{{ template_id }}"
+      response_variable: copy_response
+    - if:
+        - condition: template
+          value_template: "{{ copy_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Copy template event (HTTP {{ copy_response.status }})
+              :speech_balloon: No draft was created — check the Eventbrite dashboard
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Copy failed"
+    - variables:
+        new_event_id: "{{ (copy_response.content | from_json).id }}"
+        new_event_url: "{{ (copy_response.content | from_json).url }}"
+        template_venue_id: "{{ (copy_response.content | from_json).venue_id | default('') }}"
+
+    # --- API Step 2: GET template venue for address ---
+    - action: rest_command.eventbrite_get_event
+      data:
+        url: "https://www.eventbriteapi.com/v3/venues/{{ template_venue_id }}/"
+      response_variable: venue_details_response
+    - if:
+        - condition: template
+          value_template: "{{ venue_details_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Get venue details (HTTP {{ venue_details_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft may have been partially created — check the Eventbrite dashboard
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Get venue details failed"
+    - variables:
+        venue_address: "{{ (venue_details_response.content | from_json).address | default({}) }}"
+
+    # --- API Step 3: Create new venue with shop name ---
+    - action: rest_command.eventbrite_create_venue
+      data:
+        org_id: "{{ states('input_text.eventbrite_org_id') }}"
+        payload: >-
+          {"venue": {"name": {{ ('Make Nashville \u2014 ' ~ form_shop) | tojson }},
+          "address": {{ venue_address | tojson }}}}
+      response_variable: new_venue_response
+    - if:
+        - condition: template
+          value_template: "{{ new_venue_response.status not in [200, 201] }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Create venue (HTTP {{ new_venue_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft may have been partially created — check the Eventbrite dashboard
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Venue creation failed"
+    - variables:
+        new_venue_id: "{{ (new_venue_response.content | from_json).id }}"
+
+    # --- API Step 4: Update event (title, summary, dates, capacity, venue) ---
+    - action: rest_command.eventbrite_update_event
+      data:
+        event_id: "{{ new_event_id }}"
+        payload: >-
+          {"event": {"name": {"html": {{ form_title | tojson }}},
+          "summary": {{ summary_truncated | tojson }},
+          "start": {"timezone": "America/Chicago", "utc": "{{ start_utc }}"},
+          "end": {"timezone": "America/Chicago", "utc": "{{ end_utc }}"},
+          "capacity": {{ form_capacity | int(20) }},
+          "venue_id": "{{ new_venue_id }}"}}
+      response_variable: update_response
+    - if:
+        - condition: template
+          value_template: "{{ update_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Update event details (HTTP {{ update_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft may have been partially created — check the Eventbrite dashboard
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Event update failed"
+
+    # --- API Step 5: Update description via Structured Content ---
+    - action: rest_command.eventbrite_update_description
+      data:
+        event_id: "{{ new_event_id }}"
+        payload: >-
+          {"modules": [{"type": "text", "data": {"body": {"text": {{ form_description | tojson }},
+          "alignment": "left"}}}], "publish": true}
+      response_variable: desc_response
+    - if:
+        - condition: template
+          value_template: "{{ desc_response.status not in [200, 201] }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Update description (HTTP {{ desc_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft was created but may be missing its description — check the draft
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Description update failed"
+
+    # --- API Step 6: GET ticket classes ---
+    - action: rest_command.eventbrite_get_event
+      data:
+        url: "https://www.eventbriteapi.com/v3/events/{{ new_event_id }}/ticket_classes/"
+      response_variable: tickets_response
+    - if:
+        - condition: template
+          value_template: "{{ tickets_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Get ticket classes (HTTP {{ tickets_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft was created but ticket prices were not updated — check the draft
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Get ticket classes failed"
+    - variables:
+        member_ticket_id: >-
+          {% for tc in (tickets_response.content | from_json).ticket_classes %}{% if 'member' in tc.name | lower and 'non' not in tc.name | lower %}{{ tc.id }}{% endif %}{% endfor %}
+        nonmember_ticket_id: >-
+          {% for tc in (tickets_response.content | from_json).ticket_classes %}{% if 'non' in tc.name | lower and 'member' in tc.name | lower %}{{ tc.id }}{% endif %}{% endfor %}
+
+    # --- API Step 7: Update member ticket price ---
+    - action: rest_command.eventbrite_update_ticket_class
+      data:
+        event_id: "{{ new_event_id }}"
+        ticket_class_id: "{{ member_ticket_id | trim }}"
+        payload: >-
+          {"ticket_class": {"cost": "USD,{{ member_cents }}", "quantity_total": {{ form_capacity | int(20) }}}}
+      response_variable: member_ticket_response
+    - if:
+        - condition: template
+          value_template: "{{ member_ticket_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Update member ticket price (HTTP {{ member_ticket_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft was created but ticket prices may be wrong — check the draft
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Member ticket update failed"
+
+    # --- API Step 8: Update non-member ticket price ---
+    - action: rest_command.eventbrite_update_ticket_class
+      data:
+        event_id: "{{ new_event_id }}"
+        ticket_class_id: "{{ nonmember_ticket_id | trim }}"
+        payload: >-
+          {"ticket_class": {"cost": "USD,{{ nonmember_cents }}", "quantity_total": {{ form_capacity | int(20) }}}}
+      response_variable: nonmember_ticket_response
+    - if:
+        - condition: template
+          value_template: "{{ nonmember_ticket_response.status != 200 }}"
+      then:
+        - action: notify.make_nashville
+          data:
+            target: "#integrations_sandbox"
+            message: >-
+              :warning: *Workshop Draft Failed*
+              *{{ form_title }}* — submitted by {{ form_name }}
+              Step failed: Update non-member ticket price (HTTP {{ nonmember_ticket_response.status }})
+              :link: {{ new_event_url }}
+              :speech_balloon: The Eventbrite draft was created but ticket prices may be wrong — check the draft
+            data:
+              username: Eventbrite
+              icon: calendar
+        - stop: "Non-member ticket update failed"
+
+    # --- Build Slack pass-through fields ---
+    - variables:
+        slack_passthrough: |-
+          {%- set skip = [
+            'Title of Your Workshop/Class',
+            'Headline / Summary',
+            'Long Description',
+            'Date of First Class',
+            'Class Start Time',
+            'Class End Time',
+            'Maximum number of participants',
+            'MEMBER TICKET PRICE',
+            'NON MEMBER TICKET PRICE',
+            'What shop or studio will you use for class?',
+            'Timestamp'
+          ] -%}
+          {%- set ns = namespace(lines=[]) -%}
+          {%- for key, value in trigger.json.items() -%}
+            {%- if key not in skip and value -%}
+              {%- set ns.lines = ns.lines + ['*' ~ key ~ ':* ' ~ value] -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ ns.lines | join('\n') }}
+
+    # --- Post success to Slack ---
+    - action: notify.make_nashville
+      data:
+        target: "#integrations_sandbox"
+        message: |-
+          :calendar: *New Workshop Submission*
+          *{{ form_title }}*
+          :link: <{{ new_event_url }}|Edit Eventbrite Draft>
+          :clock1: {{ event_date_display }} — {{ end_time_display }}
+          :busts_in_silhouette: Capacity: {{ form_capacity }}
+          :ticket: Member: {{ member_display }} / Non-Member: {{ nonmember_display }}
+          :round_pushpin: Make Nashville — {{ form_shop }}
+          ———
+          {{ slack_passthrough }}
+        data:
+          username: Eventbrite
+          icon: calendar
+  mode: single

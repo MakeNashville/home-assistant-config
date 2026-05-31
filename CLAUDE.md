@@ -10,6 +10,7 @@ Home Assistant configuration for the [MakeNashville](https://makenashville.org) 
 - 3D printer lifecycle notifications (6 printers → `#3dprint-info` Slack)
 - Facilities monitoring: temperature, water, power, Kaeser compressor (→ `#facilities-feed`)
 - Air quality alerting for the 3D print room
+- Eventbrite event + signup notifications (→ `#integrations_sandbox`)
 - Automated nightly config backup to GitHub
 
 ---
@@ -22,12 +23,12 @@ Home Assistant configuration for the [MakeNashville](https://makenashville.org) 
 | `automations/printers.yaml` | All 3D printer automations |
 | `automations/facilities.yaml` | Facilities Pulse smart alert + verbose mode + Air Quality Alert |
 | `automations/kaeser.yaml` | Kaeser compressor overpressure alert + history purge |
-| `automations/webhooks.yaml` | Stripe filament webhook + OctoEverywhere Gadget webhook |
+| `automations/eventbrite.yaml` | Eventbrite new event + daily signup digest notifications |
+| `automations/webhooks.yaml` | Stripe filament webhook + OctoEverywhere Gadget webhook + Slack cancel-print webhook |
 | `automations/backup.yaml` | Triggers nightly backup via SSH addon |
 | `git_backup.sh` | Backup script: checkouts ha-backup, merges main, commits, pushes, opens PR |
 | `write_entity_list.sh` | Writes `entity_list.txt` from entities tagged with the `entity_list` HA label |
 | `entity_list.txt` | Auto-generated entity ID reference. **Do not edit by hand.** |
-| `dashboards/air_quality.yaml` | Lovelace YAML dashboard for the 3D print room air quality |
 | `dashboards/facilities.yaml` | Lovelace YAML dashboard for facilities overview |
 | `esphome/kaeser-monitor.yaml` | ESPHome config for the Kaeser pressure/switch sensor |
 
@@ -43,6 +44,7 @@ feature branch → PR → validate-yaml.yml passes → merge to main → deploy.
 - Always branch off `main`, open a PR, wait for YAML validation, then merge
 - On merge, `deploy.yml` pulls config onto HA, validates it, and reloads or restarts as needed
 - Deployment status posts to `#deployment-feed`
+- New integrations should post to `#integrations_sandbox` first for testing before moving to a production channel
 
 ### Backup branch
 
@@ -82,6 +84,16 @@ Six printers, named after fruits:
 | Dragonfruit | PrusaLink (Prusa XL) | Uses alias template sensors for entity name compatibility |
 
 Bambu printers use anchors (`bambu_lab_printers`, `all_printers`) in `automations/printers.yaml` — add new Bambu printers to those anchors.
+
+### Slack pause button
+
+Print Starting, Print Progress, Print Paused, and Gadget AI notifications include a Slack Block Kit "Pause Print" button (Bambu printers only). Clicking it triggers a confirmation dialog, then POSTs to an HA webhook that presses `button.{printer}_pause_printing` and responds in Slack.
+
+- The button uses `action_id: pause_bambu_print` with the printer name as `value`
+- The webhook automation is in `automations/webhooks.yaml` (`Slack – Pause Bambu Print`)
+- `rest_command.slack_respond` in `configuration.yaml` handles the Slack response via `response_url`
+- Requires Slack app Interactivity enabled with Request URL pointing to the HA webhook
+- Secret: `slack_cancel_print_webhook_id` in `secrets.yaml`
 
 ---
 

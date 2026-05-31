@@ -23,11 +23,11 @@ Manages 3D printer lifecycle notifications, facilities monitoring, air quality a
 ├── entity_list.txt           # Auto-generated entity ID reference — do not edit by hand
 │
 ├── dashboards/
-│   ├── air_quality.yaml      # Air quality dashboard (3D print room)
 │   └── facilities.yaml       # Facilities overview dashboard
 │
 ├── esphome/
 │   ├── kaeser-monitor.yaml   # Kaeser air compressor pressure/switch sensor
+│   ├── emporia-vue.yaml      # Emporia Vue 3 power monitor
 │   └── secrets.yaml          # ⛔ Not committed — see Secrets
 │
 ├── blueprints/               # Automation blueprints
@@ -58,6 +58,9 @@ Environment data is pulled dynamically via the `facilities_pulse` HA label — t
 
 ### Air Quality
 AirGradient sensor in the 3D print room. Alerts post to `#facilities-feed` when overall status degrades to Poor or Dangerous (sustained 3 min), with active printer context included. Recovery alerts fire when status returns to Good or Moderate (sustained 5 min).
+
+### Emporia Vue 3
+Device that monitors power consumption of various circuits from inside a load center.
 
 ### Kaeser compressor
 Pressure and switch state monitored via ESPHome on an ESP32-C6 Feather. Overpressurization events notify Tim via mobile push and `#facilities-feed`.

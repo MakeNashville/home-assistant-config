@@ -15,18 +15,18 @@ homeassistant:
 
 lovelace:
   dashboards:
-    air-quality:
-      mode: yaml
-      title: Air Quality
-      icon: mdi:air-filter
-      filename: dashboards/air_quality.yaml
-      show_in_sidebar: true
-      require_admin: false
     facilities-overview:
       mode: yaml
       title: Facilities
       icon: mdi:office-building-cog
       filename: dashboards/facilities.yaml
+      show_in_sidebar: true
+      require_admin: false
+    energy-monitor:
+      mode: yaml
+      title: Energy Monitor
+      icon: mdi:lightning-bolt
+      filename: dashboards/energy.yaml
       show_in_sidebar: true
       require_admin: false
 
@@ -43,7 +43,62 @@ rest_command:
       Content-Type: "application/json; charset=utf-8"
     payload: >-
       {"channel": {{ channel | tojson }}, "text": {{ text | tojson }},
-       "username": {{ username | tojson }}, "icon_emoji": {{ icon_emoji | tojson }}}
+       "username": {{ username | tojson }}, "icon_emoji": {{ icon_emoji | tojson }}
+       {% if blocks is defined and blocks %}, "blocks": {{ blocks }}{% endif %}
+       {% if thread_ts is defined and thread_ts %}, "thread_ts": {{ thread_ts | string | tojson }}{% endif %}}
+  slack_respond:
+    url: "{{ response_url }}"
+    method: POST
+    headers:
+      Content-Type: "application/json; charset=utf-8"
+    payload: >-
+      {"replace_original": false, "response_type": "in_channel",
+       "text": {{ text | tojson }}}
+  slack_auth_test:
+    url: https://slack.com/api/auth.test
+    method: POST
+    headers:
+      Authorization: !secret slack_bot_token_header
+      Content-Type: "application/json; charset=utf-8"
+  eventbrite_get_event:
+    url: "{{ url }}"
+    method: GET
+    headers:
+      Authorization: !secret eventbrite_token_header
+  eventbrite_copy_event:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/copy/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+  eventbrite_update_event:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_update_description:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/structured_content/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_create_venue:
+    url: "https://www.eventbriteapi.com/v3/organizations/{{ org_id }}/venues/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
+  eventbrite_update_ticket_class:
+    url: "https://www.eventbriteapi.com/v3/events/{{ event_id }}/ticket_classes/{{ ticket_class_id }}/"
+    method: POST
+    headers:
+      Authorization: !secret eventbrite_token_header
+    content_type: "application/json"
+    payload: '{{ payload }}'
 
 input_text:
   pineapple_last_job:
@@ -72,12 +127,30 @@ input_text:
     max: 255
   dragonfruit_slack_thread_ts:
     name: Dragonfruit Slack Thread TS
+  eventbrite_org_id:
+    name: Eventbrite Org ID
+    max: 30
+  eventbrite_template_id:
+    name: Eventbrite Template Event ID
     max: 30
 
 input_boolean:
   facilities_pulse_verbose:
     name: Facilities Pulse Verbose Mode
     icon: mdi:bell-outline
+  deploy_restart_in_progress:
+    name: Deploy Restart In Progress
+    icon: mdi:restart
+  warehouse_heat_morning_fired:
+    name: Warehouse Heat Morning Fired
+    icon: mdi:weather-sunny-alert
+
+input_datetime:
+  warehouse_heat_morning_fired_at:
+    name: Warehouse Heat Morning Fired At
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-clock
 
 recorder:
   purge_keep_days: 14
@@ -93,6 +166,8 @@ recorder:
       - binary_sensor.filament_store_light_motion
       - sensor.filament_store_light_illuminance
       - input_boolean.facilities_pulse_verbose
+      - sensor.eventbrite_daily_signups
+      - sensor.eventbrite_today_events
     entity_globs:
       # Fan speeds / signals (already present)
       - sensor.*_wi_fi_signal
@@ -117,6 +192,38 @@ recorder:
       # Distance / proximity sensors
       - sensor.*_estimated_distance*
 
+rest:
+  - resource_template: >-
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/attendees/?changed_since={{ (now() - timedelta(days=1)).strftime('%Y-%m-%dT00:00:00Z') }}&expand=event
+    headers:
+      Authorization: !secret eventbrite_token_header
+    scan_interval: 3600
+    sensor:
+      - name: Eventbrite Daily Signups
+        value_template: "{{ (value_json.pagination | default({})).object_count | default(0) }}"
+        json_attributes:
+          - attendees
+  - resource_template: >-
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/events/?start_date.range_start={{ now().strftime('%Y-%m-%dT00:00:00') }}&start_date.range_end={{ now().strftime('%Y-%m-%dT23:59:59') }}&expand=ticket_classes&status=live
+    headers:
+      Authorization: !secret eventbrite_token_header
+    scan_interval: 3600
+    sensor:
+      - name: Eventbrite Today Events
+        value_template: "{{ (value_json.events | default([])) | length }}"
+        json_attributes:
+          - events
+  - resource_template: >-
+      https://www.eventbriteapi.com/v3/organizations/{{ states('input_text.eventbrite_org_id') }}/events/?start_date.range_start={{ (now() + timedelta(days=7)).strftime('%Y-%m-%dT00:00:00') }}&start_date.range_end={{ (now() + timedelta(days=7)).strftime('%Y-%m-%dT23:59:59') }}&expand=ticket_classes&status=live
+    headers:
+      Authorization: !secret eventbrite_token_header
+    scan_interval: 3600
+    sensor:
+      - name: Eventbrite Next Week Events
+        value_template: "{{ (value_json.events | default([])) | length }}"
+        json_attributes:
+          - events
+
 template:
   - sensor:
       - name: "Air Quality Overall Status"
@@ -134,6 +241,21 @@ template:
           {% elif co2 > 1200 or voc > 200 or nox > 150 or pm25 > 35.4 %}Poor
           {% elif co2 > 800  or voc > 150 or nox > 50  or pm25 > 12 %}Moderate
           {% else %}Good{% endif %}
+
+      - name: "Outdoor Temperature"
+        unique_id: outdoor_temperature
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ state_attr('weather.home', 'temperature') is not none }}
+        state: >
+          {% set t = state_attr('weather.home', 'temperature') | float(0) %}
+          {% if state_attr('weather.home', 'temperature_unit') == '°C' %}
+            {{ ((t * 9 / 5) + 32) | round(1) }}
+          {% else %}
+            {{ t | round(1) }}
+          {% endif %}
 
       - name: "Kiwi Display Name"
         unique_id: kiwi_display_name
@@ -286,6 +408,171 @@ template:
         device_class: timestamp
         availability: "{{ states('sensor.dragonfruit_print_finish') not in ['unknown', 'unavailable'] }}"
         state: "{{ states('sensor.dragonfruit_print_finish') }}"
+
+      - name: "Woodshop Heat Index"
+        unique_id: woodshop_heat_index
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ states('sensor.woodshop_climate_sensor_temperature') not in ['unknown', 'unavailable']
+             and states('sensor.woodshop_climate_sensor_humidity') not in ['unknown', 'unavailable'] }}
+        state: >
+          {% set t = states('sensor.woodshop_climate_sensor_temperature') | float(0) %}
+          {% set rh = states('sensor.woodshop_climate_sensor_humidity') | float(0) %}
+          {% if t < 80 %}
+            {{ t | round(1) }}
+          {% else %}
+            {% set hi = -42.379
+              + 2.04901523 * t
+              + 10.14333127 * rh
+              - 0.22475541 * t * rh
+              - 0.00683783 * t * t
+              - 0.05481717 * rh * rh
+              + 0.00122874 * t * t * rh
+              + 0.00085282 * t * rh * rh
+              - 0.00000199 * t * t * rh * rh %}
+            {{ hi | round(1) }}
+          {% endif %}
+
+      - name: "3D Print Heat Index"
+        unique_id: 3d_print_heat_index
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ states('sensor.air_quality_temperature') not in ['unknown', 'unavailable']
+             and states('sensor.air_quality_humidity') not in ['unknown', 'unavailable'] }}
+        state: >
+          {% set t = states('sensor.air_quality_temperature') | float(0) %}
+          {% set rh = states('sensor.air_quality_humidity') | float(0) %}
+          {% if t < 80 %}
+            {{ t | round(1) }}
+          {% else %}
+            {% set hi = -42.379
+              + 2.04901523 * t
+              + 10.14333127 * rh
+              - 0.22475541 * t * rh
+              - 0.00683783 * t * t
+              - 0.05481717 * rh * rh
+              + 0.00122874 * t * t * rh
+              + 0.00085282 * t * rh * rh
+              - 0.00000199 * t * t * rh * rh %}
+            {{ hi | round(1) }}
+          {% endif %}
+
+      - name: "Ceramics Heat Index"
+        unique_id: ceramics_heat_index
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ states('sensor.ceramics_climate_sensor_temperature') not in ['unknown', 'unavailable']
+             and states('sensor.ceramics_climate_sensor_humidity') not in ['unknown', 'unavailable'] }}
+        state: >
+          {% set t = states('sensor.ceramics_climate_sensor_temperature') | float(0) %}
+          {% set rh = states('sensor.ceramics_climate_sensor_humidity') | float(0) %}
+          {% if t < 80 %}
+            {{ t | round(1) }}
+          {% else %}
+            {% set hi = -42.379
+              + 2.04901523 * t
+              + 10.14333127 * rh
+              - 0.22475541 * t * rh
+              - 0.00683783 * t * t
+              - 0.05481717 * rh * rh
+              + 0.00122874 * t * t * rh
+              + 0.00085282 * t * rh * rh
+              - 0.00000199 * t * t * rh * rh %}
+            {{ hi | round(1) }}
+          {% endif %}
+
+      - name: "Front Hallway Heat Index"
+        unique_id: front_hallway_heat_index
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ states('sensor.front_hallway_climate_sensor_temperature') not in ['unknown', 'unavailable']
+             and states('sensor.front_hallway_climate_sensor_humidity') not in ['unknown', 'unavailable'] }}
+        state: >
+          {% set t = states('sensor.front_hallway_climate_sensor_temperature') | float(0) %}
+          {% set rh = states('sensor.front_hallway_climate_sensor_humidity') | float(0) %}
+          {% if t < 80 %}
+            {{ t | round(1) }}
+          {% else %}
+            {% set hi = -42.379
+              + 2.04901523 * t
+              + 10.14333127 * rh
+              - 0.22475541 * t * rh
+              - 0.00683783 * t * t
+              - 0.05481717 * rh * rh
+              + 0.00122874 * t * t * rh
+              + 0.00085282 * t * rh * rh
+              - 0.00000199 * t * t * rh * rh %}
+            {{ hi | round(1) }}
+          {% endif %}
+
+      - name: "Warehouse Max Heat Index"
+        unique_id: warehouse_max_heat_index
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ [
+               states('sensor.woodshop_heat_index'),
+               states('sensor.3d_print_heat_index'),
+               states('sensor.ceramics_heat_index'),
+               states('sensor.front_hallway_heat_index')
+             ] | reject('in', ['unknown', 'unavailable']) | list | length > 0 }}
+        state: >
+          {% set best = namespace(val=-1000, any=false) %}
+          {% for entity in [
+            'sensor.woodshop_heat_index',
+            'sensor.3d_print_heat_index',
+            'sensor.ceramics_heat_index',
+            'sensor.front_hallway_heat_index'
+          ] %}
+            {% set s = states(entity) %}
+            {% if s not in ['unknown', 'unavailable'] %}
+              {% set best.any = true %}
+              {% set v = s | float(0) %}
+              {% if v > best.val %}{% set best.val = v %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if best.any %}{{ best.val | round(1) }}{% else %}unavailable{% endif %}
+        attributes:
+          hottest_area: >
+            {% set best = namespace(name='unknown', val=-1000) %}
+            {% for name, entity in [
+              ('Woodshop',       'sensor.woodshop_heat_index'),
+              ('3D Print Room',  'sensor.3d_print_heat_index'),
+              ('Ceramics',       'sensor.ceramics_heat_index'),
+              ('Front Hallway',  'sensor.front_hallway_heat_index')
+            ] %}
+              {% set s = states(entity) %}
+              {% if s not in ['unknown', 'unavailable'] %}
+                {% set v = s | float(0) %}
+                {% if v > best.val %}
+                  {% set best.val = v %}
+                  {% set best.name = name %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ best.name }}
+          hottest_area_temperature: >
+            {% set name_to_temp = {
+              'Woodshop':       'sensor.woodshop_climate_sensor_temperature',
+              '3D Print Room':  'sensor.air_quality_temperature',
+              'Ceramics':       'sensor.ceramics_climate_sensor_temperature',
+              'Front Hallway':  'sensor.front_hallway_climate_sensor_temperature'
+            } %}
+            {% set hottest = state_attr('sensor.warehouse_max_heat_index', 'hottest_area') %}
+            {% if hottest in name_to_temp %}
+              {{ states(name_to_temp[hottest]) | float(0) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
 
 sensor:
   # Weekly print counts — used by the Sunday metrics automation

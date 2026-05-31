@@ -1,0 +1,261 @@
+title: Energy Monitor
+views:
+  - title: Energy Monitor
+    path: overview
+    icon: mdi:lightning-bolt
+    cards:
+
+      # ── Top row: status + total gauge (left), glance summary (right) ──────
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              # ── Status header ─────────────────────────────────────────────
+              - type: markdown
+                content: >
+                  {% set total = states('sensor.pro3em_1_power') | float(0) %}
+                  {% set icon = '🟢' if total < 20000 else '🟡' if total < 27000 else '🔴' %}
+                  ## {{ icon }} ⚡ Energy Monitor — **{{ now().strftime('%-I:%M %p') }}**
+
+                  Total load: **{{ (total / 1000) | round(2) }} kW**
+                  {%- if total >= 27000 %} — ⚠️ HIGH LOAD{% endif %}
+
+              # ── Total power gauge ─────────────────────────────────────────
+              - type: gauge
+                entity: sensor.pro3em_1_power
+                name: Total Power
+                unit: W
+                min: 0
+                max: 30000
+                needle: true
+                severity:
+                  green: 0
+                  yellow: 20000
+                  red: 27000
+
+          # ── Glance summary ────────────────────────────────────────────────
+          - type: glance
+            title: All Readings
+            columns: 3
+            entities:
+              - entity: sensor.pro3em_1_phase_a_power
+                name: A · Watts
+              - entity: sensor.pro3em_1_phase_a_current
+                name: A · Amps
+              - entity: sensor.pro3em_1_phase_a_voltage
+                name: A · Volts
+              - entity: sensor.pro3em_1_phase_b_power
+                name: B · Watts
+              - entity: sensor.pro3em_1_phase_b_current
+                name: B · Amps
+              - entity: sensor.pro3em_1_phase_b_voltage
+                name: B · Volts
+              - entity: sensor.pro3em_1_phase_c_power
+                name: C · Watts
+              - entity: sensor.pro3em_1_phase_c_current
+                name: C · Amps
+              - entity: sensor.pro3em_1_phase_c_voltage
+                name: C · Volts
+
+      # ── Per-phase power ───────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.pro3em_1_phase_a_power
+            name: Phase A — Power
+            unit: W
+            min: 0
+            max: 10000
+            needle: true
+            severity:
+              green: 0
+              yellow: 7000
+              red: 9000
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_b_power
+            name: Phase B — Power
+            unit: W
+            min: 0
+            max: 10000
+            needle: true
+            severity:
+              green: 0
+              yellow: 7000
+              red: 9000
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_c_power
+            name: Phase C — Power
+            unit: W
+            min: 0
+            max: 10000
+            needle: true
+            severity:
+              green: 0
+              yellow: 7000
+              red: 9000
+
+      # ── Per-phase current ─────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.pro3em_1_phase_a_current
+            name: Phase A — Current
+            unit: A
+            min: 0
+            max: 400
+            needle: true
+            severity:
+              green: 0
+              yellow: 280
+              red: 360
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_b_current
+            name: Phase B — Current
+            unit: A
+            min: 0
+            max: 400
+            needle: true
+            severity:
+              green: 0
+              yellow: 280
+              red: 360
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_c_current
+            name: Phase C — Current
+            unit: A
+            min: 0
+            max: 400
+            needle: true
+            severity:
+              green: 0
+              yellow: 280
+              red: 360
+
+      # ── Per-phase voltage ─────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.pro3em_1_phase_a_voltage
+            name: Phase A — Voltage
+            unit: V
+            min: 100
+            max: 130
+            needle: true
+            severity:
+              green: 114
+              yellow: 108
+              red: 100
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_b_voltage
+            name: Phase B — Voltage
+            unit: V
+            min: 100
+            max: 130
+            needle: true
+            severity:
+              green: 114
+              yellow: 108
+              red: 100
+
+          - type: gauge
+            entity: sensor.pro3em_1_phase_c_voltage
+            name: Phase C — Voltage
+            unit: V
+            min: 100
+            max: 130
+            needle: true
+            severity:
+              green: 114
+              yellow: 108
+              red: 100
+
+      # ── 24-hour history ───────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: history-graph
+            title: Current — 24h (A)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pro3em_1_phase_a_current
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_current
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_current
+                name: Phase C
+
+          - type: history-graph
+            title: Voltage — 24h (V)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pro3em_1_phase_a_voltage
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_voltage
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_voltage
+                name: Phase C
+
+          - type: history-graph
+            title: Power — 24h (W)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pro3em_1_power
+                name: Total
+              - entity: sensor.pro3em_1_phase_a_power
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_power
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_power
+                name: Phase C
+
+      # ── 2-week history ────────────────────────────────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: history-graph
+            title: Current — 2 weeks (A)
+            hours_to_show: 336
+            entities:
+              - entity: sensor.pro3em_1_phase_a_current
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_current
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_current
+                name: Phase C
+
+          - type: history-graph
+            title: Voltage — 2 weeks (V)
+            hours_to_show: 336
+            entities:
+              - entity: sensor.pro3em_1_phase_a_voltage
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_voltage
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_voltage
+                name: Phase C
+
+          - type: history-graph
+            title: Power — 2 weeks (W)
+            hours_to_show: 336
+            entities:
+              - entity: sensor.pro3em_1_power
+                name: Total
+              - entity: sensor.pro3em_1_phase_a_power
+                name: Phase A
+              - entity: sensor.pro3em_1_phase_b_power
+                name: Phase B
+              - entity: sensor.pro3em_1_phase_c_power
+                name: Phase C
