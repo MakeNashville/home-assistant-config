@@ -124,17 +124,20 @@
     for:
       seconds: 10
     trigger: state
-    from:
-    - prepare
+    not_from:
+    - pause
   - entity_id:
     - sensor.pineapple_print_status
     to:
     - printing
-    from:
-    - idle
+    not_from:
+    - paused
     for:
       seconds: 10
     trigger: state
+  conditions:
+  - condition: template
+    value_template: "{{ '.' not in states('input_text.' + trigger.entity_id.split('_')[0].split('.')[1] + '_slack_thread_ts') }}"
   actions:
   - variables:
       printer: '{{ trigger.entity_id.split("_")[0].split(".")[1] }}'
