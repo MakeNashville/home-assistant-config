@@ -492,8 +492,8 @@
         {% endfor -%}
         {% set wx_sources = [
           ('Outside (Met)', 'weather.forecast_home'),
-          ('Outside (NWS)', 'weather.nws_hourly'),
-          ('Outside (O-M)', 'weather.open_meteo'),
+          ('Outside (NWS)', 'weather.outside_nws_make_nashville_kbna'),
+          ('Outside (O-M)', 'weather.make_nashville'),
         ] -%}
         {% for label, entity in wx_sources -%}
         {% if state_attr(entity, 'temperature') is not none -%}
