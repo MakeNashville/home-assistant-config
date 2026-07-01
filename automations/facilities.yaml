@@ -490,13 +490,22 @@
         {{ icon }} {{ "%-17s"|format(a.name) }} {{ "%.1f°F"|format(t) }}  {{ h | round(0) | int }}%  {{ dp | round(0) | int }}° DP
         {% endif -%}
         {% endfor -%}
-        {% set ot = state_attr('weather.forecast_home','temperature') | float(0) -%}
-        {% set orh = state_attr('weather.forecast_home','humidity') | float(0) -%}
+        {% set wx_sources = [
+          ('Outside (Met)', 'weather.forecast_home'),
+          ('Outside (NWS)', 'weather.outside_nws_make_nashville_kbna'),
+          ('Outside (O-M)', 'weather.make_nashville'),
+        ] -%}
+        {% for label, entity in wx_sources -%}
+        {% if state_attr(entity, 'temperature') is not none -%}
+        {% set ot = state_attr(entity, 'temperature') | float(0) -%}
+        {% set orh = state_attr(entity, 'humidity') | float(0) -%}
         {% set otc = (ot - 32) * 5 / 9 -%}
         {% set orh_safe = [orh, 0.01] | max -%}
         {% set out_alpha = log(orh_safe / 100) + (17.625 * otc) / (243.04 + otc) -%}
         {% set out_dp = ((243.04 * out_alpha) / (17.625 - out_alpha)) * 9 / 5 + 32 -%}
         {% set out_icon = ':rotating_light:' if ot >= 95 else ':hot_face:' if ot >= 88 else ':warning:' if ot >= 82 else ':white_check_mark:' -%}
-        {{ out_icon }} {{ "%-17s"|format('Outside') }} {{ "%.1f°F"|format(ot) }}  {{ orh | round(0) | int }}%  {{ out_dp | round(0) | int }}° DP
+        {{ out_icon }} {{ "%-17s"|format(label) }} {{ "%.1f°F"|format(ot) }}  {{ orh | round(0) | int }}%  {{ out_dp | round(0) | int }}° DP
+        {% endif -%}
+        {% endfor -%}
         {{ care_line -}}
   mode: single
