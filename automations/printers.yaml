@@ -389,7 +389,7 @@
   max: 4
 - id: 'hms_error_alert'
   alias: HMS Error Alert
-  description: Posts Bambu HMS hardware error details to #integrations_sandbox
+  description: Posts Bambu HMS hardware error details to #3dprint-info
   triggers:
   - entity_id:
     - binary_sensor.kiwi_hms_errors
@@ -423,7 +423,7 @@
         value_template: "{{ '.' in thread_ts }}"
       sequence:
       - data:
-          target: "#integrations_sandbox"
+          target: "#3dprint-info"
           message: "{{ hms_msg }}"
           data:
             username: '{{ printer | capitalize }}'
@@ -432,7 +432,7 @@
         action: notify.make_nashville
     default:
     - data:
-        target: "#integrations_sandbox"
+        target: "#3dprint-info"
         message: "{{ hms_msg }}"
         data:
           username: '{{ printer | capitalize }}'
