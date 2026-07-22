@@ -417,16 +417,27 @@
         {%- set wiki = state_attr(trigger.entity_id, i ~ '-Wiki') %}{% if wiki %} — <{{ wiki }}|More info>{% endif -%}
         {%- endfor %}
         <{{ states('input_text.'+printer+'_stream') }}|Camera Feed>
-  - condition: template
-    value_template: "{{ '.' in thread_ts }}"
-  - data:
-      target: "#3dprint-info"
-      message: "{{ hms_msg }}"
-      data:
-        username: '{{ printer | capitalize }}'
-        icon: "{{ icon_name }}"
-        thread_ts: '{{ thread_ts }}'
-    action: notify.make_nashville
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ '.' in thread_ts }}"
+      sequence:
+      - data:
+          target: "#3dprint-info"
+          message: "{{ hms_msg }}"
+          data:
+            username: '{{ printer | capitalize }}'
+            icon: "{{ icon_name }}"
+            thread_ts: '{{ thread_ts }}'
+        action: notify.make_nashville
+    default:
+    - data:
+        target: "#3dprint-info"
+        message: "{{ hms_msg }}"
+        data:
+          username: '{{ printer | capitalize }}'
+          icon: "{{ icon_name }}"
+      action: notify.make_nashville
   mode: parallel
   max: 4
 - id: '1740400001000'
