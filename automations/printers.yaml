@@ -407,37 +407,47 @@
       icon_name: "{{ 'kiwifruit' if printer == 'kiwi' else printer }}"
       thread_ts: '{{ states("input_text." + printer + "_slack_thread_ts") }}'
   - variables:
-      hms_msg: |-
+      hms_idx: >-
         {%- set count = state_attr(trigger.entity_id, 'Count') | int(0) -%}
-        :warning: HMS error{{ 's' if count > 1 else '' }} on {{ printer | capitalize -}}
+        {%- set ns = namespace(idx=[]) -%}
+        {%- for i in range(1, count + 1) -%}
+        {%- if 'fan' not in (state_attr(trigger.entity_id, i ~ '-Error') or '') | lower -%}
+        {%- set ns.idx = ns.idx + [i] -%}
+        {%- endif -%}
+        {%- endfor -%}
+        {{ ns.idx }}
+  - condition: template
+    value_template: "{{ hms_idx | length > 0 }}"
+  - variables:
+      hms_msg: |-
+        :warning: HMS error{{ 's' if hms_idx | length > 1 else '' }} on {{ printer | capitalize -}}
         {%- if object_name not in ['unknown','unavailable',''] %} while printing {{ object_name }}{% endif -%}
         {%- if display_name not in ['unknown','unavailable',''] and display_name != object_name %} (@{{ display_name }}){% endif -%}
-        {%- for i in range(1, count + 1) %}
+        {%- for i in hms_idx %}
         • {%- set sev = state_attr(trigger.entity_id, i ~ '-Severity') | default('') %}{% if sev %} [{{ sev }}]{% endif %} {{ state_attr(trigger.entity_id, i ~ '-Error') | default('Unknown error') -}}
         {%- set wiki = state_attr(trigger.entity_id, i ~ '-Wiki') %}{% if wiki %} — <{{ wiki }}|More info>{% endif -%}
         {%- endfor %}
-        <{{ states('input_text.'+printer+'_stream') }}|Camera Feed>
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: "{{ '.' in thread_ts }}"
-      sequence:
-      - data:
-          target: "#3dprint-info"
-          message: "{{ hms_msg }}"
-          data:
-            username: '{{ printer | capitalize }}'
-            icon: "{{ icon_name }}"
-            thread_ts: '{{ thread_ts }}'
-        action: notify.make_nashville
-    default:
-    - data:
-        target: "#3dprint-info"
-        message: "{{ hms_msg }}"
-        data:
-          username: '{{ printer | capitalize }}'
-          icon: "{{ icon_name }}"
-      action: notify.make_nashville
+      blocks: >-
+        [{"type": "section", "text": {"type": "mrkdwn", "text": {{ hms_msg | tojson }}}},
+        {"type": "actions", "elements":
+        [{"type": "button", "text": {"type": "plain_text", "text": "Camera Feed"}, "url": "{{ states('input_text.' + printer + '_stream') }}"},
+        {"type": "button",
+        "text": {"type": "plain_text", "text": "Pause Print"},
+        "action_id": "pause_bambu_print",
+        "value": "{{ printer }}",
+        "confirm": {
+        "title": {"type": "plain_text", "text": "Pause Print?"},
+        "text": {"type": "mrkdwn", "text": "This will pause the current print. Are you sure?"},
+        "confirm": {"type": "plain_text", "text": "Yes, pause it"},
+        "deny": {"type": "plain_text", "text": "Never mind"}}}]}]
+  - action: rest_command.slack_post_3dprint
+    data:
+      channel: "#3dprint-info"
+      text: "{{ hms_msg }}"
+      username: "{{ printer | capitalize }}"
+      icon_emoji: ":{{ icon_name }}:"
+      blocks: "{{ blocks }}"
+      thread_ts: "{{ thread_ts if '.' in thread_ts else '' }}"
   mode: parallel
   max: 4
 - id: '1740400001000'
