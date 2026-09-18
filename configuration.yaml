@@ -388,7 +388,8 @@ template:
                states('sensor.woodshop_climate_sensor_temperature'),
                states('sensor.air_quality_temperature'),
                states('sensor.ceramics_climate_sensor_temperature'),
-               states('sensor.front_hallway_climate_sensor_temperature')
+               states('sensor.front_hallway_climate_sensor_temperature'),
+               states('sensor.no_5_temp_humidity_sensor_temperature')
              ] | reject('in', ['unknown', 'unavailable']) | list | length > 0 }}
         state: >
           {% set best = namespace(val=-1000, any=false) %}
@@ -396,7 +397,8 @@ template:
             'sensor.woodshop_climate_sensor_temperature',
             'sensor.air_quality_temperature',
             'sensor.ceramics_climate_sensor_temperature',
-            'sensor.front_hallway_climate_sensor_temperature'
+            'sensor.front_hallway_climate_sensor_temperature',
+            'sensor.no_5_temp_humidity_sensor_temperature'
           ] %}
             {% set s = states(entity) %}
             {% if s not in ['unknown', 'unavailable'] %}
@@ -410,10 +412,11 @@ template:
           hottest_area: >
             {% set best = namespace(name='unknown', val=-1000) %}
             {% for name, entity in [
-              ('Woodshop',       'sensor.woodshop_climate_sensor_temperature'),
-              ('3D Print Room',  'sensor.air_quality_temperature'),
-              ('Metalshop',      'sensor.ceramics_climate_sensor_temperature'),
-              ('Front Hallway',  'sensor.front_hallway_climate_sensor_temperature')
+              ('Woodshop',         'sensor.woodshop_climate_sensor_temperature'),
+              ('3D Print Room',    'sensor.air_quality_temperature'),
+              ('Metalshop',        'sensor.ceramics_climate_sensor_temperature'),
+              ('Clay Shelf',       'sensor.front_hallway_climate_sensor_temperature'),
+              ('Ceramics Shelves', 'sensor.no_5_temp_humidity_sensor_temperature')
             ] %}
               {% set s = states(entity) %}
               {% if s not in ['unknown', 'unavailable'] %}
