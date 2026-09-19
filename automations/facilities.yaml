@@ -398,6 +398,14 @@
         - name: Ceramics Shelves
           temp: sensor.no_5_temp_humidity_sensor_temperature
           humidity: sensor.no_5_temp_humidity_sensor_humidity
+      # Outdoor sensors: rendered as rows in the post, like indoor_areas. They are NOT in
+      # sensor.warehouse_max_temperature (configuration.yaml), which lists indoor sensors only,
+      # so an outdoor reading can't trip the 80°F gate or become "Currently warmest".
+      # Don't add outdoor sensors to that template sensor.
+      outdoor_areas:
+        - name: Outside Back Dock
+          temp: sensor.no_8_temp_humidity_sensor_temperature
+          humidity: sensor.no_8_temp_humidity_sensor_humidity
   - action: notify.make_nashville
     data:
       target: "#climate-feed"
@@ -413,7 +421,7 @@
 
         Currently warmest: *{{ state_attr('sensor.warehouse_max_temperature', 'hottest_area') }}* — {{ max_temp | round(0) | int }}°F
 
-        {% for a in indoor_areas -%}
+        {% for a in indoor_areas + outdoor_areas -%}
         {% set t_raw = states(a.temp) -%}
         {% set h_raw = states(a.humidity) -%}
         {% if t_raw not in ['unknown','unavailable',none] and h_raw not in ['unknown','unavailable',none] -%}
