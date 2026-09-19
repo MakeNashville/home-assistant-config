@@ -392,9 +392,12 @@
         - name: Metalshop
           temp: sensor.ceramics_climate_sensor_temperature
           humidity: sensor.ceramics_climate_sensor_humidity
-        - name: Front Hallway
+        - name: Clay Shelf
           temp: sensor.front_hallway_climate_sensor_temperature
           humidity: sensor.front_hallway_climate_sensor_humidity
+        - name: Ceramics Shelves
+          temp: sensor.no_5_temp_humidity_sensor_temperature
+          humidity: sensor.no_5_temp_humidity_sensor_humidity
   - action: notify.make_nashville
     data:
       target: "#climate-feed"
